@@ -1,4 +1,3 @@
-// app/report/page.tsx
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -6,15 +5,13 @@ import ReportFilterForm from '../../components/ReportFilterForm';
 import { DepartmentTable } from '../../components/DepartmentTable';
 import { Employee, ReportApiRawData } from '../types/employee';
 
-// --- Helper function: แยก deptcode ออกเป็นระดับต่างๆ (เหมือนใน ReportFilterForm) ---
 const parseDeptCode = (fullDeptCode: string) => {
   const level1 = fullDeptCode.length >= 2 ? fullDeptCode.substring(0, 2) : '';
   const level2 = fullDeptCode.length >= 4 ? fullDeptCode.substring(0, 4) : '';
-  const level3 = fullDeptCode.length >= 6 ? fullDeptCode.substring(0, 6) : ''; // ใช้ 6 หลักเป็นระดับสุดท้าย
+  const level3 = fullDeptCode.length >= 6 ? fullDeptCode.substring(0, 6) : '';
   return { level1, level2, level3 };
 };
 
-// --- ฟังก์ชันหลักของหน้า (Page Component) ---
 export default function ReportPage() {
   const today = new Date().toISOString().split('T')[0];
 
@@ -54,7 +51,6 @@ export default function ReportPage() {
         }
       });
 
-      // กรองข้อมูลก่อน
       const filteredRawData = rawData.filter(item => {
         if (filters.date && item.workdate !== filters.date) {
           return false;
@@ -85,38 +81,30 @@ export default function ReportPage() {
         return true;
       });
 
-      // --- ขั้นตอนใหม่: รวมกลุ่มข้อมูล (Group By Workdate และ OriginalFullDeptcode) ---
       const groupedData = new Map<string, Employee>();
 
       filteredRawData.forEach(item => {
-        // ใช้ originalFullDeptcode และ workdate เป็น key สำหรับการรวมกลุ่ม
         const groupKey = `${item.workdate}-${item.deptcode}`;
-
-        // แปลงค่าตัวเลขให้ปลอดภัยก่อนรวม
         const currentCountScan = parseInt(item.countscan || '0');
         const currentCountNotScan = parseInt(item.countnotscan || '0');
         const currentCountPerson = parseInt(item.countperson || '0');
         const currentLate = parseInt(item.late || '0');
 
         if (groupedData.has(groupKey)) {
-          // ถ้ามี Key นี้อยู่แล้ว ให้รวมค่าตัวเลข
           const existingEmployee = groupedData.get(groupKey)!;
           existingEmployee.countscan += currentCountScan;
           existingEmployee.countnotscan += currentCountNotScan;
           existingEmployee.countperson += currentCountPerson;
           existingEmployee.late += currentLate;
-          // Note: ข้อมูลอื่นๆ เช่น deptname, deptsbu, deptstd ถือว่าเหมือนกันสำหรับ groupKey เดียวกัน
-          // หรือคุณอาจต้องมี logic เลือกตัวที่ต้องการหากมีค่าต่างกันใน groupเดียวกัน
         } else {
-          // ถ้ายังไม่มี Key นี้ ให้สร้าง Employee object ใหม่
           const { level1, level2, level3 } = item.deptcode ? parseDeptCode(item.deptcode) : { level1: '', level2: '', level3: '' };
 
           groupedData.set(groupKey, {
-            employeeId: item.employeeId || '', // อาจจะต้องคิดว่าจะแสดง employeeId หลายๆ คนในกลุ่มนี้ยังไง ถ้าต้องการ
+            employeeId: item.employeeId || '',
             groupid: item.groupid || '',
             groupname: item.groupname || '',
             workdate: item.workdate || '',
-            deptcode: level3, // 6 หลัก สำหรับ Logic ภายใน
+            deptcode: level3,
             deptname: item.deptname || '',
             deptsbu: item.deptsbu || '',
             deptstd: item.deptstd !== undefined ? item.deptstd : null,
@@ -130,15 +118,12 @@ export default function ReportPage() {
             mainDepartmentName: levelCodeToNameMap.get(level2) || `แผนกหลัก ${level2}`,
             subDepartmentCode: level3,
             subDepartmentName: levelCodeToNameMap.get(level3) || item.deptname || `แผนกย่อย/ส่วนงาน ${level3}`,
-            originalFullDeptcode: item.deptcode, // 8 หลัก สำหรับแสดงผล
+            originalFullDeptcode: item.deptcode, 
           });
         }
       });
 
-      // แปลง Map กลับไปเป็น Array เพื่อส่งให้ DepartmentTable
       const processedData: Employee[] = Array.from(groupedData.values());
-
-      // (Optional) จัดเรียงข้อมูลหากต้องการ เช่น ตาม deptcode หรือ workdate
       processedData.sort((a, b) => {
         if (a.workdate !== b.workdate) return a.workdate.localeCompare(b.workdate);
         return a.originalFullDeptcode.localeCompare(b.originalFullDeptcode);

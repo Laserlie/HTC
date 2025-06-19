@@ -188,11 +188,11 @@ export default function ReportDetailPage() {
         <span>Back</span>
       </button>
 
-      <h1 className="text-2xl font-bold">แผนก: {deptName}</h1>
+      <h1 className="text-2xl font-bold">Department : {deptName}</h1>
 
       <div className="flex flex-wrap items-center gap-3">
-        <label className="flex flex-col items-start">
-          <span className="text-gray-700 text-sm font-medium mb-1">From:</span>
+        <label className="flex flex-row items-center gap-2">
+          <span className="text-gray-700 text-sm font-medium">From:</span>
           <input
             type="date"
             value={from}
@@ -200,8 +200,8 @@ export default function ReportDetailPage() {
             className="border border-slate-300 px-2 py-1 rounded"
           />
         </label>
-        <label className="flex flex-col items-start">
-          <span className="text-gray-700 text-sm font-medium mb-1">To:</span>
+        <label className="flex flex-row items-center gap-2">
+          <span className="text-gray-700 text-sm font-medium">To:</span>
           <input
             type="date"
             value={to}
@@ -212,7 +212,7 @@ export default function ReportDetailPage() {
       </div>
 
      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 items-stretch">
-  {/* Total */}
+
   <div className="flex flex-col items-center justify-center bg-blue-100 text-blue-800 px-6 py-5 rounded-2xl shadow-md h-full">
     <div className="flex items-center gap-4">
       <FaUsers size={36} />
@@ -223,7 +223,6 @@ export default function ReportDetailPage() {
     </div>
   </div>
 
-  {/* Scanned */}
   <div className="flex flex-col items-center justify-center bg-green-100 text-green-800 px-6 py-5 rounded-2xl shadow-md h-full">
     <div className="flex items-center gap-4">
       <FaCheckCircle size={36} />
@@ -234,7 +233,6 @@ export default function ReportDetailPage() {
     </div>
   </div>
 
-  {/* Not Scanned */}
   <div className="flex flex-col items-center justify-center bg-red-100 text-red-800 px-6 py-5 rounded-2xl shadow-md h-full">
     <div className="flex items-center gap-4">
       <FaExclamationCircle size={36} />
@@ -272,7 +270,15 @@ export default function ReportDetailPage() {
                 </thead>
                 <tbody>
                   {paginatedNotScanned.map((row, idx) => (
-                    <tr key={idx}>
+                    <tr
+                      key={idx}
+                      className="cursor-pointer hover:bg-blue-50"
+                      onClick={() => {
+                        router.push(
+                          `/report/person/${encodeURIComponent(row.person_code)}?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`
+                        );
+                      }}
+                    >
                       <td className="p-3">{row.person_code}</td>
                       <td className="p-3">{row.deptcode}</td>
                       <td className="p-3">{row.full_name}</td>
@@ -292,7 +298,7 @@ export default function ReportDetailPage() {
 
           {scannedDetails.length > 0 && (
             <>
-              <h2 className="text-lg font-semibold mt-6">Scan</h2>
+              <h2 className="text-lg font-semibold mt-6">Scanned</h2>
               <table className="min-w-full bg-white rounded shadow text-sm">
                 <thead className="bg-green-100 text-left">
                   <tr>
@@ -310,7 +316,15 @@ export default function ReportDetailPage() {
                 </thead>
                 <tbody>
                   {paginatedScanned.map((row, idx) => (
-                    <tr key={idx}>
+                    <tr
+                      key={idx}
+                      className="cursor-pointer hover:bg-blue-50"
+                      onClick={() => {
+                        router.push(
+                          `/report/person/${encodeURIComponent(row.person_code)}?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`
+                        );
+                      }}
+                    >
                       <td className="p-3">{row.person_code}</td>
                       <td className="p-3">{row.deptcode}</td>
                       <td className="p-3">{row.full_name}</td>
@@ -331,7 +345,7 @@ export default function ReportDetailPage() {
           {details.length > 0 && (
             <div className="flex flex-wrap items-center justify-center gap-4 mt-4">
               <label htmlFor="rows-per-page-bottom" className="text-sm font-medium text-gray-700">
-                เลือกจำนวนแถว:
+                Rows per page:
               </label>
               <select
                 id="rows-per-page-bottom"
@@ -343,7 +357,7 @@ export default function ReportDetailPage() {
                 <option value={20}>20</option>
                 <option value={50}>50</option>
                 <option value={100}>100</option>
-                <option value={details.length}>ทั้งหมด</option>
+                <option value={details.length}>All</option>
               </select>
 
               <button

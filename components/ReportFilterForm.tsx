@@ -1,133 +1,100 @@
-//HTC\components\ReportFilterForm
-
 'use client';
 
 import { useEffect, useState } from 'react';
 
-// กำหนด Type ของข้อมูลดิบที่ได้รับจาก API (ใช้ร่วมกับ app/types/employee.ts)
-// ในคอมโพเนนต์นี้ เราใช้โครงสร้างพื้นฐานเพื่อสร้าง dropdown options
 type ReportApiRawDataForFilter = {
-  deptcode: string; // รหัสส่วนงาน/หน่วยงาน (อาจจะ 8 หลัก หรือ 6 หลักก็ได้ ขอแค่มีโครงสร้างให้แยกได้)
-  deptname: string; // ชื่อของส่วนงาน/หน่วยงานนั้นๆ
+  deptcode: string; 
+  deptname: string; 
 };
 
-// กำหนด Type ของ Props สำหรับ Component นี้
 type Props = {
   onSearch: (filters: { 
     date: string; 
-    factoryId: string; // ตรงกับ deptcode 2 หลักแรก
-    mainDepartmentId: string; // ตรงกับ deptcode 4 หลักแรก
-    subDepartmentId: string; // ตรงกับ deptcode 6 หลักแรก (เป็นระดับสุดท้ายที่เลือกได้)
-    employeeId: string; // สถานะการสแกน
+    factoryId: string; 
+    mainDepartmentId: string; 
+    subDepartmentId: string; 
+    employeeId: string; 
   }) => void;
-  initialFilters: { // ค่าเริ่มต้นของฟิลเตอร์
+  initialFilters: { 
     date: string;
     factoryId: string; 
     mainDepartmentId: string; 
-    subDepartmentId: string; // เป็นระดับสุดท้าย
+    subDepartmentId: string; 
     employeeId: string;
   };
 };
 
-// --- Types สำหรับ Dropdown แต่ละระดับ (อิงตามโครงสร้าง deptcode 6 หลัก) ---
-
-// สำหรับ Dropdown 'โรงงาน' (deptcode 2 หลักแรก)
 type FactoryForDropdown = {
-  factoryCode: string; // เช่น "01"
-  factoryName: string; // ชื่อโรงงาน
+  factoryCode: string; 
+  factoryName: string; 
 };
 
-// สำหรับ Dropdown 'แผนกหลัก' (deptcode 4 หลักแรก)
 type MainDepartmentForDropdown = {
-  deptcodelevel2: string; // เช่น "0102"
-  deptnamelevel2: string; // ชื่อแผนกหลัก
-  parentFactoryCode: string; // เช่น "01"
+  deptcodelevel2: string; 
+  deptnamelevel2: string; 
+  parentFactoryCode: string; 
 };
 
-// สำหรับ Dropdown 'แผนกย่อย/ส่วนงาน' (deptcode 6 หลักแรก) - เป็นระดับสุดท้าย
 type SubDepartmentForDropdown = {
-  deptcodelevel3: string; // เช่น "010203"
-  deptnamelevel3: string; // ชื่อแผนกย่อย/ส่วนงาน
-  parentMainDepartmentCode: string; // เช่น "0102"
-  parentFactoryCode: string; // เช่น "01"
+  deptcodelevel3: string; 
+  deptnamelevel3: string; 
+  parentMainDepartmentCode: string;
+  parentFactoryCode: string; 
 };
 
-
-// --- ฟังก์ชันช่วย: แยก deptcode ออกเป็นระดับต่างๆ (แค่ 3 ระดับ) ---
 const parseDeptCode = (fullDeptCode: string) => {
-  // ตรวจสอบความยาวของ deptcode ก่อนแยก เพื่อป้องกัน error
   const level1 = fullDeptCode.length >= 2 ? fullDeptCode.substring(0, 2) : '';
   const level2 = fullDeptCode.length >= 4 ? fullDeptCode.substring(0, 4) : '';
-  const level3 = fullDeptCode.length >= 6 ? fullDeptCode.substring(0, 6) : ''; // ใช้ 6 หลักเป็นระดับสุดท้าย
+  const level3 = fullDeptCode.length >= 6 ? fullDeptCode.substring(0, 6) : ''; 
   return { level1, level2, level3 };
 };
 
-// --- Component ReportFilterForm ---
 const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
-  // States สำหรับเก็บค่าที่เลือกในแต่ละฟิลเตอร์
   const [date, setDate] = useState(initialFilters.date);
   const [factoryId, setFactoryId] = useState(initialFilters.factoryId);
   const [mainDepartmentId, setMainDepartmentId] = useState(initialFilters.mainDepartmentId); 
   const [subDepartmentId, setSubDepartmentId] = useState(initialFilters.subDepartmentId); 
   const [scanStatus, setScanStatus] = useState(initialFilters.employeeId);
-
-  // States สำหรับเก็บข้อมูลทั้งหมดที่ดึงมาจาก API (แบบไม่ซ้ำในแต่ละระดับ)
   const [factories, setFactories] = useState<FactoryForDropdown[]>([]);
   const [allMainDepartments, setAllMainDepartments] = useState<MainDepartmentForDropdown[]>([]);
   const [allSubDepartments, setAllSubDepartments] = useState<SubDepartmentForDropdown[]>([]); 
-
-  // States สำหรับเก็บข้อมูลที่ถูกกรองแล้ว เพื่อแสดงใน Dropdown แต่ละตัว
   const [filteredMainDepartments, setFilteredMainDepartments] = useState<MainDepartmentForDropdown[]>([]);
   const [filteredSubDepartments, setFilteredSubDepartments] = useState<SubDepartmentForDropdown[]>([]); 
-
-  const [loadingData, setLoadingData] = useState(true); // สถานะการโหลดข้อมูล
-
-  // --- Effect 1: ดึงข้อมูลทั้งหมดจาก API และประมวลผลลำดับชั้นและชื่อ (3 ระดับ) ---
+  const [loadingData, setLoadingData] = useState(true); 
+ 
   useEffect(() => {
     setLoadingData(true);
-    // เรียก API เพื่อดึงข้อมูลเฉพาะส่วน deptcode และ deptname มาสร้าง dropdown options
-    // API endpoint นี้อาจจะแตกต่างจาก /api/manpower หากคุณมี API สำหรับ master data
-    fetch('/api/manpower') // ใช้ API เดียวกันไปก่อน ถ้าคุณไม่มี API สำหรับ master data แยก
+    fetch('/api/manpower') 
       .then(res => {
         if (!res.ok) { 
           throw new Error(`HTTP error! status: ${res.status}`);
         }
         return res.json();
       })
-      .then((data: ReportApiRawDataForFilter[]) => { // ใช้ ReportApiRawDataForFilter ที่มีแค่ deptcode, deptname
+      .then((data: ReportApiRawDataForFilter[]) => { 
         if (Array.isArray(data)) { 
           const uniqueFactories: FactoryForDropdown[] = [];
           const seenFactoryCodes = new Set<string>(); 
-
           const uniqueMainDepartments: MainDepartmentForDropdown[] = [];
           const seenMainDeptCodes = new Set<string>(); 
-
           const uniqueSubDepartments: SubDepartmentForDropdown[] = []; 
           const seenSubDeptCodes = new Set<string>(); 
-          
           const levelCodeToNameMap = new Map<string, string>(); 
 
           data.forEach(item => { 
-            if (!item.deptcode || !item.deptname) return; // ข้ามรายการที่ไม่สมบูรณ์
+            if (!item.deptcode || !item.deptname) return; 
             
             const { level1, level2, level3 } = parseDeptCode(item.deptcode);
 
-            // เก็บชื่อที่ยาวที่สุด (ละเอียดที่สุด) ที่สัมพันธ์กับแต่ละระดับ code
             if (level1 && (!levelCodeToNameMap.has(level1) || item.deptname.length > (levelCodeToNameMap.get(level1)?.length || 0))) {
                 levelCodeToNameMap.set(level1, item.deptname);
             }
             if (level2 && (!levelCodeToNameMap.has(level2) || item.deptname.length > (levelCodeToNameMap.get(level2)?.length || 0))) {
                 levelCodeToNameMap.set(level2, item.deptname);
             }
-            // สำหรับ level3 ให้ใช้ deptname ตรงๆ ของ item นั้น หากต้องการให้ชื่อตรงกับรายการที่ API ให้มา
             if (level3 && (!levelCodeToNameMap.has(level3) || item.deptname.length > (levelCodeToNameMap.get(level3)?.length || 0))) {
                 levelCodeToNameMap.set(level3, item.deptname);
             }
-
-
-            // --- เก็บข้อมูลสำหรับ Dropdown แต่ละระดับ ---
-
-            // 1. โรงงาน (Factory)
             if (level1 && !seenFactoryCodes.has(level1)) {
               uniqueFactories.push({ 
                 factoryCode: level1, 
@@ -135,22 +102,18 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
               }); 
               seenFactoryCodes.add(level1);
             }
-
-            // 2. แผนกหลัก (Main Department)
             if (level2 && level1 && !seenMainDeptCodes.has(level2)) {
                 uniqueMainDepartments.push({ 
                     deptcodelevel2: level2, 
-                    deptnamelevel2: levelCodeToNameMap.get(level2) || `แผนกหลัก ${level2}`,
+                    deptnamelevel2: levelCodeToNameMap.get(level2) || 'แผนกหลัก ${level2}',
                     parentFactoryCode: level1 
                 });
                 seenMainDeptCodes.add(level2);
             }
-
-            // 3. แผนกย่อย/ส่วนงาน (Sub-Department) - เป็นระดับสุดท้ายที่เราจะกรอง
             if (level3 && level2 && level1 && !seenSubDeptCodes.has(level3)) {
                 uniqueSubDepartments.push({
                     deptcodelevel3: level3,
-                    deptnamelevel3: levelCodeToNameMap.get(level3) || item.deptname, // ใช้ item.deptname ตรงๆ สำหรับระดับสุดท้าย
+                    deptnamelevel3: levelCodeToNameMap.get(level3) || item.deptname, 
                     parentMainDepartmentCode: level2,
                     parentFactoryCode: level1
                 });
@@ -180,7 +143,6 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
       });
   }, []); 
 
-  // --- Effect 2: กรอง 'แผนกหลัก' ตาม 'โรงงาน' ที่เลือก ---
   useEffect(() => {
     let newFilteredMainDepartments: MainDepartmentForDropdown[] = [];
 
@@ -202,7 +164,6 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
     }
   }, [factoryId, allMainDepartments, mainDepartmentId]); 
 
-  // --- Effect 3: กรอง 'แผนกย่อย/ส่วนงาน' ตาม 'โรงงาน' และ 'แผนกหลัก' ที่เลือก ---
   useEffect(() => {
     let newFilteredSubDepartments: SubDepartmentForDropdown[] = [];
 
@@ -233,7 +194,6 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
     }
   }, [factoryId, mainDepartmentId, allSubDepartments, subDepartmentId]); 
 
-  // --- ฟังก์ชันเมื่อกดปุ่มค้นหา ---
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault(); 
     onSearch({ 
@@ -245,13 +205,12 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
     });
   };
 
-  // --- UI (ส่วนแสดงผล) ของ Filter Form ---
   return (
     <form onSubmit={handleSubmit} className="space-y-4 bg-white p-4 rounded-xl shadow">
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4"> 
         {/* Dropdown วันที่ */}
         <div>
-          <label className="block mb-1 font-medium">วันที่</label>
+          <label className="block mb-1 font-medium">Date</label>
           <input
             type="date"
             className="w-full border rounded px-2 py-1"
@@ -263,7 +222,7 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
 
         {/* Dropdown โรงงาน */}
         <div>
-          <label className="block mb-1 font-medium">โรงงาน</label>
+          <label className="block mb-1 font-medium">Factory</label>
           <select
             className="w-full border rounded px-2 py-1"
             value={factoryId}
@@ -275,7 +234,7 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
             disabled={loadingData}
           >
             <option key="default-factory" value="">
-              {loadingData ? 'กำลังโหลดโรงงาน...' : '-- ทั้งหมด --'}
+              {loadingData ? 'Loading...' : '-- All --'}
             </option>
             {factories.map((f, idx) => (
               <option key={`factory-${f.factoryCode}-${idx}`} value={f.factoryCode}>
@@ -287,7 +246,7 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
 
         {/* Dropdown แผนกหลัก */}
         <div>
-          <label className="block mb-1 font-medium">แผนกหลัก</label>
+          <label className="block mb-1 font-medium">Department</label>
           <select
             className="w-full border rounded px-2 py-1"
             value={mainDepartmentId}
@@ -298,7 +257,7 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
             disabled={loadingData}
           >
             <option key="default-main-department" value="">
-              {loadingData ? 'กำลังโหลดแผนกหลัก...' : '-- ทั้งหมด --'}
+              {loadingData ? 'Loading...' : '-- All --'}
             </option>
             {filteredMainDepartments.map((d, idx) => (
               <option key={`main-department-${d.deptcodelevel2}-${idx}`} value={d.deptcodelevel2}>
@@ -310,7 +269,7 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
         
         {/* Dropdown แผนกย่อย/ส่วนงาน (เป็นระดับสุดท้าย) */}
         <div>
-          <label className="block mb-1 font-medium">แผนกย่อย/ส่วนงาน</label>
+          <label className="block mb-1 font-medium">Division</label>
           <select
             className="w-full border rounded px-2 py-1"
             value={subDepartmentId}
@@ -320,7 +279,7 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
             disabled={loadingData}
           >
             <option key="default-sub-department" value="">
-              {loadingData ? 'กำลังโหลดแผนกย่อย/ส่วนงาน...' : '-- ทั้งหมด --'}
+              {loadingData ? 'Loading...' : '-- All --'}
             </option>
             {filteredSubDepartments.map((d, idx) => (
               <option key={`sub-department-${d.deptcodelevel3}-${idx}`} value={d.deptcodelevel3}>
@@ -332,20 +291,20 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
 
         {/* Dropdown สถานะการสแกน */}
         <div className="md:col-span-1"> 
-          <label className="block mb-1 font-medium">สถานะ</label>
+          <label className="block mb-1 font-medium">Status</label>
           <select
             className="w-full border rounded px-2 py-1"
             value={scanStatus}
             onChange={(e) => setScanStatus(e.target.value)}
           >
             <option key="scan-status-all" value="all">
-              -- ทั้งหมด --
+              -- All --
             </option>
             <option key="scan-status-scanned" value="scanned">
-              สแกนแล้ว
+              Scanned
             </option>
             <option key="scan-status-notscanned" value="not_scanned">
-              ยังไม่สแกน
+              Not Scan
             </option>
           </select>
         </div>
