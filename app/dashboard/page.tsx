@@ -23,7 +23,7 @@ const ManpowerTable = dynamic(
 );
 
 export default function DashboardPage() {
-  const [selectedDate, setSelectedDate] = useState(() => {
+  const [selectedDate] = useState(() => {
     return new Date().toLocaleDateString('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' });
   });
 

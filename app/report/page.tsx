@@ -14,37 +14,17 @@ const parseDeptCode = (fullDeptCode: string) => {
 };
 
 export default function ReportPage() {
-  const [filters, setFilters] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('reportFilters');
-      if (saved) return JSON.parse(saved);
-    }
-    return {
-      from: '',
-      to: '',
-      factoryId: '',
-      mainDepartmentId: '',
-      subDepartmentId: '',
-      employeeId: 'all',
-    };
+  const [filters, setFilters] = useState({
+    from: '',
+    to: '',
+    factoryId: '',
+    mainDepartmentId: '',
+    subDepartmentId: '',
+    employeeId: 'all',
   });
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
-  const [hasSearched, setHasSearched] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('reportHasSearched');
-      if (saved) return JSON.parse(saved);
-    }
-    return false;
-  });
-
-  // Sync filters and hasSearched to localStorage
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('reportFilters', JSON.stringify(filters));
-      localStorage.setItem('reportHasSearched', JSON.stringify(hasSearched));
-    }
-  }, [filters, hasSearched]);
+  const [hasSearched, setHasSearched] = useState(false);
 
   const fetchAndProcessData = useCallback(async () => {
     setLoading(true);
