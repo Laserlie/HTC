@@ -1,75 +1,89 @@
 'use client';
 
-import { useState } from 'react';
 import { FaCheckCircle, FaExclamationCircle, FaUsers } from 'react-icons/fa';
+import Link from 'next/link';
+import React from 'react';
 
 type Props = {
   totalScanned: number;
   totalNotScanned: number;
+  from: string;
+  to: string;
+  deptCode: string;
 };
 
-const AttendanceCardSummary = ({ totalScanned, totalNotScanned }: Props) => {
+const AttendanceCardSummary = ({ totalScanned, totalNotScanned, from, to, deptCode }: Props) => {
   const totalEmployees = totalScanned + totalNotScanned;
-  const [hovered, setHovered] = useState<string | null>(null);
+
+  const scannedPercentage = totalEmployees > 0 ? (totalScanned / totalEmployees) * 100 : 0;
+  const notScannedPercentage = totalEmployees > 0 ? (totalNotScanned / totalEmployees) * 100 : 0;
+
+  const createReportLink = (status: 'all' | 'scanned' | 'not_scanned') => {
+    const params = new URLSearchParams();
+    params.append('status', status);
+    params.append('from', from);
+    params.append('to', to);
+    params.append('deptcode', deptCode);
+    return `/report/ScanNoscanReport?${params.toString()}`;
+  };
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 items-stretch">
-
-        {/* Total */}
-        <div
-          onMouseEnter={() => setHovered('total')}
-          onMouseLeave={() => setHovered(null)}
-          className="flex flex-col items-center justify-center bg-blue-100 text-blue-800 px-6 py-5 rounded-2xl shadow-md transition-transform duration-300 transform hover:scale-105 hover:shadow-lg h-full"
-        >
-          <div className="flex items-center gap-4">
-            <FaUsers size={36} />
-            <div className="text-left">
-              <div className="text-2xl font-extrabold">{totalEmployees}</div>
-              <div className="text-base text-blue-900 font-medium">Total</div>
+        <Link href={createReportLink('all')} passHref className="!no-underline">
+          <div
+            className="flex flex-col items-center justify-center bg-blue-100 text-blue-800 px-6 py-5 rounded-2xl shadow-md h-full transition-transform hover:scale-105 hover:shadow-lg cursor-pointer relative"
+            title="คลิกเพื่อดูเพิ่มเติม"
+          >
+            <div className="flex items-center gap-4 w-full justify-start">
+              <FaUsers size={36} />
+              <div className="text-left">
+                <div className="text-2xl font-extrabold">{totalEmployees}</div>
+                <div className="text-base text-blue-900 font-extrabold">Total</div>
+              </div>
+            </div>
+            <div className="absolute bottom-3 right-4 text-right text-black text-sm">
             </div>
           </div>
-          {hovered === 'total' && (
-            <div className="mt-2 text-sm text-blue-900">รวมพนักงานทั้งหมด</div>
-          )}
-        </div>
+        </Link>
 
-        {/* Scanned */}
-        <div
-          onMouseEnter={() => setHovered('scanned')}
-          onMouseLeave={() => setHovered(null)}
-          className="flex flex-col items-center justify-center bg-green-100 text-green-800 px-6 py-5 rounded-2xl shadow-md transition-transform duration-300 transform hover:scale-105 hover:shadow-lg h-full"
-        >
-          <div className="flex items-center gap-4">
-            <FaCheckCircle size={36} />
-            <div className="text-left">
-              <div className="text-2xl font-extrabold">{totalScanned}</div>
-              <div className="text-base text-green-900 font-medium">Scan</div>
+        <Link href={createReportLink('scanned')} passHref className="!no-underline">
+          <div
+            className="flex flex-col items-center justify-center bg-green-100 text-green-800 px-6 py-5 rounded-2xl shadow-md h-full transition-transform hover:scale-105 hover:shadow-lg cursor-pointer relative"
+            title="คลิกเพื่อดูเพิ่มเติม"
+          >
+            <div className="flex items-center gap-4 w-full justify-start">
+              <FaCheckCircle size={36} />
+              <div className="text-left">
+                <div className="text-2xl font-extrabold">{totalScanned}</div>
+                <div className="text-base text-green-900 font-extrabold">Scan</div>
+              </div>
+            </div>
+            <div className="absolute bottom-3 right-4 text-right text-black text-sm">
+              <div className='text-lg font-bold text-green-700'>{scannedPercentage.toFixed(2)}%</div>
+              <div>ของพนักงานทั้งหมด</div>
             </div>
           </div>
-          {hovered === 'scanned' && (
-            <div className="mt-2 text-sm text-green-900">จำนวนคนที่สแกนแล้ว</div>
-          )}
-        </div>
+        </Link>
 
-        {/* Not Scanned */}
-        <div
-          onMouseEnter={() => setHovered('not_scanned')}
-          onMouseLeave={() => setHovered(null)}
-          className="flex flex-col items-center justify-center bg-red-100 text-red-800 px-6 py-5 rounded-2xl shadow-md transition-transform duration-300 transform hover:scale-105 hover:shadow-lg h-full"
-        >
-          <div className="flex items-center gap-4">
-            <FaExclamationCircle size={36} />
-            <div className="text-left">
-              <div className="text-2xl font-extrabold">{totalNotScanned}</div>
-              <div className="text-base text-red-900 font-medium">No Scan</div>
+        <Link href={createReportLink('not_scanned')} passHref className="!no-underline">
+          <div
+            className="flex flex-col items-center justify-center bg-red-100 text-red-800 px-6 py-5 rounded-2xl shadow-md h-full transition-transform hover:scale-105 hover:shadow-lg cursor-pointer relative"
+            title="คลิกเพื่อดูเพิ่มเติม"
+          >
+            <div className="flex items-center gap-4 w-full justify-start">
+              <FaExclamationCircle size={36} />
+              <div className="text-left">
+                <div className="text-2xl font-extrabold">{totalNotScanned}</div>
+                <div className="text-base text-red-900 font-extrabold">No Scan</div>
+              </div>
+            </div>
+            <div className="absolute bottom-3 right-4 text-right text-black text-sm">
+              <div className='text-lg font-bold text-red-700'>{notScannedPercentage.toFixed(2)}%</div>
+              <div>ของพนักงานทั้งหมด</div>
             </div>
           </div>
-          {hovered === 'not_scanned' && (
-            <div className="mt-2 text-sm text-red-900">จำนวนคนที่ยังไม่ได้สแกน</div>
-          )}
-        </div>
-
+        </Link>
       </div>
     </div>
   );

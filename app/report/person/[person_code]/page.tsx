@@ -195,8 +195,11 @@ export default function ReportPersonDetailPage() {
         <>
           <div className="space-y-2">
             <h1 className="text-2xl font-bold">
-              Attendance History | {personInfo.full_name}
+              Attendance History 
             </h1>
+            <div className="text-xl font-bold">
+            Name : {personInfo.full_name}
+            </div>
             <p className="text-gray-600">
               Employee ID : {personInfo.person_code} | Department : {personInfo.department_full_paths}
             </p>
@@ -248,7 +251,13 @@ export default function ReportPersonDetailPage() {
                         className="border-b last:border-b-0"
                       >
                         <td className="p-3">{d.workdate}</td>
-                        <td className="p-3">{d.firstscantime ? 'Scanned' : 'No Scan'}</td>
+                        <td className="p-3">
+                          {d.firstscantime ? (
+                            'Scanned'
+                          ) : (
+                            <span className="text-red-600 font-semibold">No Scan</span>
+                          )}
+                        </td>
                         <td className="p-3">{d.shiftname}</td>
                         <td className="p-3">{formatTime(d.firstscantime)}</td>
                         <td className="p-3">{formatTime(d.lastscantime)}</td>

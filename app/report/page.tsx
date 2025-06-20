@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import ReportFilterForm from '../../components/ReportFilterForm';
 import { DepartmentTable } from '../../components/DepartmentTable';
 import { Employee, ReportApiRawData } from '../types/employee';
+import Spinner from '../../components/ui/Spinner';
 
 const parseDeptCode = (fullDeptCode: string) => {
   const level1 = fullDeptCode.length >= 2 ? fullDeptCode.substring(0, 2) : '';
@@ -15,8 +16,10 @@ const parseDeptCode = (fullDeptCode: string) => {
 export default function ReportPage() {
   const today = new Date().toISOString().split('T')[0];
 
+  // เปลี่ยน filters ให้รองรับ from/to
   const [filters, setFilters] = useState({
-    date: today,
+    from: today,
+    to: today,
     factoryId: '',
     mainDepartmentId: '',
     subDepartmentId: '',
@@ -29,7 +32,11 @@ export default function ReportPage() {
   const fetchAndProcessData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/manpower');
+      // ส่ง from/to ไปที่ API
+      const params = new URLSearchParams();
+      if (filters.from) params.append('from', filters.from);
+      if (filters.to) params.append('to', filters.to);
+      const res = await fetch(`/api/manpower?${params.toString()}`);
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
@@ -52,9 +59,7 @@ export default function ReportPage() {
       });
 
       const filteredRawData = rawData.filter(item => {
-        if (filters.date && item.workdate !== filters.date) {
-          return false;
-        }
+        // ไม่ต้อง filter ด้วยวันที่ซ้ำ เพราะ query ส่งไปแล้ว
         if (!item.deptcode) return false;
 
         const { level1, level2, level3 } = parseDeptCode(item.deptcode);
@@ -149,12 +154,12 @@ export default function ReportPage() {
 
   return (
     <div className="container mx-auto p-4 space-y-6">
-      <h1 className="text-2xl font-bold text-gray-800">รายงานข้อมูลการสแกน</h1>
+      <h1 className="text-2xl font-bold text-gray-800">Scan Data List</h1>
 
       <ReportFilterForm onSearch={handleSearch} initialFilters={filters} />
 
       {loading ? (
-        <div className="text-center py-8 text-gray-500">กำลังโหลดข้อมูล...</div>
+        <Spinner />
       ) : (
         <DepartmentTable employees={filteredEmployees} scanStatus={filters.employeeId} />
       )}

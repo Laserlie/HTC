@@ -68,17 +68,34 @@ export function ManpowerTable({ selectedDate, scanStatus, deptcodelevel1Filter }
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Lazy loading states
+  const PAGE_SIZE = 30;
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+
+  useEffect(() => {
+    setPage(1);
+    setEmployees([]);
+    setHasMore(true);
+  }, [selectedDate, deptcodelevel1Filter]);
+
   useEffect(() => {
     const fetchEmployees = async () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`/api/department?date=${selectedDate}`);
+        // เพิ่ม query สำหรับ pagination
+        const response = await fetch(`/api/department?date=${selectedDate}&page=${page}&pageSize=${PAGE_SIZE}`);
         if (!response.ok) {
           throw new Error('Failed to fetch employees');
         }
         const data: Employee[] = await response.json();
-        setEmployees(data);
+        if (page === 1) {
+          setEmployees(data);
+        } else {
+          setEmployees(prev => [...prev, ...data]);
+        }
+        setHasMore(data.length === PAGE_SIZE);
       } catch (err) {
         if (err instanceof Error) {
           setError(err.message);
@@ -91,7 +108,7 @@ export function ManpowerTable({ selectedDate, scanStatus, deptcodelevel1Filter }
     };
 
     fetchEmployees();
-  }, [selectedDate]);
+  }, [selectedDate, page, deptcodelevel1Filter]);
 
   const aggregatedDepartments = useMemo<AggregatedDepartment[]>(() => {
     const departmentMap = new Map<string, AggregatedDepartment>();
@@ -246,6 +263,22 @@ export function ManpowerTable({ selectedDate, scanStatus, deptcodelevel1Filter }
           })}
         </tbody>
       </table>
+      {/* Lazy loading: Load more button */}
+      {hasMore && !loading && (
+        <div className="flex justify-center mt-4">
+          <button
+            className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+            onClick={() => setPage(p => p + 1)}
+          >
+            โหลดเพิ่มเติม
+          </button>
+        </div>
+      )}
+      {loading && page > 1 && (
+        <div className="flex justify-center items-center p-4">
+          <Spinner />
+        </div>
+      )}
     </div>
   );
 }

@@ -26,7 +26,6 @@ export default function ReportDetailPage() {
   const initialWorkdate = searchParams.get('workdate') || '';
 
   const [from, setFrom] = useState(initialWorkdate);
-  const [to, setTo] = useState(initialWorkdate);
   const [details, setDetails] = useState<Detail[]>([]);
   const [deptName, setDeptName] = useState('');
   const [loading, setLoading] = useState(false);
@@ -42,17 +41,13 @@ export default function ReportDetailPage() {
   useEffect(() => {
     const invalidDept = !deptcode || deptcode === 'undefined' || deptcode === '';
     const invalidFromDate = !from || !isValidDate(from);
-    const invalidToDate = !to || !isValidDate(to);
 
-    if (invalidDept || invalidFromDate || invalidToDate) {
+    if (invalidDept || invalidFromDate) {
       if (invalidDept) {
         console.error('รหัสแผนกไม่ถูกต้อง:', deptcode);
       }
       if (invalidFromDate) {
         console.error('วันที่เริ่มต้นไม่ถูกต้อง:', from);
-      }
-      if (invalidToDate) {
-        console.error('วันที่สิ้นสุดไม่ถูกต้อง:', to);
       }
       return;
     }
@@ -61,7 +56,6 @@ export default function ReportDetailPage() {
       setLoading(true);
       const searchParamsForApi = new URLSearchParams();
       searchParamsForApi.append('from', from);
-      searchParamsForApi.append('to', to);
       searchParamsForApi.append('deptcode', deptcode);
 
       try {
@@ -86,7 +80,7 @@ export default function ReportDetailPage() {
     };
 
     fetchDetails();
-  }, [deptcode, from, to]);
+  }, [deptcode, from]);
 
   const formatTime = (isoString: string | null): string => {
     if (!isoString) return '-';
@@ -123,7 +117,7 @@ export default function ReportDetailPage() {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `report_${deptName}_${from}_to_${to}.csv`);
+    link.setAttribute('download', `report_${deptName}_${from}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -192,20 +186,11 @@ export default function ReportDetailPage() {
 
       <div className="flex flex-wrap items-center gap-3">
         <label className="flex flex-row items-center gap-2">
-          <span className="text-gray-700 text-sm font-medium">From:</span>
+          <span className="text-gray-700 text-sm font-medium">Date :</span>
           <input
             type="date"
             value={from}
             onChange={(e) => setFrom(e.target.value)}
-            className="border border-slate-300 px-2 py-1 rounded"
-          />
-        </label>
-        <label className="flex flex-row items-center gap-2">
-          <span className="text-gray-700 text-sm font-medium">To:</span>
-          <input
-            type="date"
-            value={to}
-            onChange={(e) => setTo(e.target.value)}
             className="border border-slate-300 px-2 py-1 rounded"
           />
         </label>
@@ -275,7 +260,7 @@ export default function ReportDetailPage() {
                       className="cursor-pointer hover:bg-blue-50"
                       onClick={() => {
                         router.push(
-                          `/report/person/${encodeURIComponent(row.person_code)}?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`
+                          `/report/person/${encodeURIComponent(row.person_code)}?from=${encodeURIComponent(from)}`
                         );
                       }}
                     >
@@ -321,7 +306,7 @@ export default function ReportDetailPage() {
                       className="cursor-pointer hover:bg-blue-50"
                       onClick={() => {
                         router.push(
-                          `/report/person/${encodeURIComponent(row.person_code)}?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`
+                          `/report/person/${encodeURIComponent(row.person_code)}?from=${encodeURIComponent(from)}`
                         );
                       }}
                     >

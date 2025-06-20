@@ -9,14 +9,16 @@ type ReportApiRawDataForFilter = {
 
 type Props = {
   onSearch: (filters: { 
-    date: string; 
+    from: string; 
+    to: string; 
     factoryId: string; 
     mainDepartmentId: string; 
     subDepartmentId: string; 
     employeeId: string; 
   }) => void;
   initialFilters: { 
-    date: string;
+    from: string;
+    to: string;
     factoryId: string; 
     mainDepartmentId: string; 
     subDepartmentId: string; 
@@ -49,8 +51,18 @@ const parseDeptCode = (fullDeptCode: string) => {
   return { level1, level2, level3 };
 };
 
+const getTodayString = () => {
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+};
+
 const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
-  const [date, setDate] = useState(initialFilters.date);
+  const todayStr = getTodayString();
+  const [from, setFrom] = useState(initialFilters.from || todayStr);
+  const [to, setTo] = useState(initialFilters.to || todayStr);
   const [factoryId, setFactoryId] = useState(initialFilters.factoryId);
   const [mainDepartmentId, setMainDepartmentId] = useState(initialFilters.mainDepartmentId); 
   const [subDepartmentId, setSubDepartmentId] = useState(initialFilters.subDepartmentId); 
@@ -64,7 +76,11 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
  
   useEffect(() => {
     setLoadingData(true);
-    fetch('/api/manpower') 
+    // เพิ่ม query string สำหรับวันที่
+    const params = new URLSearchParams();
+    params.append('from', from);
+    params.append('to', to);
+    fetch(`/api/manpower?${params.toString()}`) 
       .then(res => {
         if (!res.ok) { 
           throw new Error(`HTTP error! status: ${res.status}`);
@@ -141,7 +157,8 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
       .finally(() => {
         setLoadingData(false); 
       });
-  }, []); 
+  // ให้ useEffect ทำงานเมื่อ from หรือ to เปลี่ยน
+  }, [from, to]); 
 
   useEffect(() => {
     let newFilteredMainDepartments: MainDepartmentForDropdown[] = [];
@@ -197,7 +214,8 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault(); 
     onSearch({ 
-      date, 
+      from,
+      to,
       factoryId,
       mainDepartmentId, 
       subDepartmentId, 
@@ -207,19 +225,29 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 bg-white p-4 rounded-xl shadow">
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4"> 
-        {/* Dropdown วันที่ */}
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-4"> 
+        {/* Date Range: From */}
         <div>
-          <label className="block mb-1 font-medium">Date</label>
+          <label className="block mb-1 font-medium">From</label>
           <input
             type="date"
             className="w-full border rounded px-2 py-1"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
             required
           />
         </div>
-
+        {/* Date Range: To */}
+        <div>
+          <label className="block mb-1 font-medium">To</label>
+          <input
+            type="date"
+            className="w-full border rounded px-2 py-1"
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+            required
+          />
+        </div>
         {/* Dropdown โรงงาน */}
         <div>
           <label className="block mb-1 font-medium">Factory</label>
@@ -243,7 +271,6 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
             ))}
           </select>
         </div>
-
         {/* Dropdown แผนกหลัก */}
         <div>
           <label className="block mb-1 font-medium">Department</label>
@@ -266,8 +293,7 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
             ))}
           </select>
         </div>
-        
-        {/* Dropdown แผนกย่อย/ส่วนงาน (เป็นระดับสุดท้าย) */}
+        {/* Dropdown แผนกย่อย/ส่วนงาน */}
         <div>
           <label className="block mb-1 font-medium">Division</label>
           <select
@@ -288,7 +314,6 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
             ))}
           </select>
         </div>
-
         {/* Dropdown สถานะการสแกน */}
         <div className="md:col-span-1"> 
           <label className="block mb-1 font-medium">Status</label>
@@ -296,21 +321,34 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
             className="w-full border rounded px-2 py-1"
             value={scanStatus}
             onChange={(e) => setScanStatus(e.target.value)}
+            disabled={loadingData}
           >
-            <option key="scan-status-all" value="all">
-              -- All --
-            </option>
-            <option key="scan-status-scanned" value="scanned">
-              Scanned
-            </option>
-            <option key="scan-status-notscanned" value="not_scanned">
-              Not Scan
-            </option>
+            {loadingData ? (
+              <option key="scan-status-loading" value="">
+                Loading...
+              </option>
+            ) : (
+              <>
+                <option key="scan-status-all" value="all">
+                  -- All --
+                </option>
+                <option key="scan-status-scanned" value="scanned">
+                  Scanned
+                </option>
+                <option key="scan-status-notscanned" value="not_scanned">
+                  Not Scan
+                </option>
+              </>
+            )}
           </select>
         </div>
       </div>
-      <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-        ค้นหา
+      <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center justify-center">
+        Search
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" fill="none"/>
+          <line x1="16.5" y1="16.5" x2="21" y2="21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+        </svg>
       </button>
     </form>
   );
