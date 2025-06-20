@@ -9,7 +9,7 @@ export async function GET(req: Request) {
         const to = searchParams.get('to');
 
         let query = 'SELECT * FROM public.vw_manpower';
-        const params: any[] = [];
+        const params: unknown[] = [];
 
         if (from && to) {
             query += ' WHERE workdate BETWEEN $1 AND $2';

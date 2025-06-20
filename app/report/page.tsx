@@ -14,25 +14,41 @@ const parseDeptCode = (fullDeptCode: string) => {
 };
 
 export default function ReportPage() {
-  const today = new Date().toISOString().split('T')[0];
-
-  // เปลี่ยน filters ให้รองรับ from/to
-  const [filters, setFilters] = useState({
-    from: today,
-    to: today,
-    factoryId: '',
-    mainDepartmentId: '',
-    subDepartmentId: '',
-    employeeId: 'all',
+  const [filters, setFilters] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('reportFilters');
+      if (saved) return JSON.parse(saved);
+    }
+    return {
+      from: '',
+      to: '',
+      factoryId: '',
+      mainDepartmentId: '',
+      subDepartmentId: '',
+      employeeId: 'all',
+    };
   });
-
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasSearched, setHasSearched] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('reportHasSearched');
+      if (saved) return JSON.parse(saved);
+    }
+    return false;
+  });
+
+  // Sync filters and hasSearched to localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('reportFilters', JSON.stringify(filters));
+      localStorage.setItem('reportHasSearched', JSON.stringify(hasSearched));
+    }
+  }, [filters, hasSearched]);
 
   const fetchAndProcessData = useCallback(async () => {
     setLoading(true);
     try {
-      // ส่ง from/to ไปที่ API
       const params = new URLSearchParams();
       if (filters.from) params.append('from', filters.from);
       if (filters.to) params.append('to', filters.to);
@@ -135,7 +151,6 @@ export default function ReportPage() {
       });
 
       setFilteredEmployees(processedData);
-
     } catch (err) {
       console.error('Error fetching or processing data:', err);
       setFilteredEmployees([]);
@@ -145,11 +160,14 @@ export default function ReportPage() {
   }, [filters]);
 
   useEffect(() => {
-    fetchAndProcessData();
-  }, [fetchAndProcessData]);
+    if (hasSearched) {
+      fetchAndProcessData();
+    }
+  }, [fetchAndProcessData, hasSearched]);
 
   const handleSearch = (newFilters: typeof filters) => {
     setFilters(newFilters);
+    setHasSearched(true); // กด search แล้ว
   };
 
   return (
@@ -158,7 +176,9 @@ export default function ReportPage() {
 
       <ReportFilterForm onSearch={handleSearch} initialFilters={filters} />
 
-      {loading ? (
+      {!hasSearched ? (
+        <div className="text-center text-gray-500 py-8">กรุณาเลือกช่วงวันที่และกด Search เพื่อแสดงข้อมูล</div>
+      ) : loading ? (
         <Spinner />
       ) : (
         <DepartmentTable employees={filteredEmployees} scanStatus={filters.employeeId} />

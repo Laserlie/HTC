@@ -51,18 +51,9 @@ const parseDeptCode = (fullDeptCode: string) => {
   return { level1, level2, level3 };
 };
 
-const getTodayString = () => {
-  const today = new Date();
-  const yyyy = today.getFullYear();
-  const mm = String(today.getMonth() + 1).padStart(2, '0');
-  const dd = String(today.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-};
-
 const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
-  const todayStr = getTodayString();
-  const [from, setFrom] = useState(initialFilters.from || todayStr);
-  const [to, setTo] = useState(initialFilters.to || todayStr);
+  const [from, setFrom] = useState(initialFilters.from || '');
+  const [to, setTo] = useState(initialFilters.to || '');
   const [factoryId, setFactoryId] = useState(initialFilters.factoryId);
   const [mainDepartmentId, setMainDepartmentId] = useState(initialFilters.mainDepartmentId); 
   const [subDepartmentId, setSubDepartmentId] = useState(initialFilters.subDepartmentId); 
@@ -73,8 +64,16 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
   const [filteredMainDepartments, setFilteredMainDepartments] = useState<MainDepartmentForDropdown[]>([]);
   const [filteredSubDepartments, setFilteredSubDepartments] = useState<SubDepartmentForDropdown[]>([]); 
   const [loadingData, setLoadingData] = useState(true); 
- 
+
+  // Only fetch data if both from and to are filled
   useEffect(() => {
+    if (!from || !to) {
+      setFactories([]);
+      setAllMainDepartments([]);
+      setAllSubDepartments([]);
+      setLoadingData(false);
+      return;
+    }
     setLoadingData(true);
     // เพิ่ม query string สำหรับวันที่
     const params = new URLSearchParams();
@@ -211,6 +210,16 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
     }
   }, [factoryId, mainDepartmentId, allSubDepartments, subDepartmentId]); 
 
+  // sync state เมื่อ initialFilters เปลี่ยน (เช่น กลับมาจากหน้าอื่น)
+  useEffect(() => {
+    setFrom(initialFilters.from || '');
+    setTo(initialFilters.to || '');
+    setFactoryId(initialFilters.factoryId);
+    setMainDepartmentId(initialFilters.mainDepartmentId);
+    setSubDepartmentId(initialFilters.subDepartmentId);
+    setScanStatus(initialFilters.employeeId);
+  }, [initialFilters]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault(); 
     onSearch({ 
@@ -259,10 +268,10 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
               setMainDepartmentId(''); 
               setSubDepartmentId(''); 
             }}
-            disabled={loadingData}
+            disabled={loadingData || !from || !to}
           >
             <option key="default-factory" value="">
-              {loadingData ? 'Loading...' : '-- All --'}
+              {!from || !to ? 'กรุณาเลือกวันที่' : loadingData ? 'Loading...' : '-- All --'}
             </option>
             {factories.map((f, idx) => (
               <option key={`factory-${f.factoryCode}-${idx}`} value={f.factoryCode}>
@@ -281,10 +290,10 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
               setMainDepartmentId(e.target.value);
               setSubDepartmentId(''); 
             }}
-            disabled={loadingData}
+            disabled={loadingData || !from || !to}
           >
             <option key="default-main-department" value="">
-              {loadingData ? 'Loading...' : '-- All --'}
+              {!from || !to ? 'กรุณาเลือกวันที่' : loadingData ? 'Loading...' : '-- All --'}
             </option>
             {filteredMainDepartments.map((d, idx) => (
               <option key={`main-department-${d.deptcodelevel2}-${idx}`} value={d.deptcodelevel2}>
@@ -302,10 +311,10 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
             onChange={(e) => {
                 setSubDepartmentId(e.target.value);
             }}
-            disabled={loadingData}
+            disabled={loadingData || !from || !to}
           >
             <option key="default-sub-department" value="">
-              {loadingData ? 'Loading...' : '-- All --'}
+              {!from || !to ? 'กรุณาเลือกวันที่' : loadingData ? 'Loading...' : '-- All --'}
             </option>
             {filteredSubDepartments.map((d, idx) => (
               <option key={`sub-department-${d.deptcodelevel3}-${idx}`} value={d.deptcodelevel3}>
@@ -321,9 +330,13 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
             className="w-full border rounded px-2 py-1"
             value={scanStatus}
             onChange={(e) => setScanStatus(e.target.value)}
-            disabled={loadingData}
+            disabled={loadingData || !from || !to}
           >
-            {loadingData ? (
+            {!from || !to ? (
+              <option key="scan-status-wait" value="">
+                กรุณาเลือกวันที่
+              </option>
+            ) : loadingData ? (
               <option key="scan-status-loading" value="">
                 Loading...
               </option>
@@ -343,7 +356,11 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
           </select>
         </div>
       </div>
-      <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center justify-center">
+      <button
+        type="submit"
+        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center justify-center"
+        disabled={!from || !to || loadingData}
+      >
         Search
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" fill="none"/>

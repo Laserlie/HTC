@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Spinner from '@/components/ui/Spinner';
 import { ArrowLeft } from 'lucide-react';
@@ -23,9 +23,35 @@ type ApiResponse = {
   total_employees_prev_month?: number;
 };
 
+// --- ErrorBoundary Component ---
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error: Error | null }> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error: Error) {
+    // Optionally log error
+    console.error('Render Error:', error);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-8 text-center text-red-600 bg-red-50 rounded-lg shadow-md max-w-lg mx-auto mt-10">
+          <h2 className="text-xl font-bold mb-2">เกิดข้อผิดพลาดขณะเรนเดอร์!</h2>
+          <p>{this.state.error?.message || 'Unknown error'}</p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 const PAGE_SIZE = 50;
 
-const ScanNoscanReportPage = () => {
+const ScanNoscanReportPageInner = () => {
   const searchParams = useSearchParams();
   const status = searchParams.get('status');
   const from = searchParams.get('from');
@@ -67,16 +93,25 @@ const ScanNoscanReportPage = () => {
       const response = await fetch(`/api/attendance/report/ScanNoscan?${params.toString()}`);
 
       if (!response.ok) {
-        const errorData = await response.json();
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch {
+          errorData = {};
+        }
         throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
 
       const data: ApiResponse = await response.json();
       setAllEmployees(data.detil);
 
-    } catch (err) {
+    } catch (err: unknown) {
       setError('ไม่สามารถดึงข้อมูลพนักงานได้ โปรดลองอีกครั้ง');
-      console.error('API Fetch Error:', err);
+      if (err instanceof Error) {
+        console.error('API Fetch Error:', err.message);
+      } else {
+        console.error('API Fetch Error:', err);
+      }
     } finally {
       setLoading(false);
     }
@@ -165,6 +200,7 @@ const ScanNoscanReportPage = () => {
     };
   }, [visibleCount, flatEmployees.length]);
 
+  // Remove try/catch here, just return the JSX
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen bg-gray-50">
@@ -292,4 +328,13 @@ const ScanNoscanReportPage = () => {
   );
 };
 
-export default ScanNoscanReportPage;
+// --- Export wrapped in ErrorBoundary ---
+export default function PageWithBoundary() {
+  return (
+    <ErrorBoundary>
+      <Suspense fallback={<div className="flex justify-center items-center h-screen bg-gray-50"><Spinner /></div>}>
+        <ScanNoscanReportPageInner />
+      </Suspense>
+    </ErrorBoundary>
+  );
+}
