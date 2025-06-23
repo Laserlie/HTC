@@ -55,7 +55,6 @@ export default function ReportPage() {
       });
 
       const filteredRawData = rawData.filter(item => {
-        // ไม่ต้อง filter ด้วยวันที่ซ้ำ เพราะ query ส่งไปแล้ว
         if (!item.deptcode) return false;
 
         const { level1, level2, level3 } = parseDeptCode(item.deptcode);
@@ -147,7 +146,7 @@ export default function ReportPage() {
 
   const handleSearch = (newFilters: typeof filters) => {
     setFilters(newFilters);
-    setHasSearched(true); // กด search แล้ว
+    setHasSearched(true); 
   };
 
   return (

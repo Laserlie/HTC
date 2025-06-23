@@ -39,7 +39,6 @@ export default function DepartmentChartsContainer({ apiEndpoint }: Props) {
   const chartScannedRef = useRef<HTMLDivElement>(null);
   const chartNotScannedRef = useRef<HTMLDivElement>(null);
 
-  // Intersection Observer สำหรับกราฟสแกนแล้ว
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -56,7 +55,6 @@ export default function DepartmentChartsContainer({ apiEndpoint }: Props) {
     return () => observer.disconnect();
   }, []);
 
-  // Intersection Observer สำหรับกราฟยังไม่สแกน
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -103,24 +101,22 @@ export default function DepartmentChartsContainer({ apiEndpoint }: Props) {
     );
   }
 
-  // สร้าง Map สำหรับค้นหาข้อมูล DepartmentChartData จากชื่อแผนกได้อย่างรวดเร็ว
   const departmentDataMap = new Map<string, DepartmentChartData>();
   data.forEach(item => {
     departmentDataMap.set(item.department, item);
   });
 
-  // --- Chart Data for Scanned (Attendance Percentage) ---
   const allScannedData = data
     .map((d) => {
       const totalEmployees = d.scannedCount + d.notScannedCount;
       const attendancePercentage = totalEmployees > 0 ? (d.scannedCount / totalEmployees) * 100 : 0;
       return {
         ...d,
-        attendancePercentage: parseFloat(attendancePercentage.toFixed(2)), // เก็บเป็นเปอร์เซ็นต์ที่มีทศนิยม 2 ตำแหน่ง
+        attendancePercentage: parseFloat(attendancePercentage.toFixed(2)), 
       };
     })
-    .filter((d) => d.scannedCount > 0) // ยังคงกรองแผนกที่ไม่มีการสแกนสำหรับกราฟนี้
-    .sort((a, b) => b.attendancePercentage - a.attendancePercentage); // เรียงลำดับตามเปอร์เซ็นต์การเข้างาน
+    .filter((d) => d.scannedCount > 0) 
+    .sort((a, b) => b.attendancePercentage - a.attendancePercentage); 
 
   const chartDataScanned = {
     labels: allScannedData.map((d) => d.department),
@@ -164,19 +160,19 @@ export default function DepartmentChartsContainer({ apiEndpoint }: Props) {
         display: (context) => {
           const chart = context.chart;
           const visibleLabels = chart.scales.x.ticks.length;
-          return visibleLabels <= 20; // แสดงป้ายกำกับถ้ามีแถบไม่เกิน 20 แถบ
+          return visibleLabels <= 20; 
         },
         anchor: 'end',
         align: 'end',
         offset: 6,
         color: '#878787',
         font: { weight: 'bold' },
-        formatter: (value) => `${value}%`, // จัดรูปแบบเป็นเปอร์เซ็นต์
+        formatter: (value) => `${value}%`, 
       },
       tooltip: {
         callbacks: {
           title: (context) => {
-            return context[0].label; // ชื่อแผนก
+            return context[0].label; 
           },
           label: (context) => {
             let label = context.dataset.label || '';
@@ -184,9 +180,9 @@ export default function DepartmentChartsContainer({ apiEndpoint }: Props) {
               label += ': ';
             }
             if (context.parsed.y !== null) {
-              label += `${context.parsed.y.toLocaleString()}%`; // จัดรูปแบบเป็นเปอร์เซ็นต์
+              label += `${context.parsed.y.toLocaleString()}%`;
             }
-            return label; // เปอร์เซ็นต์การเข้างาน
+            return label;
           },
           afterLabel: (context) => {
             const departmentName = context.label;
@@ -208,25 +204,24 @@ export default function DepartmentChartsContainer({ apiEndpoint }: Props) {
       },
       y: {
         beginAtZero: true,
-        max: 100, // ค่าสูงสุดสำหรับเปอร์เซ็นต์คือ 100
-        ticks: { precision: 0, callback: (value) => `${value}%` }, // จัดรูปแบบแกน Y เป็นเปอร์เซ็นต์
+        max: 100, 
+        ticks: { precision: 0, callback: (value) => `${value}%` }, 
         title: { display: true, text: 'เปอร์เซ็นต์ (%)' },
       },
     },
   };
 
-  // --- Chart Data for Not Scanned (now Not Scanned Percentage) ---
   const allNotScannedData = data
     .map((d) => {
       const totalEmployees = d.scannedCount + d.notScannedCount;
       const notScannedPercentage = totalEmployees > 0 ? (d.notScannedCount / totalEmployees) * 100 : 0;
       return {
         ...d,
-        notScannedPercentage: parseFloat(notScannedPercentage.toFixed(2)), // เก็บเป็นเปอร์เซ็นต์ที่มีทศนิยม 2 ตำแหน่ง
+        notScannedPercentage: parseFloat(notScannedPercentage.toFixed(2)), 
       };
     })
-    .filter((d) => d.notScannedCount > 0) // กรองแผนกที่ไม่มีพนักงานยังไม่สแกน
-    .sort((a, b) => b.notScannedPercentage - a.notScannedPercentage); // เรียงตามเปอร์เซ็นต์ที่ยังไม่สแกน
+    .filter((d) => d.notScannedCount > 0) 
+    .sort((a, b) => b.notScannedPercentage - a.notScannedPercentage); 
 
   const chartDataNotScanned = {
     labels: allNotScannedData.map((d) => d.department),
@@ -272,12 +267,12 @@ export default function DepartmentChartsContainer({ apiEndpoint }: Props) {
         offset: 6,
         color: '#878787',
         font: { weight: 'bold' },
-        formatter: (value) => `${value}%`, // จัดรูปแบบเป็นเปอร์เซ็นต์
+        formatter: (value) => `${value}%`, 
       },
       tooltip: {
         callbacks: {
           title: (context) => {
-            return context[0].label; // ชื่อแผนก
+            return context[0].label; 
           },
           label: (context) => {
             let label = context.dataset.label || '';
@@ -285,9 +280,9 @@ export default function DepartmentChartsContainer({ apiEndpoint }: Props) {
               label += ': ';
             }
             if (context.parsed.y !== null) {
-              label += `${context.parsed.y.toLocaleString()}%`; // จัดรูปแบบเป็นเปอร์เซ็นต์
+              label += `${context.parsed.y.toLocaleString()}%`; 
             }
-            return label; // เปอร์เซ็นต์ยังไม่สแกน
+            return label;
           },
           afterLabel: (context) => {
             const departmentName = context.label;
@@ -309,8 +304,8 @@ export default function DepartmentChartsContainer({ apiEndpoint }: Props) {
       },
       y: {
         beginAtZero: true,
-        max: 100, // ค่าสูงสุดสำหรับเปอร์เซ็นต์คือ 100
-        ticks: { precision: 0, callback: (value) => `${value}%` }, // จัดรูปแบบแกน Y เป็นเปอร์เซ็นต์
+        max: 100, 
+        ticks: { precision: 0, callback: (value) => `${value}%` }, 
         title: { display: true, text: 'เปอร์เซ็นต์ (%)' },
       },
     },
@@ -320,14 +315,12 @@ export default function DepartmentChartsContainer({ apiEndpoint }: Props) {
     return <div className="text-center text-gray-500">ไม่พบข้อมูลสำหรับแสดงกราฟ</div>;
   }
 
-  // คำนวณความกว้างของกราฟตามจำนวนแถบเพื่อให้กราฟอ่านง่ายขึ้น
   const maxDepartments = Math.max(allScannedData.length, allNotScannedData.length);
-  const baseBarWidth = 50; // ปรับได้ตามความเหมาะสม
+  const baseBarWidth = 50;
   const calculatedChartWidth = Math.max(400, maxDepartments * baseBarWidth);
 
   return (
     <div className="flex flex-col md:flex-row gap-8 justify-center items-start">
-      {/* กราฟสำหรับเปอร์เซ็นต์การเข้างาน */}
       {allScannedData.length > 0 && (
         <div className="bg-white p-4 rounded-lg shadow w-full md:w-1/2 overflow-x-auto" ref={chartScannedRef}>
           <div style={{ height: '400px', width: `${calculatedChartWidth}px` }}>
@@ -336,7 +329,6 @@ export default function DepartmentChartsContainer({ apiEndpoint }: Props) {
         </div>
       )}
 
-      {/* กราฟสำหรับเปอร์เซ็นต์ยังไม่สแกน */}
       {allNotScannedData.length > 0 && (
         <div className="bg-white p-4 rounded-lg shadow w-full md:w-1/2 overflow-x-auto" ref={chartNotScannedRef}>
           <div style={{ height: '400px', width: `${calculatedChartWidth}px` }}>

@@ -1,6 +1,5 @@
-// app/api/attendance/report/ScanNoscan/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/services/db'; // Import named 'query' function
+import { query } from '@/services/db'; 
 
 export async function GET(req: NextRequest) {
   try {
@@ -9,12 +8,7 @@ export async function GET(req: NextRequest) {
     const deptcode = searchParams.get('deptcode');
     const from = searchParams.get('from');
     const to = searchParams.get('to');
-
-    // Get current date in YYYY-MM-DD format based on current location
-    // Using 'en-CA' locale for YYYY-MM-DD format consistency
     const today = new Date().toLocaleDateString('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' });
-
-    // Set default values for 'from' and 'to' if not provided or invalid
     const finalFrom = from && from !== 'null' && from !== 'undefined' ? from : today;
     const finalTo = to && to !== 'null' && to !== 'undefined' ? to : finalFrom;
 
@@ -36,28 +30,24 @@ export async function GET(req: NextRequest) {
     `;
     const queryParams: (string | null)[] = [finalFrom, finalTo];
 
-    // Initialize deptname for the report summary
     let finalDeptName = 'ภาพรวมทั้งหมด';
 
-    // Add deptcode filter if provided and not 'all'
     if (deptcode && deptcode.toLowerCase() !== 'all' && deptcode !== '' && deptcode !== 'undefined' && deptcode !== 'null') {
       sql += ` AND deptcode = $3`;
       queryParams.push(deptcode);
-      finalDeptName = ''; // Will be set from query result if specific deptcode
+      finalDeptName = '';
     }
 
-    // ORDER BY clause: Order by deptcode first, then workdate, then full_name
-    sql += ` ORDER BY deptcode, workdate, full_name`; // <--- Adjusted here for deptcode sorting
+    sql += ` ORDER BY deptcode, workdate, full_name`; 
 
     console.log(`API: Executing SQL with params: from=${finalFrom}, to=${finalTo}, deptcode=${deptcode || 'N/A (all)'}`);
     console.log(`API: SQL Query: ${sql}`);
     console.log(`API: Query Params: ${queryParams}`);
 
-    const result = await query(sql, queryParams); // Using the named 'query' function
+    const result = await query(sql, queryParams); 
 
     console.log('API: Query executed successfully');
 
-    // Set actual deptname from the first row if a specific deptcode was filtered
     if (deptcode && deptcode.toLowerCase() !== 'all' && result.rows.length > 0) {
       finalDeptName = result.rows[0].deptname;
     }

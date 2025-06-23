@@ -207,9 +207,23 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
     }
     return aggregatedDepartments;
   }, [aggregatedDepartments, scanStatus]);
+
+  const groupedByDate = useMemo(() => {
+    const groups = new Map<string, AggregatedDepartment[]>();
+    filteredDepartments.forEach(dept => {
+      const date = dept.workdate;
+      if (!groups.has(date)) {
+        groups.set(date, []);
+      }
+      groups.get(date)!.push(dept);
+    });
+    return Array.from(groups.entries()).sort(([dateA], [dateB]) => dateA.localeCompare(dateB));
+  }, [filteredDepartments]);
+
   useEffect(() => {
     if (!onLoadMore || !hasMore) return;
-    const observer = new IntersectionObserver( 
+    const currentRef = loadMoreRef.current; 
+    const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
           onLoadMore();
@@ -217,15 +231,16 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
       },
       { threshold: 1 }
     );
-    if (loadMoreRef.current) {
-      observer.observe(loadMoreRef.current);
+    if (currentRef) {
+      observer.observe(currentRef);
     }
     return () => {
-      if (loadMoreRef.current) {
-        observer.unobserve(loadMoreRef.current);
+      if (currentRef) {
+        observer.unobserve(currentRef);
       }
     };
-  }, [onLoadMore, hasMore, filteredDepartments.length]); 
+  }, [onLoadMore, hasMore, filteredDepartments.length]);
+  
   if (filteredDepartments.length === 0) {
     return (
       <div className="text-center py-4 text-gray-500">
@@ -240,18 +255,6 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
     'bg-white', 
     'bg-gray-200',  
   ];
-  const groupedByDate = useMemo(() => {
-    const groups = new Map<string, AggregatedDepartment[]>();
-    filteredDepartments.forEach(dept => {
-      const date = dept.workdate;
-      if (!groups.has(date)) {
-        groups.set(date, []);
-      }
-      groups.get(date)!.push(dept);
-    });
-    return Array.from(groups.entries()).sort(([dateA], [dateB]) => dateA.localeCompare(dateB));
-  }, [filteredDepartments]);
-
   return (
     <div className="space-y-6 p-4 bg-gray-50 rounded-xl shadow-inner">
       {groupedByDate.map(([date, departmentsForDate]) => (

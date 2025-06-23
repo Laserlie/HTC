@@ -65,7 +65,6 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
   const [filteredSubDepartments, setFilteredSubDepartments] = useState<SubDepartmentForDropdown[]>([]); 
   const [loadingData, setLoadingData] = useState(true); 
 
-  // Only fetch data if both from and to are filled
   useEffect(() => {
     if (!from || !to) {
       setFactories([]);
@@ -75,7 +74,6 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
       return;
     }
     setLoadingData(true);
-    // เพิ่ม query string สำหรับวันที่
     const params = new URLSearchParams();
     params.append('from', from);
     params.append('to', to);
@@ -156,7 +154,6 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
       .finally(() => {
         setLoadingData(false); 
       });
-  // ให้ useEffect ทำงานเมื่อ from หรือ to เปลี่ยน
   }, [from, to]); 
 
   useEffect(() => {
@@ -210,7 +207,6 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
     }
   }, [factoryId, mainDepartmentId, allSubDepartments, subDepartmentId]); 
 
-  // sync state เมื่อ initialFilters เปลี่ยน (เช่น กลับมาจากหน้าอื่น)
   useEffect(() => {
     setFrom(initialFilters.from || '');
     setTo(initialFilters.to || '');
@@ -235,7 +231,6 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4 bg-white p-4 rounded-xl shadow">
       <div className="grid grid-cols-1 md:grid-cols-6 gap-4"> 
-        {/* Date Range: From */}
         <div>
           <label className="block mb-1 font-medium">From</label>
           <input
@@ -246,7 +241,6 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
             required
           />
         </div>
-        {/* Date Range: To */}
         <div>
           <label className="block mb-1 font-medium">To</label>
           <input
@@ -257,7 +251,6 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
             required
           />
         </div>
-        {/* Dropdown โรงงาน */}
         <div>
           <label className="block mb-1 font-medium">Factory</label>
           <select
@@ -280,7 +273,6 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
             ))}
           </select>
         </div>
-        {/* Dropdown แผนกหลัก */}
         <div>
           <label className="block mb-1 font-medium">Department</label>
           <select
@@ -302,7 +294,6 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
             ))}
           </select>
         </div>
-        {/* Dropdown แผนกย่อย/ส่วนงาน */}
         <div>
           <label className="block mb-1 font-medium">Division</label>
           <select
@@ -323,7 +314,6 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
             ))}
           </select>
         </div>
-        {/* Dropdown สถานะการสแกน */}
         <div className="md:col-span-1"> 
           <label className="block mb-1 font-medium">Status</label>
           <select

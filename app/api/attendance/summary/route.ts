@@ -49,7 +49,6 @@ export async function GET(req: NextRequest) {
         { status: 500 }
       );
     } else {
-      // หากไม่ใช่ Error object
       return new Response(
         JSON.stringify({ error: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์ขณะดึงข้อมูลสรุปการเข้างานจาก vw_manpower' }),
         { status: 500 }

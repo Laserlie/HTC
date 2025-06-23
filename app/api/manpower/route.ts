@@ -3,7 +3,6 @@ import db from '@/services/db';
 
 export async function GET(req: Request) {
     try {
-        // รับ query string
         const { searchParams } = new URL(req.url);
         const from = searchParams.get('from');
         const to = searchParams.get('to');

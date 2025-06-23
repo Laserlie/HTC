@@ -41,7 +41,7 @@ export default function DepartmentDetailPage() {
           countnotscan: Number(emp.countnotscan ?? 0),
           countperson: Number(emp.countperson ?? 0),
           late: emp.late !== undefined ? Number(emp.late) : 0,
-          factoryCode: '', // No mapping in ReportApiRawData, set as empty string
+          factoryCode: '', 
           factoryName: '',
           mainDepartmentCode: '',
           mainDepartmentName: '',

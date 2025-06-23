@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server';
 import db from '@/services/db';
 
-// ใช้ NextRequest เพื่อดึง query string
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);

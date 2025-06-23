@@ -32,7 +32,6 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
     return { hasError: true, error };
   }
   componentDidCatch(error: Error) {
-    // Optionally log error
     console.error('Render Error:', error);
   }
   render() {
