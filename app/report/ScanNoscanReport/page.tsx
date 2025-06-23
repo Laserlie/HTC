@@ -23,7 +23,6 @@ type ApiResponse = {
   total_employees_prev_month?: number;
 };
 
-// --- ErrorBoundary Component ---
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error: Error | null }> {
   constructor(props: { children: React.ReactNode }) {
     super(props);
@@ -136,7 +135,7 @@ const ScanNoscanReportPageInner = () => {
   }, [allEmployees, selectedDeptPrefix, status]);
 
   useEffect(() => {
-    setVisibleCount(PAGE_SIZE); // reset visible count on filter change
+    setVisibleCount(PAGE_SIZE); 
   }, [allEmployees, selectedDeptPrefix, status]);
 
   useEffect(() => {
@@ -165,9 +164,7 @@ const ScanNoscanReportPageInner = () => {
 
   const groupedEmployees = groupEmployeesByDepartment(employees);
 
-  // Lazy loading: flatten grouped employees for rendering
   const flatEmployees = useMemo(() => {
-    // flatten groupedEmployees into a list with dept headers
     const rows: Array<{ type: 'dept'; deptCode: string; deptName: string; count: number } | { type: 'emp'; employee: EmployeeDetail }> = [];
     Object.keys(groupedEmployees).forEach(deptCodeKey => {
       rows.push({ type: 'dept', deptCode: deptCodeKey, deptName: groupedEmployees[deptCodeKey].deptName, count: groupedEmployees[deptCodeKey].employees.length });
@@ -180,7 +177,6 @@ const ScanNoscanReportPageInner = () => {
 
   const visibleRows = flatEmployees.slice(0, visibleCount);
 
-  // Auto lazy loading with Intersection Observer
   useEffect(() => {
     if (!loaderRef.current) return;
     if (visibleCount >= flatEmployees.length) return;
@@ -200,7 +196,6 @@ const ScanNoscanReportPageInner = () => {
     };
   }, [visibleCount, flatEmployees.length]);
 
-  // Remove try/catch here, just return the JSX
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen bg-gray-50">
@@ -233,14 +228,12 @@ const ScanNoscanReportPageInner = () => {
         วันที่: <span className="font-bold text-gray-800">{to || 'ไม่ได้ระบุ'}</span>
       </p>
 
-      {/* New Dropdown for Department Prefix - EVEN SMALLER VERSION */}
       <div className="flex justify-left mb-8 text-left p-1">
         <label htmlFor="deptPrefixFilter" className="sr-only text-left">เลือกฝ่ายโรงงาน : </label>
         <select
           id="deptPrefixFilter"
           value={selectedDeptPrefix}
           onChange={(e) => setSelectedDeptPrefix(e.target.value)}
-          // Adjusted classes for EVEN smaller size: p-1.5 and text-xs
           className="block  max-w-xs p-1 border border-gray-300 rounded-md shadow-sm text-xs focus:ring-blue-500 focus:border-blue-500  "
         >
           <option value="">ทั้งหมด</option>
@@ -328,7 +321,6 @@ const ScanNoscanReportPageInner = () => {
   );
 };
 
-// --- Export wrapped in ErrorBoundary ---
 export default function PageWithBoundary() {
   return (
     <ErrorBoundary>

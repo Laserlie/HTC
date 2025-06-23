@@ -358,7 +358,7 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
       </div>
       <button
         type="submit"
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center justify-center"
+        className="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800 flex items-center justify-center"
         disabled={!from || !to || loadingData}
       >
         Search

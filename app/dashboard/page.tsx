@@ -23,7 +23,7 @@ const ManpowerTable = dynamic(
 );
 
 export default function DashboardPage() {
-  const [selectedDate] = useState(() => {
+  const [selectedDate, setSelectedDate] = useState(() => {
     return new Date().toLocaleDateString('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' });
   });
 
@@ -71,7 +71,16 @@ export default function DashboardPage() {
   return (
     <div className="p-4 sm:p-6 space-y-6"> 
      <section className="space-y-6">
-        <h1 className="text-xl sm:text-2xl font-semibold">ภาพรวมวันที่ {selectedDate}</h1> 
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <h1 className="text-xl sm:text-2xl font-semibold">ภาพรวมวันที่ {selectedDate}</h1>
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={e => setSelectedDate(e.target.value)}
+            className="border px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring focus:border-blue-300 w-[180px]"
+            max={new Date().toLocaleDateString('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' })}
+          />
+        </div>
         <AttendanceCardSummary
           totalScanned={totalScanned}
           totalNotScanned={totalNotScanned}

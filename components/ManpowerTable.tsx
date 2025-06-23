@@ -1,4 +1,4 @@
-//..\components\ManpowerTable.tsx
+// components\ManpowerTable.tsx
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -15,7 +15,7 @@ export type Employee = {
   countnotscan: string;
   countperson: string;
   workdate: string;
-  deptcodelevel1: string; 
+  deptcodelevel1: string;
   deptcodelevel2: string;
   deptcodelevel3: string;
   deptcodelevel4: string;
@@ -43,8 +43,8 @@ type AggregatedDepartment = {
   deptcodelevel2: string;
   deptcodelevel3: string;
   deptcodelevel4: string;
+  isTotalRow?: boolean;
 };
-
 
 const getDeptLevel = (dept: AggregatedDepartment): number => {
   const level2 = dept.deptcodelevel2;
@@ -60,7 +60,7 @@ const getDeptLevel = (dept: AggregatedDepartment): number => {
   if (level4 === '00') {
     return 3;
   }
-  return 4; // Default to level 4 if none of the above match
+  return 4;
 };
 
 export function ManpowerTable({ selectedDate, scanStatus, deptcodelevel1Filter }: ManpowerTableProps) {
@@ -68,34 +68,17 @@ export function ManpowerTable({ selectedDate, scanStatus, deptcodelevel1Filter }
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Lazy loading states
-  const PAGE_SIZE = 30;
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-
-  useEffect(() => {
-    setPage(1);
-    setEmployees([]);
-    setHasMore(true);
-  }, [selectedDate, deptcodelevel1Filter]);
-
   useEffect(() => {
     const fetchEmployees = async () => {
       setLoading(true);
       setError(null);
       try {
-        // เพิ่ม query สำหรับ pagination
-        const response = await fetch(`/api/department?date=${selectedDate}&page=${page}&pageSize=${PAGE_SIZE}`);
+        const response = await fetch(`/api/department?date=${selectedDate}`);
         if (!response.ok) {
           throw new Error('Failed to fetch employees');
         }
         const data: Employee[] = await response.json();
-        if (page === 1) {
-          setEmployees(data);
-        } else {
-          setEmployees(prev => [...prev, ...data]);
-        }
-        setHasMore(data.length === PAGE_SIZE);
+        setEmployees(data);
       } catch (err) {
         if (err instanceof Error) {
           setError(err.message);
@@ -107,18 +90,24 @@ export function ManpowerTable({ selectedDate, scanStatus, deptcodelevel1Filter }
       }
     };
 
-    fetchEmployees();
-  }, [selectedDate, page, deptcodelevel1Filter]);
+    if (selectedDate) {
+      fetchEmployees();
+    }
+  }, [selectedDate]);
 
   const aggregatedDepartments = useMemo<AggregatedDepartment[]>(() => {
-    const departmentMap = new Map<string, AggregatedDepartment>();
+    const departmentsMap = new Map<string, AggregatedDepartment>();
 
     employees.forEach(emp => {
       if (deptcodelevel1Filter && emp.deptcodelevel1 !== deptcodelevel1Filter) {
         return;
       }
 
-      let currentDept = departmentMap.get(emp.deptcode);
+      const parsedScan = Number(emp.countscan);
+      const parsedNotScan = Number(emp.countnotscan);
+      const parsedPerson = Number(emp.countperson);
+
+      let currentDept = departmentsMap.get(emp.deptcode);
       if (!currentDept) {
         currentDept = {
           deptcode: emp.deptcode,
@@ -132,32 +121,157 @@ export function ManpowerTable({ selectedDate, scanStatus, deptcodelevel1Filter }
           deptcodelevel2: emp.deptcodelevel2,
           deptcodelevel3: emp.deptcodelevel3,
           deptcodelevel4: emp.deptcodelevel4,
+          isTotalRow: false,
         };
-        departmentMap.set(emp.deptcode, currentDept);
+        departmentsMap.set(emp.deptcode, currentDept);
+      }
+      currentDept.totalScanned += parsedScan;
+      currentDept.totalNotScanned += parsedNotScan;
+      currentDept.totalPerson += parsedPerson;
+
+      const ensureParentDeptExists = (code: string, level1: string, level2: string, level3: string, level4: string, namePrefix: string) => {
+          if (!departmentsMap.has(code)) {
+              const existingEmp = employees.find(e => e.deptcode === code);
+              departmentsMap.set(code, {
+                  deptcode: code,
+                  deptname: existingEmp?.deptname || `${namePrefix} ${code}`,
+                  deptsbu: existingEmp?.deptsbu || '',
+                  deptstd: existingEmp?.deptstd || '',
+                  totalScanned: 0,
+                  totalNotScanned: 0,
+                  totalPerson: 0,
+                  deptcodelevel1: level1,
+                  deptcodelevel2: level2,
+                  deptcodelevel3: level3,
+                  deptcodelevel4: level4,
+                  isTotalRow: false,
+              });
+          }
+      };
+
+      if (emp.deptcodelevel4 !== '00') {
+          const level3ParentCode = emp.deptcodelevel1 + emp.deptcodelevel2 + emp.deptcodelevel3 + '00';
+          ensureParentDeptExists(level3ParentCode, emp.deptcodelevel1, emp.deptcodelevel2, emp.deptcodelevel3, '00', 'รวมแผนก');
+      }
+      if (emp.deptcodelevel3 !== '00') {
+          const level2ParentCode = emp.deptcodelevel1 + emp.deptcodelevel2 + '0000';
+          ensureParentDeptExists(level2ParentCode, emp.deptcodelevel1, emp.deptcodelevel2, '00', '00', 'รวมฝ่าย');
+      }
+      if (emp.deptcodelevel2 !== '00') {
+          const level1ParentCode = emp.deptcodelevel1 + '000000';
+          ensureParentDeptExists(level1ParentCode, emp.deptcodelevel1, '00', '00', '00', 'รวมโรงงาน');
+      }
+    });
+
+    const hierarchicalMap = new Map<string, { dept: AggregatedDepartment; children: AggregatedDepartment[] }>();
+
+    departmentsMap.forEach(dept => {
+      hierarchicalMap.set(dept.deptcode, { dept, children: [] });
+    });
+
+    const calculateTotals = (deptCode: string): { scanned: number; notScanned: number; person: number } => {
+      const entry = hierarchicalMap.get(deptCode);
+      if (!entry) {
+        return { scanned: 0, notScanned: 0, person: 0 };
       }
 
-      currentDept.totalScanned += Number(emp.countscan);
-      currentDept.totalNotScanned += Number(emp.countnotscan);
-      currentDept.totalPerson += Number(emp.countperson);
+      let totalScanned = entry.dept.totalScanned;
+      let totalNotScanned = entry.dept.totalNotScanned;
+      let totalPerson = entry.dept.totalPerson;
+
+      entry.children.forEach(childDept => {
+        const childTotals = calculateTotals(childDept.deptcode);
+        totalScanned += childTotals.scanned;
+        totalNotScanned += childTotals.notScanned;
+        totalPerson += childTotals.person;
+      });
+
+      entry.dept.totalScanned = totalScanned;
+      entry.dept.totalNotScanned = totalNotScanned;
+      entry.dept.totalPerson = totalPerson;
+
+      return { scanned: totalScanned, notScanned: totalNotScanned, person: totalPerson };
+    };
+
+    const topLevelDepartments: AggregatedDepartment[] = [];
+    const allDepartmentsSortedByCode = Array.from(departmentsMap.values()).sort((a, b) => a.deptcode.localeCompare(b.deptcode));
+
+    allDepartmentsSortedByCode.forEach(dept => {
+      const level = getDeptLevel(dept);
+      let parentCode: string | null = null;
+
+      if (level === 4) {
+        parentCode = dept.deptcodelevel1 + dept.deptcodelevel2 + dept.deptcodelevel3 + '00';
+      } else if (level === 3) {
+        parentCode = dept.deptcodelevel1 + dept.deptcodelevel2 + '0000';
+      } else if (level === 2) {
+        parentCode = dept.deptcodelevel1 + '000000';
+      }
+
+      if (parentCode && hierarchicalMap.has(parentCode)) {
+        const parentEntry = hierarchicalMap.get(parentCode);
+        if (parentEntry) {
+            parentEntry.children.push(dept);
+        }
+      } else {
+        topLevelDepartments.push(dept);
+      }
     });
 
-    const sortedDepartments = Array.from(departmentMap.values()).sort((a, b) => {
-      return a.deptcode.localeCompare(b.deptcode);
+    hierarchicalMap.forEach(entry => {
+        entry.children.sort((a, b) => a.deptcode.localeCompare(b.deptcode));
     });
 
-    return sortedDepartments;
+    topLevelDepartments.forEach(dept => {
+        calculateTotals(dept.deptcode);
+    });
+
+    const finalDisplayList: AggregatedDepartment[] = [];
+
+    const flattenAndAddTotals = (dept: AggregatedDepartment) => {
+        const entry = hierarchicalMap.get(dept.deptcode);
+        if (!entry) return;
+
+        finalDisplayList.push({ ...entry.dept, isTotalRow: false });
+
+        entry.children.forEach(child => flattenAndAddTotals(child));
+
+        const deptLevel = getDeptLevel(entry.dept);
+        
+        if (deptLevel === 1 || deptLevel === 2) { 
+            let totalDeptName = `Total ${entry.dept.deptname}`;
+            
+            if (deptLevel === 1) {
+                totalDeptName = `Grand Total ${entry.dept.deptname.replace('รวมโรงงาน ', '')}`;
+            } else if (deptLevel === 2) {
+                totalDeptName = `Total ${entry.dept.deptname.replace('รวมฝ่าย ', '')}`;
+            }
+            
+            finalDisplayList.push({
+                ...entry.dept,
+                deptname: totalDeptName,
+                deptcode: `TOTAL_${entry.dept.deptcode}`,
+                isTotalRow: true,
+            });
+        }
+    };
+
+    topLevelDepartments.sort((a,b) => a.deptcode.localeCompare(b.deptcode));
+
+    topLevelDepartments.forEach(dept => flattenAndAddTotals(dept));
+
+    return finalDisplayList;
   }, [employees, deptcodelevel1Filter]);
 
   const filteredDepartments = useMemo(() => {
     if (scanStatus === 'scanned') {
-      return aggregatedDepartments.filter(dept => dept.totalScanned > 0);
+      return aggregatedDepartments.filter(dept => dept.totalScanned > 0 || dept.isTotalRow);
     }
     if (scanStatus === 'not_scanned') {
-      return aggregatedDepartments.filter(dept => dept.totalNotScanned > 0);
+      return aggregatedDepartments.filter(dept => dept.totalNotScanned > 0 || dept.isTotalRow);
     }
     return aggregatedDepartments;
   }, [aggregatedDepartments, scanStatus]);
-
 
   if (loading) {
     return (
@@ -180,11 +294,10 @@ export function ManpowerTable({ selectedDate, scanStatus, deptcodelevel1Filter }
   }
 
   const levelColors = [
-    'bg-white',    
+    'bg-blue-200',    
     'bg-blue-100', 
-    'bg-blue-50',  
-    'bg-gray-100', 
-    'bg-white',    
+    'bg-white', 
+    'bg-gray-200', 
   ];
 
   return (
@@ -192,41 +305,57 @@ export function ManpowerTable({ selectedDate, scanStatus, deptcodelevel1Filter }
       <table className="min-w-full text-sm text-center border-collapse ">
         <thead className="border border-blue-500 rounded-md text-white bg-blue-800 ">
           <tr>
-            <th className="py-2 px-6">รหัสแผนก</th>
-            <th className="py-2 px-6 ">ชื่อแผนก</th>
+            <th className="py-2 px-6">Deptcode</th>
+            <th className="py-2 px-6 ">Deptname</th>
             <th className="py-2 px-6">SBU</th>
             <th className="py-2 px-6">STD</th>
             {scanStatus !== 'not_scanned' && (
-              <th className="py-2 px-6">สแกนแล้ว</th>
+              <th className="py-2 px-6">Scan</th>
             )}
             {scanStatus !== 'scanned' && (
-              <th className="py-2 px-6">ยังไม่สแกน</th>
+              <th className="py-2 px-6">No Scan</th>
             )}
-            <th className="py-2 px-6">รวมทั้งหมด</th>
-            <th className="p-0">ดูรายละเอียด</th>
+            <th className="py-2 px-6">Person</th>
+            <th className="p-0"></th>
           </tr>
         </thead>
         <tbody>
           {filteredDepartments.map((dept) => {
-            const linkDeptcode = dept.deptcode;
+            const linkDeptcode = dept.deptcode.replace('TOTAL_', '');
             const linkWorkdate = selectedDate;
 
             const deptLevel = getDeptLevel(dept);
             const paddingLeft = (deptLevel - 1) * 25;
 
-            const rowBgClass = levelColors[deptLevel > 0 && deptLevel <= 4 ? deptLevel - 1 : 0];
-            const verticalPaddingClass = (deptLevel === 1 || deptLevel === 2) ? 'py-3' : 'py-2';
-            const displayedDeptCode = dept.deptcode;
+            let rowBgClass = '';
+            if (dept.isTotalRow) {
+                if (deptLevel === 1) {
+                    rowBgClass = 'bg-yellow-300 font-bold';
+                } else if (deptLevel === 2) {
+                    rowBgClass = 'bg-blue-300 font-bold';
+                } 
+            } else {
+                rowBgClass = levelColors[deptLevel - 1] || 'bg-white';
+            }
 
-            const isBlueRow = (deptLevel === 1 || deptLevel === 2);
+            const verticalPaddingClass = (deptLevel === 1 || deptLevel === 2 || dept.isTotalRow) ? 'py-3' : 'py-2';
 
             const hasNonZeroValue = dept.totalScanned !== 0 || dept.totalNotScanned !== 0 || dept.totalPerson !== 0;
+            const displaySBU = dept.isTotalRow || deptLevel === 2 ? '' : dept.deptsbu;
+            const displaySTD = dept.isTotalRow || deptLevel === 2 ? '' : dept.deptstd;
 
-            const displayedTotalScanned = (isBlueRow && !hasNonZeroValue) ? '' : dept.totalScanned;
-            const displayedTotalNotScanned = (isBlueRow && !hasNonZeroValue) ? '' : dept.totalNotScanned;
-            const displayedTotalPerson = (isBlueRow && !hasNonZeroValue) ? '' : dept.totalPerson;
+            let displayedTotalScanned = '';
+            let displayedTotalNotScanned = '';
+            let displayedTotalPerson = '';
 
-            const shouldHideIcon = isBlueRow && !hasNonZeroValue;
+            if (dept.isTotalRow || deptLevel >= 3) {
+                displayedTotalScanned = dept.totalScanned.toString();
+                displayedTotalNotScanned = dept.totalNotScanned.toString();
+                displayedTotalPerson = dept.totalPerson.toString();
+            }
+
+
+            const shouldHideIcon = dept.isTotalRow || (deptLevel !== 4 && !hasNonZeroValue);
 
             const handleLinkClick = () => {
               if (typeof window !== 'undefined') {
@@ -236,20 +365,26 @@ export function ManpowerTable({ selectedDate, scanStatus, deptcodelevel1Filter }
 
             return (
               <tr key={dept.deptcode} className={`${rowBgClass} border-b border-gray-100 last:border-b-0`}>
-                <td className={`px-6 ${verticalPaddingClass}`}>{displayedDeptCode}</td>
+                <td className={`px-6 ${verticalPaddingClass}`}>
+                    {dept.isTotalRow ? '' : dept.deptcode}
+                </td>
                 <td className={`px-6 text-left ${verticalPaddingClass}`} style={{ paddingLeft: `${paddingLeft}px` }}>
                   {dept.deptname}
                 </td>
-                <td className={`px-5 ${verticalPaddingClass}`}>{dept.deptsbu}</td>
-                <td className={`px-6 ${verticalPaddingClass}`}>{dept.deptstd}</td>
+                <td className={'px-5 ${verticalPaddingClass}'}>
+                    {displaySBU}
+                </td>
+                <td className={'px-6 ${verticalPaddingClass}'}>
+                    {displaySTD}
+                </td>
                 {scanStatus !== 'not_scanned' && (
-                  <td className={`px-6 ${verticalPaddingClass}`}>{displayedTotalScanned}</td>
+                  <td className={'px-6 ${verticalPaddingClass}'}>{displayedTotalScanned}</td>
                 )}
                 {scanStatus !== 'scanned' && (
-                  <td className={`px-6 ${verticalPaddingClass}`}>{displayedTotalNotScanned}</td>
+                  <td className={'px-6 ${verticalPaddingClass}'}>{displayedTotalNotScanned}</td>
                 )}
-                <td className={`px-6 ${verticalPaddingClass}`}>{displayedTotalPerson}</td>
-                <td className={`p-3 ${verticalPaddingClass}`}>
+                <td className={'px-6 ${verticalPaddingClass}'}>{displayedTotalPerson}</td>
+                <td className={'p-3 ${verticalPaddingClass}'}>
                   {shouldHideIcon ? (
                     ''
                   ) : (
@@ -263,22 +398,6 @@ export function ManpowerTable({ selectedDate, scanStatus, deptcodelevel1Filter }
           })}
         </tbody>
       </table>
-      {/* Lazy loading: Load more button */}
-      {hasMore && !loading && (
-        <div className="flex justify-center mt-4">
-          <button
-            className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-            onClick={() => setPage(p => p + 1)}
-          >
-            โหลดเพิ่มเติม
-          </button>
-        </div>
-      )}
-      {loading && page > 1 && (
-        <div className="flex justify-center items-center p-4">
-          <Spinner />
-        </div>
-      )}
     </div>
   );
 }
