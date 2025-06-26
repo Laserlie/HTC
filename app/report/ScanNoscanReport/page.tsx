@@ -323,8 +323,8 @@ const ScanNoscanReportPageInner = () => {
 export default function PageWithBoundary() {
   return (
     <ErrorBoundary>
-      <Suspense fallback={<div className="flex justify-center items-center h-screen bg-gray-50"><Spinner /></div>}>
-        <ScanNoscanReportPageInner />
+      <Suspense fallback={<div className="flex justify-center items-center h-screen bg-gray-50"><Spinner/></div>}>
+        <ScanNoscanReportPageInner/>
       </Suspense>
     </ErrorBoundary>
   );

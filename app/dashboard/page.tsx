@@ -23,7 +23,7 @@ const ManpowerTable = dynamic(
 );
 
 export default function DashboardPage() {
-  const [selectedDate, setSelectedDate] = useState(() => {
+  const [selectedDate] = useState(() => {
     return new Date().toLocaleDateString('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' });
   });
 
@@ -72,14 +72,7 @@ export default function DashboardPage() {
     <div className="p-4 sm:p-6 space-y-6"> 
      <section className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <h1 className="text-xl sm:text-2xl font-semibold">ภาพรวมวันที่ {selectedDate}</h1>
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={e => setSelectedDate(e.target.value)}
-            className="border px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring focus:border-blue-300 w-[180px]"
-            max={new Date().toLocaleDateString('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' })}
-          />
+          <h1 className="text-2xl sm:text-3xl font-semibold">ภาพรวมวันที่ {selectedDate}</h1>
         </div>
         <AttendanceCardSummary
           totalScanned={totalScanned}
@@ -91,20 +84,20 @@ export default function DashboardPage() {
       </section>
 
       <section className="space-y-4">
-        <h1 className="text-lg sm:text-xl font-semibold">Department Overview</h1> 
+        <h1 className="text-xl sm:text-2xl font-semibold">Department Overview</h1> 
         <DepartmentBarChart apiEndpoint={`/api/department/Barchart?date=${selectedDate}`} />
       </section>
 
       <section className="space-y-4">
        
         <div className="mb-4 flex flex-row justify-between items-center gap-2">
-          <h1 className="text-lg sm:text-xl font-semibold">Manpower Monitoring</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold">Manpower Monitoring</h1>
           <div>
             <select
               id="factorySelect"
               value={selectedFactory}
               onChange={(e) => setSelectedFactory(e.target.value)}
-              className="border px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring focus:border-blue-300 w-[160px] sm:w-auto"
+              className="border px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring focus:border-blue-300 w-[160px] sm:w-auto text-base"
             >
               <option value="all">ทั้งหมด</option>
               <option value="06">โรงงาน 1 (&quot;06&quot;)</option>

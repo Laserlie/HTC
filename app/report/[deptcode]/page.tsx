@@ -172,6 +172,12 @@ export default function ReportDetailPage() {
     setRowsPerPage(Number(e.target.value));
   };
 
+  const totalEmployees = details.length;
+  const scannedCount = scannedDetails.length;
+  const notScannedCount = notScannedDetails.length;
+  const scannedPercentage = totalEmployees > 0 ? (scannedCount / totalEmployees) * 100 : 0;
+  const notScannedPercentage = totalEmployees > 0 ? (notScannedCount / totalEmployees) * 100 : 0;
+
   return (
     <div className="p-6 space-y-6">
       <button
@@ -196,38 +202,57 @@ export default function ReportDetailPage() {
         </label>
       </div>
 
-     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 items-stretch">
+      {/* Card Summary Section */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 items-stretch">
+        <div
+          className="flex flex-col items-center justify-center bg-blue-100 text-blue-800 px-6 py-5 rounded-2xl shadow-md h-full transition-transform hover:scale-105 hover:shadow-lg cursor-pointer relative"
+          title="Total Employees"
+        >
+          <div className="flex items-center gap-4 w-full justify-start">
+            <FaUsers size={36} />
+            <div className="text-left">
+              <div className="text-2xl font-extrabold">{totalEmployees}</div>
+              <div className="text-base text-blue-900 font-extrabold">Total</div>
+            </div>
+          </div>
 
-  <div className="flex flex-col items-center justify-center bg-blue-100 text-blue-800 px-6 py-5 rounded-2xl shadow-md h-full">
-    <div className="flex items-center gap-4">
-      <FaUsers size={36} />
-      <div className="text-left">
-        <div className="text-2xl font-extrabold">{details.length}</div>
-        <div className="text-base text-blue-900 font-medium">Total</div>
-      </div>
-    </div>
-  </div>
+          <div className="absolute bottom-3 right-4 text-right text-black text-sm"></div>
+        </div>
 
-  <div className="flex flex-col items-center justify-center bg-green-100 text-green-800 px-6 py-5 rounded-2xl shadow-md h-full">
-    <div className="flex items-center gap-4">
-      <FaCheckCircle size={36} />
-      <div className="text-left">
-        <div className="text-2xl font-extrabold">{scannedDetails.length}</div>
-        <div className="text-base text-green-900 font-medium">Scan</div>
-      </div>
-    </div>
-  </div>
+        <div
+          className="flex flex-col items-center justify-center bg-green-100 text-green-800 px-6 py-5 rounded-2xl shadow-md h-full transition-transform hover:scale-105 hover:shadow-lg cursor-pointer relative"
+          title="Scanned"
+        >
+          <div className="flex items-center gap-4 w-full justify-start">
+            <FaCheckCircle size={36} />
+            <div className="text-left">
+              <div className="text-2xl font-extrabold">{scannedCount}</div>
+              <div className="text-base text-green-900 font-extrabold">Scan</div>
+            </div>
+          </div>
+          <div className="absolute bottom-3 right-4 text-right text-black text-sm">
+            <div className='text-lg font-bold text-green-700'>{scannedPercentage.toFixed(2)}%</div>
+            <div>ของพนักงานทั้งหมด</div>
+          </div>
+        </div>
 
-  <div className="flex flex-col items-center justify-center bg-red-100 text-red-800 px-6 py-5 rounded-2xl shadow-md h-full">
-    <div className="flex items-center gap-4">
-      <FaExclamationCircle size={36} />
-      <div className="text-left">
-        <div className="text-2xl font-extrabold">{notScannedDetails.length}</div>
-        <div className="text-base text-red-900 font-medium">No Scan</div>
+        <div
+          className="flex flex-col items-center justify-center bg-red-100 text-red-800 px-6 py-5 rounded-2xl shadow-md h-full transition-transform hover:scale-105 hover:shadow-lg cursor-pointer relative"
+          title="No Scan"
+        >
+          <div className="flex items-center gap-4 w-full justify-start">
+            <FaExclamationCircle size={36} />
+            <div className="text-left">
+              <div className="text-2xl font-extrabold">{notScannedCount}</div>
+              <div className="text-base text-red-900 font-extrabold">No Scan</div>
+            </div>
+          </div>
+          <div className="absolute bottom-3 right-4 text-right text-black text-sm">
+            <div className='text-lg font-bold text-red-700'>{notScannedPercentage.toFixed(2)}%</div>
+            <div>ของพนักงานทั้งหมด</div>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-</div>
 
       {loading ? (
         <div className="flex justify-center py-10 text-gray-500 animate-spin">
@@ -241,6 +266,7 @@ export default function ReportDetailPage() {
               <table className="min-w-full bg-white rounded shadow text-sm mb-6">
                 <thead className="bg-red-100 text-left">
                   <tr>
+                    <th className="p-3">HQ Emp Id</th>
                     <th className="p-3">Emp Id</th>
                     <th className="p-3">Deptcode</th>
                     <th className="p-3">FullName</th>
@@ -265,6 +291,7 @@ export default function ReportDetailPage() {
                       }}
                     >
                       <td className="p-3">{row.person_code}</td>
+                      <td className="p-3">{}</td>
                       <td className="p-3">{row.deptcode}</td>
                       <td className="p-3">{row.full_name}</td>
                       <td className="p-3">{row.department_full_paths}</td>
@@ -287,6 +314,7 @@ export default function ReportDetailPage() {
               <table className="min-w-full bg-white rounded shadow text-sm">
                 <thead className="bg-green-100 text-left">
                   <tr>
+                    <th className="p-3">HQ Emp Id</th>
                     <th className="p-3">Emp Id</th>
                     <th className="p-3">Deptcode</th>
                     <th className="p-3">FullName</th>
@@ -311,6 +339,7 @@ export default function ReportDetailPage() {
                       }}
                     >
                       <td className="p-3">{row.person_code}</td>
+                      <td className="p-3">{}</td>
                       <td className="p-3">{row.deptcode}</td>
                       <td className="p-3">{row.full_name}</td>
                       <td className="p-3">{row.department_full_paths}</td>
