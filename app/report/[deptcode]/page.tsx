@@ -8,6 +8,7 @@ import { FaCheckCircle, FaExclamationCircle, FaUsers } from 'react-icons/fa';
 
 type Detail = {
   person_code: string;
+  htcpersoncode: string;
   deptcode: string;
   full_name: string;
   department_full_paths: string;
@@ -291,7 +292,7 @@ export default function ReportDetailPage() {
                       }}
                     >
                       <td className="p-3">{row.person_code}</td>
-                      <td className="p-3">{}</td>
+                      <td className="p-3">{row.htcpersoncode}</td>
                       <td className="p-3">{row.deptcode}</td>
                       <td className="p-3">{row.full_name}</td>
                       <td className="p-3">{row.department_full_paths}</td>
@@ -339,7 +340,7 @@ export default function ReportDetailPage() {
                       }}
                     >
                       <td className="p-3">{row.person_code}</td>
-                      <td className="p-3">{}</td>
+                      <td className="p-3">{row.htcpersoncode}</td>
                       <td className="p-3">{row.deptcode}</td>
                       <td className="p-3">{row.full_name}</td>
                       <td className="p-3">{row.department_full_paths}</td>

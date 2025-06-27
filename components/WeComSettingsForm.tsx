@@ -29,7 +29,7 @@ export default function WeComSettingsForm() {
   useEffect(() => {
     async function fetchDepartments() {
       try {
-        const res = await axios.get(' /api/department/list');
+        const res = await axios.get('/api/department/list');
         setDepartments(res.data);
 
         const defaultHods: { [id: number]: string } = {};
@@ -40,7 +40,15 @@ export default function WeComSettingsForm() {
         setHods(defaultHods);
       } catch (err) {
         console.error(err);
-        setError('โหลดข้อมูลไม่สำเร็จ');
+        let message = 'โหลดข้อมูลไม่สำเร็จ';
+        if (axios.isAxiosError(err)) {
+          message =
+            err.response?.data?.message ||
+            err.response?.data?.error ||
+            err.message ||
+            message;
+        }
+        setError(message);
       } finally {
         setLoading(false);
       }

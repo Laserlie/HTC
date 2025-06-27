@@ -25,6 +25,7 @@ export async function GET(req: NextRequest) {
       SELECT
         workdate,
         person_code,
+        htcpersoncode,
         deptcode,
         deptname,
         full_name,
