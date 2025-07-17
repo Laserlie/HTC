@@ -50,121 +50,37 @@ export default function WeComSettingsForm() {
     const EMPLOYEE_ACTIVE_API_PROXY = "/api/wecom/employeeactive";
     const LINE_USERS_API_PROXY = "/api/wecom/lineuser";
 
-    // สำหรับ Debugging Frontend State (สามารถลบออกได้เมื่อใช้งานจริง)
-    useEffect(() => {
-        console.log('--- Frontend State Update ---');
-        console.log('departments:', departments);
-        console.log('wecomIdMap:', Object.fromEntries(
-            Array.from(wecomIdMap.entries()).map(([key, value]) => [key, { ...value, originalLineUser: value.originalLineUser ? '(LineUser Object)' : 'N/A' }])
-        ));
-        console.log('selectedDepartmentId:', selectedDepartmentId);
-        console.log('loading:', loading);
-        console.log('error:', error);
-        console.log('success:', success);
-        console.log('-----------------------------');
-    }, [departments, wecomIdMap, selectedDepartmentId, loading, error, success]);
+  useEffect(() => {
+    async function fetchDepartments() {
+      try {
+        const res = await axios.get(' /api/department/list');
+        setDepartments(res.data);
 
-    // ฟังก์ชันสำหรับ Fetch ข้อมูลทั้งหมดจาก Backend
-    const fetchData = useCallback(async () => {
-        setLoading(true);
+        const defaultHods: { [id: number]: string } = {};
+        res.data.forEach((d: Department) => {
+          const hod = d.employees.find((e) => e.is_hod);
+          defaultHods[d.id] = hod ? hod.wecom_id : '';
+        });
+        setHods(defaultHods);
+      } catch (err) {
+        console.error(err);
+        setError('โหลดข้อมูลไม่สำเร็จ');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchDepartments();
+  }, []);
+
+  useEffect(() => {
+    if (success || error) {
+      const timer = setTimeout(() => {
+        setSuccess('');
         setError('');
-
-        try {
-            interface RawEmployee {
-                workdayId: string;
-                empCode: string;
-                empName: string;
-                deptCode: string;
-                deptName: string;
-            }
-
-            // ดึงข้อมูลพนักงาน Active
-            const empRes = await axios.get<RawEmployee[]>(EMPLOYEE_ACTIVE_API_PROXY);
-            const rawEmployees = empRes.data || [];
-
-            const activeEmployees: Employee[] = rawEmployees.map((emp) => ({
-                id: emp.empCode || '',
-                name: emp.empName || '',
-                deptCode: emp.deptCode || '',
-                deptName: emp.deptName || '',
-                workdayId: emp.workdayId || '',
-            }));
-
-            // ดึงข้อมูล LineUser ที่มีอยู่แล้วจาก Backend
-            const lineUsersRes = await axios.get<LineUser[]>(LINE_USERS_API_PROXY);
-            const lineUsers = lineUsersRes.data || [];
-
-            // สร้าง Map ของ WeCom ID ที่มีอยู่แล้วสำหรับเข้าถึงได้ง่าย
-            const initialWeComMap = new Map<string, { weComId: string; backendId?: number; workdayId?: string; originalLineUser?: LineUser }>();
-            lineUsers.forEach(lu => {
-                const employee = activeEmployees.find(emp => emp.id === lu.employeeCode);
-                if (employee && lu.employeeCode) {
-                    initialWeComMap.set(lu.employeeCode, {
-                        weComId: lu.weComId || '', // เก็บค่าว่าง '' ถ้าเป็น null จาก backend
-                        backendId: lu.id,
-                        workdayId: employee.workdayId,
-                        originalLineUser: lu // เก็บข้อมูล LineUser เดิมไว้ทั้งหมด
-                    });
-                }
-            });
-
-            // จัดกลุ่มพนักงานตามแผนก
-            const departmentMap = new Map<string, Department>();
-
-            activeEmployees.forEach(emp => {
-                const deptId = emp.deptCode || 'unknown';
-                const deptName = emp.deptName || 'ไม่ทราบแผนก';
-
-                if (!departmentMap.has(deptId)) {
-                    departmentMap.set(deptId, {
-                        id: deptId,
-                        name: deptName,
-                        employees: [],
-                    });
-                }
-
-                const dept = departmentMap.get(deptId)!;
-                const existingWeComData = initialWeComMap.get(emp.id);
-                dept.employees.push({
-                    ...emp,
-                    wecom_id: existingWeComData?.weComId || '',
-                    backendLineUserId: existingWeComData?.backendId
-                });
-            });
-
-            const fetchedDepartments = Array.from(departmentMap.values());
-
-            // อัปเดต State
-            setDepartments(fetchedDepartments);
-            setWecomIdMap(initialWeComMap);
-            setOriginalWecomIdMap(new Map(initialWeComMap)); // อัปเดต original map ด้วยข้อมูลใหม่ทั้งหมด
-        } catch (err) {
-            console.error('Error fetching data:', err);
-            if (axios.isAxiosError(err) && err.response?.data?.message) {
-                setError(`โหลดข้อมูลไม่สำเร็จ: ${err.response.data.message}`);
-            } else {
-                setError('โหลดข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
-            }
-        } finally {
-            setLoading(false);
-        }
-    }, [EMPLOYEE_ACTIVE_API_PROXY, LINE_USERS_API_PROXY]);
-
-    // เรียก fetchData ครั้งแรกเมื่อ component โหลด
-    useEffect(() => {
-        fetchData();
-    }, [fetchData]);
-
-    // ตั้งเวลาล้างข้อความ success/error
-    useEffect(() => {
-        if (success || error) {
-            const timer = setTimeout(() => {
-                setSuccess('');
-                setError('');
-            }, 5000);
-            return () => clearTimeout(timer);
-        }
-    }, [success, error]);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [success, error]);
 
     // กรองพนักงานตามแผนกที่เลือกและเรียงลำดับ
     const currentDepartmentEmployees = useMemo(() => {

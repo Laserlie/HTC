@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import ReportFilterForm from '../../components/ReportFilterForm';
 import { DepartmentTable } from '../../components/DepartmentTable';
 import { Employee, ReportApiRawData } from '../types/employee';
@@ -13,18 +14,33 @@ const parseDeptCode = (fullDeptCode: string) => {
   return { level1, level2, level3 };
 };
 
-export default function ReportPage() {
-  const [filters, setFilters] = useState({
-    from: '',
-    to: '',
-    factoryId: '',
-    mainDepartmentId: '',
-    subDepartmentId: '',
-    employeeId: 'all',
-  });
+const getInitialFilters = (searchParams: ReturnType<typeof useSearchParams>) => ({
+  from: searchParams.get('from') || '',
+  to: searchParams.get('to') || '',
+  factoryId: searchParams.get('factoryId') || '',
+  mainDepartmentId: searchParams.get('mainDepartmentId') || '',
+  subDepartmentId: searchParams.get('subDepartmentId') || '',
+  employeeId: searchParams.get('employeeId') || 'all',
+});
+
+function ReportPageContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const [filters, setFilters] = useState(() => getInitialFilters(searchParams));
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
-  const [hasSearched, setHasSearched] = useState(false);
+  const [hasSearched, setHasSearched] = useState(() => {
+    const params = getInitialFilters(searchParams);
+    return !!(params.from && params.to);
+  });
+
+  const searchParamsString = searchParams?.toString();
+
+  useEffect(() => {
+    setFilters(getInitialFilters(searchParams));
+    setHasSearched(!!(searchParams.get('from') && searchParams.get('to')));
+  }, [searchParams, searchParamsString]);
 
   const fetchAndProcessData = useCallback(async () => {
     setLoading(true);
@@ -146,7 +162,18 @@ export default function ReportPage() {
 
   const handleSearch = (newFilters: typeof filters) => {
     setFilters(newFilters);
-    setHasSearched(true); 
+    setHasSearched(true);
+
+    // Update URL query string
+    const params = new URLSearchParams();
+    if (newFilters.from) params.set('from', newFilters.from);
+    if (newFilters.to) params.set('to', newFilters.to);
+    if (newFilters.factoryId) params.set('factoryId', newFilters.factoryId);
+    if (newFilters.mainDepartmentId) params.set('mainDepartmentId', newFilters.mainDepartmentId);
+    if (newFilters.subDepartmentId) params.set('subDepartmentId', newFilters.subDepartmentId);
+    if (newFilters.employeeId && newFilters.employeeId !== 'all') params.set('employeeId', newFilters.employeeId);
+
+    router.replace(`/report?${params.toString()}`);
   };
 
   return (
@@ -163,5 +190,13 @@ export default function ReportPage() {
         <DepartmentTable employees={filteredEmployees} scanStatus={filters.employeeId} />
       )}
     </div>
+  );
+}
+
+export default function ReportPage() {
+  return (
+    <Suspense fallback={<Spinner />}>
+      <ReportPageContent />
+    </Suspense>
   );
 }
