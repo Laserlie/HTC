@@ -27,6 +27,7 @@ export async function GET(req: NextRequest) {
         person_code,
         deptcode,
         deptname,
+        htcpersoncode,
         full_name,
         department_full_paths,
         firstscantime,

@@ -1,0 +1,181 @@
+2025-07-08 11:28:11,222 - INFO] Starting polling mode...
+2025-07-08 11:28:11,326 - INFO] Attempting to load state from: state\last_polled_time.json
+2025-07-08 11:28:11,328 - INFO] Starting polling from last processed time: 2025-07-08 11:28:03.647587 
+2025-07-08 11:28:11,328 - INFO] Refreshing WeCom access token...
+2025-07-08 11:28:12,483 - INFO] WeCom access token refreshed.
+2025-07-08 11:28:13,443 - WARNING] Using mock scan data. Please implement a real API call for scan times.
+2025-07-08 11:28:13,458 - INFO] Found 1226 new or updated scan records.
+2025-07-08 11:28:13,602 - WARNING] No WeCom User ID for Jantakan Thongprasert (70040868). Message not sent.
+2025-07-08 11:28:16,718 - WARNING] No WeCom User ID for Kyaw Zayar Lin (70040051). Message not sent.
+2025-07-08 11:28:16,797 - WARNING] No WeCom User ID for HAN LIN ZAW (70040451). Message not sent.
+2025-07-08 11:28:16,990 - WARNING] No WeCom User ID for Ye Thurain (70040203). Message not sent.
+2025-07-08 11:28:17,092 - WARNING] No WeCom User ID for ZAYAR MYINT (70040711). Message not sent.
+2025-07-08 11:28:17,613 - WARNING] No WeCom User ID for Lyu Hao (70037878). Message not sent.
+2025-07-08 11:28:18,438 - WARNING] No WeCom User ID for ZAY LIN TUN (70038547). Message not sent.
+2025-07-08 11:28:18,559 - WARNING] No WeCom User ID for MYIN MYIN SAN (70038249). Message not sent.
+2025-07-08 11:28:18,624 - WARNING] No WeCom User ID for TUN ZAW (70039186). Message not sent.
+2025-07-08 11:28:18,776 - WARNING] No WeCom User ID for CHAMROEUN NONG (70038814). Message not sent.
+2025-07-08 11:28:18,873 - WARNING] No WeCom User ID for Mi chan Saw (70040643). Message not sent.
+2025-07-08 11:28:19,126 - WARNING] No WeCom User ID for AUNG KO WIN (70038910). Message not sent.
+2025-07-08 11:28:19,411 - WARNING] No WeCom User ID for ZAW MYO AUNG (70039791). Message not sent.
+2025-07-08 11:28:19,899 - WARNING] No WeCom User ID for YA MIN OO (70038926). Message not sent.
+2025-07-08 11:28:20,624 - WARNING] No WeCom User ID for THAT PAING PHYO (70038218). Message not sent.
+2025-07-08 11:28:20,695 - WARNING] No WeCom User ID for EI EI PHYU (70039909). Message not sent.
+2025-07-08 11:28:20,752 - WARNING] No WeCom User ID for Zin mar Oo (70040646). Message not sent.
+2025-07-08 11:28:20,819 - WARNING] No WeCom User ID for Ko ko Maung (70040761). Message not sent.
+2025-07-08 11:28:20,890 - WARNING] No WeCom User ID for Soe Koko (70040768). Message not sent.
+2025-07-08 11:28:21,459 - WARNING] No WeCom User ID for Thandar Aye (70040754). Message not sent.
+2025-07-08 11:28:21,513 - WARNING] No WeCom User ID for Aung chit Thu (70040772). Message not sent.
+2025-07-08 11:28:21,749 - WARNING] No WeCom User ID for Hla tun Win (70040786). Message not sent.
+2025-07-08 11:28:21,855 - WARNING] No WeCom User ID for TAK LIN (70037977). Message not sent.
+2025-07-08 11:28:21,970 - WARNING] No WeCom User ID for Aung ye Kyaw (70040788). Message not sent.
+2025-07-08 11:28:22,089 - WARNING] No WeCom User ID for WIN MIN HLAING (70038882). Message not sent.
+2025-07-08 11:28:22,151 - WARNING] No WeCom User ID for AYE KAUNG (70038927). Message not sent.
+2025-07-08 11:28:22,229 - WARNING] No WeCom User ID for Khaing mar Win (70040753). Message not sent.
+2025-07-08 11:28:22,419 - WARNING] No WeCom User ID for Khaing mar Soe (70040593). Message not sent.
+2025-07-08 11:28:22,483 - WARNING] No WeCom User ID for Zin min Paing (70040661). Message not sent.
+2025-07-08 11:28:22,822 - WARNING] No WeCom User ID for AUNG MIN OO (70038961). Message not sent.
+2025-07-08 11:28:22,878 - WARNING] No WeCom User ID for THEIN THAN ZAW (70039077). Message not sent.
+2025-07-08 11:28:22,931 - WARNING] No WeCom User ID for SREYNOT SOUT (70039210). Message not sent.
+2025-07-08 11:28:23,043 - WARNING] No WeCom User ID for Chan myae Aung (70040663). Message not sent.
+2025-07-08 11:28:23,134 - WARNING] No WeCom User ID for Ye Yeint (70040671). Message not sent.
+2025-07-08 11:28:23,354 - WARNING] No WeCom User ID for EI EI TONE (70039235). Message not sent.
+2025-07-08 11:28:23,423 - WARNING] No WeCom User ID for Ma nan than than Shwe (70040656). Message not sent.
+2025-07-08 11:28:23,516 - WARNING] No WeCom User ID for Wint war Haling (70040805). Message not sent.
+2025-07-08 11:28:24,123 - WARNING] No WeCom User ID for MAY ZIN OO (70038952). Message not sent.
+2025-07-08 11:28:24,649 - WARNING] No WeCom User ID for THAN HTAY AUNG (70039775). Message not sent.
+2025-07-08 11:28:24,719 - WARNING] No WeCom User ID for Ma phyu Chay (70040565). Message not sent.
+2025-07-08 11:28:25,072 - WARNING] No WeCom User ID for PAN NU WAI (70038928). Message not sent.
+2025-07-08 11:28:25,126 - WARNING] No WeCom User ID for CHO MAR WIN (70039047). Message not sent.
+2025-07-08 11:28:26,422 - WARNING] No WeCom User ID for Zhao Yongtao (70037509). Message not sent.
+2025-07-08 11:28:31,200 - WARNING] No WeCom User ID for SOPHEAP MAV (70037910). Message not sent.
+2025-07-08 11:28:31,272 - WARNING] No WeCom User ID for CHANTHOEURN SIM (70038368). Message not sent.
+2025-07-08 11:28:31,320 - WARNING] No WeCom User ID for AYE CHAN AUNG (70038446). Message not sent.
+2025-07-08 11:28:31,378 - WARNING] No WeCom User ID for SRAS KANG (70038639). Message not sent.
+2025-07-08 11:28:31,467 - WARNING] No WeCom User ID for AUNG NAING SWE (70038904). Message not sent.
+2025-07-08 11:28:31,526 - WARNING] No WeCom User ID for AYE CHAN AUNG (70038998). Message not sent.
+2025-07-08 11:28:31,574 - WARNING] No WeCom User ID for KAY ZIN THWE (70039007). Message not sent.
+2025-07-08 11:28:31,652 - WARNING] No WeCom User ID for WIN PA PA TUN (70039095). Message not sent.
+2025-07-08 11:28:31,738 - WARNING] No WeCom User ID for SOKHEA BEN (70039208). Message not sent.
+2025-07-08 11:28:31,807 - WARNING] No WeCom User ID for WAI PHYO OO (70039257). Message not sent.
+2025-07-08 11:28:31,864 - WARNING] No WeCom User ID for AUNG YE MIN (70039274). Message not sent.
+2025-07-08 11:28:31,913 - WARNING] No WeCom User ID for AYE KYAW TINT (70039276). Message not sent.
+2025-07-08 11:28:31,963 - WARNING] No WeCom User ID for THEIN THAN HTAY (70039288). Message not sent.
+2025-07-08 11:28:32,068 - WARNING] No WeCom User ID for PAING PAING (70039524). Message not sent.
+2025-07-08 11:28:32,133 - WARNING] No WeCom User ID for SOE MIN NAING (70039542). Message not sent.
+2025-07-08 11:28:32,196 - WARNING] No WeCom User ID for MAY ME WIN HLAING (70039546). Message not sent.
+2025-07-08 11:28:32,443 - WARNING] No WeCom User ID for MYO SANDAR KYAW (70039569). Message not sent.
+2025-07-08 11:28:32,501 - WARNING] No WeCom User ID for PHYU WIN THWE (70039576). Message not sent.
+2025-07-08 11:28:32,553 - WARNING] No WeCom User ID for KYU KYU MYINT (70039577). Message not sent.
+2025-07-08 11:28:32,645 - WARNING] No WeCom User ID for AUNG MOE KYAW (70039605). Message not sent.
+2025-07-08 11:28:32,721 - WARNING] No WeCom User ID for JULY JULY (70039626). Message not sent.
+2025-07-08 11:28:32,788 - WARNING] No WeCom User ID for CHO CHO NAING (70039637). Message not sent.
+2025-07-08 11:28:32,841 - WARNING] No WeCom User ID for SIN MA (70039638). Message not sent.
+2025-07-08 11:28:32,895 - WARNING] No WeCom User ID for WAR WAR TUN (70039643). Message not sent.
+2025-07-08 11:28:32,958 - WARNING] No WeCom User ID for AUNG TUN LIN (70039657). Message not sent.
+2025-07-08 11:28:33,014 - WARNING] No WeCom User ID for KYAW NAING SOE (70039684). Message not sent.
+2025-07-08 11:28:33,093 - WARNING] No WeCom User ID for WIN WIN AYE (70039712). Message not sent.
+2025-07-08 11:28:33,180 - WARNING] No WeCom User ID for HNIN YU HLAING (70039732). Message not sent.
+2025-07-08 11:28:33,228 - WARNING] No WeCom User ID for HTET WAI LIN (70039734). Message not sent.
+2025-07-08 11:28:33,277 - WARNING] No WeCom User ID for ZAW MYO PAING (70039746). Message not sent.
+2025-07-08 11:28:33,356 - WARNING] No WeCom User ID for TL DA LAI (70039765). Message not sent.
+2025-07-08 11:28:33,402 - WARNING] No WeCom User ID for MAR MAR WIH (70039766). Message not sent.
+2025-07-08 11:28:33,463 - WARNING] No WeCom User ID for YAN AUNG (70039773). Message not sent.
+2025-07-08 11:28:33,564 - WARNING] No WeCom User ID for THU ZAR WIN (70039790). Message not sent.
+2025-07-08 11:28:33,620 - WARNING] No WeCom User ID for CHEW YU MON (70039821). Message not sent.
+2025-07-08 11:28:33,705 - WARNING] No WeCom User ID for MYO KO KO (70039896). Message not sent.
+2025-07-08 11:28:33,772 - WARNING] No WeCom User ID for MYO SI THU (70039912). Message not sent.
+2025-07-08 11:28:34,348 - WARNING] No WeCom User ID for Channrith Rin (70040023). Message not sent.
+2025-07-08 11:28:34,467 - WARNING] No WeCom User ID for Aung moe Khaing (70040046). Message not sent.
+2025-07-08 11:28:34,535 - WARNING] No WeCom User ID for Phyo htet Zaw (70040050). Message not sent.
+2025-07-08 11:28:34,637 - WARNING] No WeCom User ID for Ei ei Soe (70040064). Message not sent.
+2025-07-08 11:28:34,685 - WARNING] No WeCom User ID for Ei mon Aaung (70040065). Message not sent.
+2025-07-08 11:28:34,789 - WARNING] No WeCom User ID for Zar Chi Naing (70040094). Message not sent.
+2025-07-08 11:28:34,920 - WARNING] No WeCom User ID for Soe Lwin (70040135). Message not sent.
+2025-07-08 11:28:34,978 - WARNING] No WeCom User ID for Chan Min (70040137). Message not sent.
+2025-07-08 11:28:35,074 - WARNING] No WeCom User ID for Hlaing min Thu (70040152). Message not sent.
+2025-07-08 11:28:35,123 - WARNING] No WeCom User ID for Tin ko Win (70040154). Message not sent.
+2025-07-08 11:28:35,193 - WARNING] No WeCom User ID for Maung Shine (70040171). Message not sent.
+2025-07-08 11:28:35,309 - WARNING] No WeCom User ID for Hay mar Win (70040186). Message not sent.
+2025-07-08 11:28:35,373 - WARNING] No WeCom User ID for Nwe nwe Aung (70040192). Message not sent.
+2025-07-08 11:28:35,433 - WARNING] No WeCom User ID for Tun maung Chay (70040196). Message not sent.
+2025-07-08 11:28:35,546 - WARNING] No WeCom User ID for Htet wai Kyaw (70040216). Message not sent.
+2025-07-08 11:28:35,634 - WARNING] No WeCom User ID for Thone htike Oo (70040238). Message not sent.
+2025-07-08 11:28:35,739 - WARNING] No WeCom User ID for Thura Aung (70040266). Message not sent.
+2025-07-08 11:28:35,835 - WARNING] No WeCom User ID for Chit san Maung (70040331). Message not sent.
+2025-07-08 11:28:35,892 - WARNING] No WeCom User ID for Nyi nyi Zaw (70040336). Message not sent.
+2025-07-08 11:28:35,957 - WARNING] No WeCom User ID for Moe thu zar Khaing (70040346). Message not sent.
+2025-07-08 11:28:36,004 - WARNING] No WeCom User ID for Khin San (70040347). Message not sent.
+2025-07-08 11:28:36,057 - WARNING] No WeCom User ID for Hor Samros (70040353). Message not sent.
+2025-07-08 11:28:36,255 - WARNING] No WeCom User ID for Min Aung (70040357). Message not sent.
+2025-07-08 11:28:36,324 - WARNING] No WeCom User ID for May zin Oo (70040411). Message not sent.
+2025-07-08 11:28:36,373 - WARNING] No WeCom User ID for Bunthai Tha (70040413). Message not sent.
+2025-07-08 11:28:36,433 - WARNING] No WeCom User ID for Phyo kyaw Thu (70040422). Message not sent.
+2025-07-08 11:28:36,491 - WARNING] No WeCom User ID for Nay ko Htet (70040428). Message not sent.
+2025-07-08 11:28:36,559 - WARNING] No WeCom User ID for Than Htike (70040432). Message not sent.
+2025-07-08 11:28:36,644 - WARNING] No WeCom User ID for Mya ei Phyo (70040444). Message not sent.
+2025-07-08 11:28:36,736 - WARNING] No WeCom User ID for AUNG KHAING WIN (70040463). Message not sent.
+2025-07-08 11:28:36,787 - WARNING] No WeCom User ID for UNT MIN KHANT (70040469). Message not sent.
+2025-07-08 11:28:36,900 - WARNING] No WeCom User ID for Min ko Ko (70040496). Message not sent.
+2025-07-08 11:28:36,952 - WARNING] No WeCom User ID for Mg Chat (70040499). Message not sent.
+2025-07-08 11:28:37,006 - WARNING] No WeCom User ID for Nay min Maung (70040501). Message not sent.
+2025-07-08 11:28:37,075 - WARNING] No WeCom User ID for Than Soe (70040502). Message not sent.
+2025-07-08 11:28:37,154 - WARNING] No WeCom User ID for Aung naing Soe (70040503). Message not sent.
+2025-07-08 11:28:37,222 - WARNING] No WeCom User ID for Kyaw Min Tun (70040504). Message not sent.
+2025-07-08 11:28:37,321 - WARNING] No WeCom User ID for Than dar Soe (70040519). Message not sent.
+2025-07-08 11:28:37,438 - WARNING] No WeCom User ID for Savorn San (70040534). Message not sent.
+2025-07-08 11:28:37,491 - WARNING] No WeCom User ID for Chin Lou (70040537). Message not sent.
+2025-07-08 11:28:37,626 - WARNING] No WeCom User ID for Aey hnin Mone (70040582). Message not sent.
+2025-07-08 11:28:37,680 - WARNING] No WeCom User ID for Moe thuzar Tun (70040603). Message not sent.
+2025-07-08 11:28:37,754 - WARNING] No WeCom User ID for Aye Sandar Myint (70040619). Message not sent.
+2025-07-08 11:28:37,805 - WARNING] No WeCom User ID for Ko Shine (70040627). Message not sent.
+2025-07-08 11:28:37,891 - WARNING] No WeCom User ID for Nyi nyi Phyo (70040672). Message not sent.
+2025-07-08 11:28:37,952 - WARNING] No WeCom User ID for Zay yar Lin (70040682). Message not sent.
+2025-07-08 11:28:38,002 - WARNING] No WeCom User ID for Thidar Nyein (70040691). Message not sent.
+2025-07-08 11:28:38,059 - WARNING] No WeCom User ID for Htay mar Win (70040694). Message not sent.
+2025-07-08 11:28:38,181 - WARNING] No WeCom User ID for WIN SOE (70040707). Message not sent.
+2025-07-08 11:28:38,248 - WARNING] No WeCom User ID for KYAW THET PAING THWE (70040709). Message not sent.
+2025-07-08 11:28:38,485 - WARNING] No WeCom User ID for NAEKHE CHEY (70040720). Message not sent.
+2025-07-08 11:28:38,557 - WARNING] No WeCom User ID for MA MOE SANDAR (70040721). Message not sent.
+2025-07-08 11:28:38,604 - WARNING] No WeCom User ID for MOH MOH MYINT HAN (70040724). Message not sent.
+2025-07-08 11:28:38,666 - WARNING] No WeCom User ID for Kyaw ye Naing (70040732). Message not sent.
+2025-07-08 11:28:38,813 - WARNING] No WeCom User ID for Mr.Jing Pengfei (70040891). Message not sent.
+2025-07-08 11:28:39,900 - WARNING] Using mock total scan-in data.
+2025-07-08 11:28:39,902 - INFO] Current total scan-in for 2025-07-08: 1 people (from Mock API).
+2025-07-08 11:28:39,903 - INFO] --- Notify HOD with team scan summary (English) ---
+2025-07-08 11:28:41,297 - INFO] Message sent successfully to poramet
+2025-07-08 11:28:42,799 - INFO] Message sent successfully to poramet
+2025-07-08 11:28:43,958 - INFO] Message sent successfully to poramet
+2025-07-08 11:28:45,147 - INFO] Message sent successfully to poramet
+2025-07-08 11:28:46,376 - INFO] Message sent successfully to poramet
+2025-07-08 11:28:47,553 - INFO] Message sent successfully to poramet
+2025-07-08 11:28:48,873 - INFO] Message sent successfully to poramet
+2025-07-08 11:28:50,101 - INFO] Message sent successfully to poramet
+2025-07-08 11:28:51,700 - INFO] Message sent successfully to poramet
+2025-07-08 11:28:52,929 - INFO] Message sent successfully to poramet
+2025-07-08 11:28:54,099 - INFO] Message sent successfully to poramet
+2025-07-08 11:28:55,327 - INFO] Message sent successfully to poramet
+2025-07-08 11:28:56,866 - INFO] Message sent successfully to poramet
+2025-07-08 11:28:58,067 - INFO] Message sent successfully to poramet
+2025-07-08 11:28:59,215 - INFO] Message sent successfully to poramet
+2025-07-08 11:29:00,450 - INFO] Message sent successfully to poramet
+2025-07-08 11:29:02,220 - INFO] Message sent successfully to poramet
+2025-07-08 11:29:03,327 - INFO] Message sent successfully to poramet
+2025-07-08 11:29:04,722 - INFO] Message sent successfully to poramet
+2025-07-08 11:29:05,916 - INFO] Message sent successfully to poramet
+2025-07-08 11:29:07,064 - INFO] Message sent successfully to poramet
+2025-07-08 11:29:08,186 - INFO] Message sent successfully to poramet
+2025-07-08 11:29:09,313 - INFO] Message sent successfully to poramet
+2025-07-08 11:29:10,479 - INFO] Message sent successfully to poramet
+2025-07-08 11:29:11,580 - INFO] Message sent successfully to poramet
+2025-07-08 11:29:13,555 - INFO] Message sent successfully to poramet
+2025-07-08 11:29:14,678 - INFO] Message sent successfully to poramet
+2025-07-08 11:29:15,804 - INFO] Message sent successfully to poramet
+2025-07-08 11:29:16,930 - INFO] Message sent successfully to poramet
+2025-07-08 11:29:18,400 - INFO] Message sent successfully to poramet
+2025-07-08 11:29:19,553 - INFO] Message sent successfully to poramet
+2025-07-08 11:29:20,657 - INFO] Message sent successfully to poramet
+2025-07-08 11:29:21,805 - INFO] Message sent successfully to poramet
+2025-07-08 11:29:22,936 - INFO] Message sent successfully to poramet
+2025-07-08 11:29:24,571 - INFO] Message sent successfully to poramet
+2025-07-08 11:29:25,698 - INFO] Message sent successfully to poramet
