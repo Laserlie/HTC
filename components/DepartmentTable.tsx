@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { PiFileMagnifyingGlassBold } from 'react-icons/pi';
 import { Employee } from '../app/types/employee';
 
+// ฟังก์ชัน hasNonZeroValue ถูกลบออกเนื่องจากไม่ได้ใช้งานในโค้ด
+
 export type AggregatedDepartment = {
   deptcode: string;
   deptname: string;
@@ -46,6 +48,34 @@ export type DepartmentTableProps = {
 
 export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, hasMore}: DepartmentTableProps) {
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (typeof window !== 'undefined' && window.scrollY > 200) {
+        setShowBackToTop(true);
+      } else {
+        setShowBackToTop(false);
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('scroll', handleScroll);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, []);
+
+  const handleBackToTop = () => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+
   const aggregatedDepartments = useMemo<AggregatedDepartment[]>(() => {
     const departmentsMap = new Map<string, AggregatedDepartment>();
 
@@ -81,11 +111,11 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
       currentDept.totalPerson += Number(emp.countperson);
 
       const updateParentTotals = (
-        parentCode: string, 
-        parentName: string, 
-        level1: string, 
-        level2: string, 
-        level3: string, 
+        parentCode: string,
+        parentName: string,
+        level1: string,
+        level2: string,
+        level3: string,
         level4: string
       ) => {
         const parentGroupKey = `${emp.workdate}-${parentCode}`;
@@ -94,7 +124,7 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
           parentDept = {
             deptcode: parentCode,
             deptname: parentName,
-            deptsbu: '', 
+            deptsbu: '',
             deptstd: null,
             totalScanned: 0,
             totalNotScanned: 0,
@@ -104,7 +134,7 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
             deptcodelevel3: level3,
             deptcodelevel4: level4,
             workdate: emp.workdate,
-            isTotalRow: false, 
+            isTotalRow: false,
           };
           departmentsMap.set(parentGroupKey, parentDept);
         }
@@ -112,13 +142,13 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
         parentDept.totalNotScanned += Number(emp.countnotscan);
         parentDept.totalPerson += Number(emp.countperson);
       };
-      if (getDeptLevel(currentDept) === 4) { 
+      if (getDeptLevel(currentDept) === 4) {
         updateParentTotals(deptcodelevel3, `รวมแผนก ${deptcodelevel3.substring(0, 6)}`, deptcodelevel1, deptcodelevel2, deptcodelevel3, deptcodelevel3);
       }
-      if (getDeptLevel(currentDept) >= 3) { 
+      if (getDeptLevel(currentDept) >= 3) {
         updateParentTotals(deptcodelevel2, `รวมฝ่าย ${deptcodelevel2.substring(0, 4)}`, deptcodelevel1, deptcodelevel2, deptcodelevel2, deptcodelevel2);
       }
-      if (getDeptLevel(currentDept) >= 2) { 
+      if (getDeptLevel(currentDept) >= 2) {
         updateParentTotals(deptcodelevel1, `รวมโรงงาน ${deptcodelevel1.substring(0, 2)}`, deptcodelevel1, deptcodelevel1, deptcodelevel1, deptcodelevel1);
       }
     });
@@ -178,7 +208,7 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
             finalDisplayList.push({
                 ...entry.dept,
                 deptname: totalDeptName,
-                deptcode: 'TOTAL_${entry.dept.deptcode}',
+                deptcode: `TOTAL_${entry.dept.deptcode}`,
                 isTotalRow: true,
                 deptsbu: '',
                 deptstd: null,
@@ -198,10 +228,10 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
 
   const filteredDepartments = useMemo(() => {
     if (scanStatus === 'scanned') {
-      return aggregatedDepartments.filter(dept => dept.totalScanned > 0 || dept.isTotalRow);
+      return aggregatedDepartments.filter(dept => dept.totalScanned > 0 && !dept.isTotalRow);
     }
     if (scanStatus === 'not_scanned') {
-      return aggregatedDepartments.filter(dept => dept.totalNotScanned > 0 || dept.isTotalRow);
+      return aggregatedDepartments.filter(dept => dept.totalNotScanned > 0 && !dept.isTotalRow);
     }
     return aggregatedDepartments;
   }, [aggregatedDepartments, scanStatus]);
@@ -239,7 +269,7 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
       }
     };
   }, [onLoadMore, hasMore, filteredDepartments.length]);
-  
+
   if (filteredDepartments.length === 0) {
     return (
       <div className="text-center py-4 text-gray-500">
@@ -329,7 +359,8 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
                     displayedTotalPerson = dept.totalPerson.toString();
                   }
 
-                  const shouldHideIcon = dept.isTotalRow || (deptLevel < 4 && !hasNonZeroValue);
+                  // ตรรกะ: ซ่อนไอคอนถ้าเป็นแถวรวม (isTotalRow) หรือ (deptLevel น้อยกว่า 4 และค่าทั้งหมดเป็นศูนย์)
+                  const shouldHideIcon = dept.isTotalRow || (deptLevel < 4 && allZeroValues);
 
                   const handleLinkClick = () => {
                     if (typeof window !== 'undefined') {
