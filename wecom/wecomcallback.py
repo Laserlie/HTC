@@ -431,13 +431,13 @@ def wecom_webhook():
                 if received_text.strip().lower() == 'help' or received_text.strip() == '0':
                     logging.info(f"[{request_id}] Processing command 'help' or '0'")
                     reply_text = (
-                        "**คำสั่งที่รองรับ:**\n"
-                        "**0** หรือ **help**: แสดงรายการคำสั่งนี้\n"
-                        "**1** หรือ **1/YYYY-MM-DD**: สรุปการสแกนเข้า-ออกของทั้งแผนก\n"
-                        "**2**: สรุปการสแกนเข้า-ออกส่วนตัวประจำวัน\n"
-                        "**3** หรือ **3/WorkdayID** หรือ **3/WorkdayID/YYYY-MM**: สรุปการสแกนเข้า-ออกส่วนตัวประจำเดือน (ถ้าไม่ระบุ WorkdayID จะเป็นของคุณ)\n"
-                        "**4**: รายชื่อพนักงานในแผนกของคุณ\n"
-                        "**5**: แสดงรายการวันหยุดประจำปีปัจจุบัน" 
+                        "คำสั่งที่รองรับ:\n"
+                        "0 หรือ help: แสดงรายการคำสั่งนี้\n"
+                        "1 หรือ 1/YYYY-MM-DD: สรุปการสแกนเข้า-ออกของทั้งแผนก\n"
+                        "2 : สรุปการสแกนเข้า-ออกส่วนตัวประจำวัน\n"
+                        "3 หรือ 3/WorkdayID หรือ 3/WorkdayID/YYYY-MM: สรุปการสแกนเข้า-ออกส่วนตัวประจำเดือน (ถ้าไม่ระบุ WorkdayID จะเป็นของคุณ)\n"
+                        "4 : รายชื่อพนักงานในแผนกของคุณ\n"
+                        "5 : แสดงรายการวันหยุดประจำปีปัจจุบัน" 
                     )
                 
                 elif received_text.strip() == '5': 
@@ -783,6 +783,6 @@ if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001,debug=False)
 
 
-#step to use 
+#step to use
 # run wecomcallback.py
 # new terminal, run lt --port 5001 --subdomain htcfacescan

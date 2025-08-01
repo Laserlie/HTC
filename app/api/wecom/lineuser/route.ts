@@ -1,13 +1,10 @@
-//HTC\app\api\wecom\lineuser\route.ts
-
 import axios from 'axios';
 import { NextResponse } from 'next/server';
 
 const BACKEND_LINE_USERS_URL = "http://10.35.10.47:2007/api/LineUsers";
 
 // GET Handler สำหรับดึงข้อมูล LineUser ทั้งหมด (Path: /api/wecom/lineuser)
-
-export async function GET() {
+export async function GET(req: Request) {
     try {
         const response = await axios.get(BACKEND_LINE_USERS_URL);
         return NextResponse.json(response.data, { status: response.status });

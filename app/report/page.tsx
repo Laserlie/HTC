@@ -1,3 +1,4 @@
+// pages/report/page.tsx
 'use client';
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
@@ -34,6 +35,7 @@ function ReportPageContent() {
     const params = getInitialFilters(searchParams);
     return !!(params.from && params.to);
   });
+  const [levelCodeToNameMap, setLevelCodeToNameMap] = useState<Map<string, string>>(new Map()); // Added state for the map
 
   const searchParamsString = searchParams?.toString();
 
@@ -54,21 +56,30 @@ function ReportPageContent() {
       }
       const rawData: ReportApiRawData[] = await res.json();
 
-      const levelCodeToNameMap = new Map<string, string>();
+      const newLevelCodeToNameMap = new Map<string, string>();
       rawData.forEach(item => {
-        if (item.deptcode) {
-          const { level1, level2, level3 } = parseDeptCode(item.deptcode);
-          if (level1 && item.deptname && (!levelCodeToNameMap.has(level1) || item.deptname.length > (levelCodeToNameMap.get(level1)?.length || 0))) {
-              levelCodeToNameMap.set(level1, item.deptname);
-          }
-          if (level2 && item.deptname && (!levelCodeToNameMap.has(level2) || item.deptname.length > (levelCodeToNameMap.get(level2)?.length || 0))) {
-              levelCodeToNameMap.set(level2, item.deptname);
-          }
-          if (level3 && item.deptname && (!levelCodeToNameMap.has(level3) || item.deptname.length > (levelCodeToNameMap.get(level3)?.length || 0))) {
-              levelCodeToNameMap.set(level3, item.deptname);
+        if (item.deptcode && item.deptname) {
+          // 1. Map the full 8-digit deptcode to its specific deptname
+          newLevelCodeToNameMap.set(item.deptcode, item.deptname);
+
+          // 2. Also map the abbreviated codes (level 1, 2, 3) to their corresponding names
+          //    This assumes that the rawData will contain items for the aggregate levels (e.g., 06000000 for 'Platform')
+          if (item.deptcode.endsWith('000000') && item.deptcode.length === 8) { // Level 1 (e.g., 06000000 -> Platform)
+            const level1Code = item.deptcode.substring(0, 2);
+            newLevelCodeToNameMap.set(level1Code, item.deptname);
+          } else if (item.deptcode.endsWith('0000') && item.deptcode.length === 8) { // Level 2 (e.g., 06020000 -> P&O)
+            const level2Code = item.deptcode.substring(0, 4);
+            newLevelCodeToNameMap.set(level2Code, item.deptname);
+          } else if (item.deptcode.endsWith('00') && item.deptcode.length === 8) { // Level 3 (e.g., 06020100 -> IT or 06030000 -> HR)
+            const level3Code = item.deptcode.substring(0, 6);
+            // Only set if not already more specifically set by a full code (e.g. 06020100 maps 060201 to IT directly)
+            if (!newLevelCodeToNameMap.has(level3Code) || (newLevelCodeToNameMap.get(level3Code) || '').length < item.deptname.length) {
+              newLevelCodeToNameMap.set(level3Code, item.deptname);
+            }
           }
         }
       });
+      setLevelCodeToNameMap(newLevelCodeToNameMap); // Update state with the new map
 
       const filteredRawData = rawData.filter(item => {
         if (!item.deptcode) return false;
@@ -120,8 +131,8 @@ function ReportPageContent() {
             groupid: item.groupid || '',
             groupname: item.groupname || '',
             workdate: item.workdate || '',
-            deptcode: level3,
-            deptname: item.deptname || '',
+            deptcode: item.deptcode, // Use full deptcode for original reference
+            deptname: newLevelCodeToNameMap.get(item.deptcode) || item.deptname || '', // Use map for specific deptname
             deptsbu: item.deptsbu || '',
             deptstd: item.deptstd !== undefined ? item.deptstd : null,
             countscan: currentCountScan,
@@ -129,12 +140,12 @@ function ReportPageContent() {
             countperson: currentCountPerson,
             late: currentLate,
             factoryCode: level1,
-            factoryName: levelCodeToNameMap.get(level1) || `โรงงาน ${level1}`,
+            factoryName: newLevelCodeToNameMap.get(level1) || `โรงงาน ${level1}`, // Use map for factory name
             mainDepartmentCode: level2,
-            mainDepartmentName: levelCodeToNameMap.get(level2) || `แผนกหลัก ${level2}`,
+            mainDepartmentName: newLevelCodeToNameMap.get(level2) || `แผนกหลัก ${level2}`, // Use map for main dept name
             subDepartmentCode: level3,
-            subDepartmentName: levelCodeToNameMap.get(level3) || item.deptname || `แผนกย่อย/ส่วนงาน ${level3}`,
-            originalFullDeptcode: item.deptcode, 
+            subDepartmentName: newLevelCodeToNameMap.get(level3) || `แผนกย่อย/ส่วนงาน ${level3}`, // Use map for sub dept name
+            originalFullDeptcode: item.deptcode,
           });
         }
       });
@@ -187,7 +198,12 @@ function ReportPageContent() {
       ) : loading ? (
         <Spinner />
       ) : (
-        <DepartmentTable employees={filteredEmployees} scanStatus={filters.employeeId} />
+        <DepartmentTable
+          employees={filteredEmployees}
+          scanStatus={filters.employeeId}
+          levelCodeToNameMap={levelCodeToNameMap} // Pass the map
+          // filters={filters} // Removed filters prop
+        />
       )}
     </div>
   );

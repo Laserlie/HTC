@@ -290,10 +290,10 @@ def fetch_scans_from_api(target_date, combined_employee_data):
 
     # จำกัดจำนวน workdayIds ใน URL เพื่อหลีกเลี่ยง URL ที่ยาวเกินไป (ถ้ามีพนักงานเยอะมาก)
     # หาก API มีข้อจำกัด หรือมีพนักงานเป็นพันคน อาจต้องแบ่งการเรียก API
-    workday_ids_str = ",".join(all_workday_ids_with_wecom)
+    workday_ids_params = "&".join([f"workdayIds={wid}" for wid in all_workday_ids_with_wecom])
     
     # สร้าง URL สำหรับเรียก API ScanSummary
-    url = f"{DAILY_SCANS_API}?year={current_year}&month={current_month}&workdayIds={workday_ids_str}"
+    url = f"{DAILY_SCANS_API}?year={current_year}&month={current_month}&{workday_ids_params}"
     
     print(f"[DEBUG] Fetching daily scan data from {url}", flush=True)
     try:
@@ -648,7 +648,7 @@ if __name__ == "__main__":
 
 ############ --------testmode----------#############
 
-##  (เปลี่ยนเป็นวันที่ที่ต้องการทดสอบ)
+##  python wecomsend.py --test-mode --test-date 2025-07-25(เปลี่ยนเป็นวันที่ต้องการทดสอบ)
 
 
 

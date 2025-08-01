@@ -1,11 +1,10 @@
+// components/DepartmentTable.tsx
 'use client';
 
 import React, { useRef, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { PiFileMagnifyingGlassBold } from 'react-icons/pi';
 import { Employee } from '../app/types/employee';
-
-// ฟังก์ชัน hasNonZeroValue ถูกลบออกเนื่องจากไม่ได้ใช้งานในโค้ด
 
 export type AggregatedDepartment = {
   deptcode: string;
@@ -43,10 +42,18 @@ export type DepartmentTableProps = {
   scanStatus?: string;
   onLoadMore?: () => void;
   hasMore?: boolean;
-  selectedDate?: string;
+  levelCodeToNameMap: Map<string, string>;
+  // filters: { // Removed filters prop
+  //   from: string;
+  //   to: string;
+  //   factoryId: string;
+  //   mainDepartmentId: string;
+  //   subDepartmentId: string;
+  //   employeeId: string;
+  // };
 };
 
-export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, hasMore}: DepartmentTableProps) {
+export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, hasMore, levelCodeToNameMap }: DepartmentTableProps) { // Removed filters from destructuring
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
 
@@ -91,7 +98,7 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
       if (!currentDept) {
         currentDept = {
           deptcode: fullDeptCode,
-          deptname: emp.deptname,
+          deptname: levelCodeToNameMap.get(fullDeptCode) || emp.deptname,
           deptsbu: emp.deptsbu,
           deptstd: emp.deptstd,
           totalScanned: 0,
@@ -111,28 +118,24 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
       currentDept.totalPerson += Number(emp.countperson);
 
       const updateParentTotals = (
-        parentCode: string,
-        parentName: string,
-        level1: string,
-        level2: string,
-        level3: string,
-        level4: string
+        parentCodeFull: string,
+        parentCodeShort: string
       ) => {
-        const parentGroupKey = `${emp.workdate}-${parentCode}`;
+        const parentGroupKey = `${emp.workdate}-${parentCodeFull}`;
         let parentDept = departmentsMap.get(parentGroupKey);
         if (!parentDept) {
           parentDept = {
-            deptcode: parentCode,
-            deptname: parentName,
+            deptcode: parentCodeFull,
+            deptname: levelCodeToNameMap.get(parentCodeShort) || `รวม ${parentCodeShort}`,
             deptsbu: '',
             deptstd: null,
             totalScanned: 0,
             totalNotScanned: 0,
             totalPerson: 0,
-            deptcodelevel1: level1,
-            deptcodelevel2: level2,
-            deptcodelevel3: level3,
-            deptcodelevel4: level4,
+            deptcodelevel1: parentCodeFull.substring(0,2) + '000000',
+            deptcodelevel2: parentCodeFull.substring(0,4) + '0000',
+            deptcodelevel3: parentCodeFull.substring(0,6) + '00',
+            deptcodelevel4: parentCodeFull,
             workdate: emp.workdate,
             isTotalRow: false,
           };
@@ -142,26 +145,30 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
         parentDept.totalNotScanned += Number(emp.countnotscan);
         parentDept.totalPerson += Number(emp.countperson);
       };
-      if (getDeptLevel(currentDept) === 4) {
-        updateParentTotals(deptcodelevel3, `รวมแผนก ${deptcodelevel3.substring(0, 6)}`, deptcodelevel1, deptcodelevel2, deptcodelevel3, deptcodelevel3);
+
+      const currentDeptLevel = getDeptLevel(currentDept);
+
+      if (currentDeptLevel === 4) {
+        updateParentTotals(deptcodelevel3, deptcodelevel3.substring(0,6));
       }
-      if (getDeptLevel(currentDept) >= 3) {
-        updateParentTotals(deptcodelevel2, `รวมฝ่าย ${deptcodelevel2.substring(0, 4)}`, deptcodelevel1, deptcodelevel2, deptcodelevel2, deptcodelevel2);
+      if (currentDeptLevel >= 3) {
+        updateParentTotals(deptcodelevel2, deptcodelevel2.substring(0,4));
       }
-      if (getDeptLevel(currentDept) >= 2) {
-        updateParentTotals(deptcodelevel1, `รวมโรงงาน ${deptcodelevel1.substring(0, 2)}`, deptcodelevel1, deptcodelevel1, deptcodelevel1, deptcodelevel1);
+      if (currentDeptLevel >= 2) {
+        updateParentTotals(deptcodelevel1, deptcodelevel1.substring(0,2));
       }
     });
+
     const hierarchicalMap = new Map<string, { dept: AggregatedDepartment; children: AggregatedDepartment[] }>();
     departmentsMap.forEach(dept => {
       hierarchicalMap.set(`${dept.workdate}-${dept.deptcode}`, { dept, children: [] });
     });
+
     const topLevelDepartments: AggregatedDepartment[] = [];
     const allDepartmentsSortedByCode = Array.from(departmentsMap.values()).sort((a, b) => {
       if (a.workdate !== b.workdate) return a.workdate.localeCompare(b.workdate);
       return a.deptcode.localeCompare(b.deptcode);
     });
-
 
     allDepartmentsSortedByCode.forEach(dept => {
       const level = getDeptLevel(dept);
@@ -175,15 +182,21 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
         parentCode = dept.deptcodelevel1;
       }
 
-        const parentEntryKey = parentCode ? `${dept.workdate}-${parentCode}` : null;
-        if (parentEntryKey && hierarchicalMap.has(parentEntryKey)) {
-            const parentEntry = hierarchicalMap.get(parentEntryKey);
-            if (parentEntry) {
-                parentEntry.children.push(dept);
-            }
-        } else {
-            topLevelDepartments.push(dept);
-        }
+      if (dept.isTotalRow) {
+          topLevelDepartments.push(dept);
+          return;
+      }
+
+      const parentEntryKey = parentCode ? `${dept.workdate}-${parentCode}` : null;
+
+      if (parentEntryKey && hierarchicalMap.has(parentEntryKey) && parentEntryKey !== `${dept.workdate}-${dept.deptcode}`) {
+          const parentEntry = hierarchicalMap.get(parentEntryKey);
+          if (parentEntry) {
+              parentEntry.children.push(dept);
+          }
+      } else {
+          topLevelDepartments.push(dept);
+      }
     });
 
     hierarchicalMap.forEach(entry => {
@@ -195,20 +208,39 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
     const flattenAndAddTotals = (dept: AggregatedDepartment) => {
         const entry = hierarchicalMap.get(`${dept.workdate}-${dept.deptcode}`);
         if (!entry) return;
+
         finalDisplayList.push({ ...entry.dept, isTotalRow: false });
+
         entry.children.forEach(child => flattenAndAddTotals(child));
+
         const deptLevel = getDeptLevel(entry.dept);
-        if (deptLevel === 1 || deptLevel === 2) {
-            let totalDeptName = '';
-            if (deptLevel === 1) {
-                totalDeptName = `Grand Total ${entry.dept.deptname.replace('รวมโรงงาน ', '')}`;
-            } else if (deptLevel === 2) {
-                totalDeptName = `Total ${entry.dept.deptname.replace('รวมฝ่าย ', '')}`;
+        const currentDeptCodeForTotal = entry.dept.deptcode;
+
+        if (deptLevel === 1 || deptLevel === 2 || deptLevel === 3) {
+            // Condition to hide green total rows for ANY level 3 department without children
+            if (deptLevel === 3 && entry.children.length === 0) {
+                // Skip pushing this total row if it's a level 3 department with no children
+                return;
             }
+
+            let totalDeptName = '';
+            let totalDeptCodeShort = '';
+
+            if (deptLevel === 1) {
+                totalDeptCodeShort = currentDeptCodeForTotal.substring(0, 2);
+                totalDeptName = `Grand Total ${levelCodeToNameMap.get(totalDeptCodeShort) || totalDeptCodeShort}`;
+            } else if (deptLevel === 2) {
+                totalDeptCodeShort = currentDeptCodeForTotal.substring(0, 4);
+                totalDeptName = `Total ${levelCodeToNameMap.get(totalDeptCodeShort) || totalDeptCodeShort}`;
+            } else if (deptLevel === 3) {
+                totalDeptCodeShort = currentDeptCodeForTotal.substring(0, 6);
+                totalDeptName = `Total ${levelCodeToNameMap.get(totalDeptCodeShort) || totalDeptCodeShort}`;
+            }
+
             finalDisplayList.push({
                 ...entry.dept,
                 deptname: totalDeptName,
-                deptcode: `TOTAL_${entry.dept.deptcode}`,
+                deptcode: `TOTAL_${currentDeptCodeForTotal}`,
                 isTotalRow: true,
                 deptsbu: '',
                 deptstd: null,
@@ -221,20 +253,35 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
       return a.deptcode.localeCompare(b.deptcode);
     });
 
-    topLevelDepartments.forEach(dept => flattenAndAddTotals(dept));
+    topLevelDepartments
+      .filter(dept => !dept.isTotalRow)
+      .forEach(dept => flattenAndAddTotals(dept));
 
     return finalDisplayList;
-  }, [employees]);
+  }, [employees, levelCodeToNameMap]);
 
   const filteredDepartments = useMemo(() => {
-    if (scanStatus === 'scanned') {
-      return aggregatedDepartments.filter(dept => dept.totalScanned > 0 && !dept.isTotalRow);
-    }
-    if (scanStatus === 'not_scanned') {
-      return aggregatedDepartments.filter(dept => dept.totalNotScanned > 0 && !dept.isTotalRow);
-    }
-    return aggregatedDepartments;
+    return aggregatedDepartments.filter(dept => {
+        const allZeroValues = dept.totalScanned === 0 && dept.totalNotScanned === 0 && dept.totalPerson === 0;
+
+        // If it's a total row and all values are zero, always hide it
+        if (dept.isTotalRow && allZeroValues) {
+            return false;
+        }
+
+        // Apply scanStatus filter only to non-total rows
+        if (!dept.isTotalRow) {
+            if (scanStatus === 'scanned') {
+                return dept.totalScanned > 0;
+            }
+            if (scanStatus === 'not_scanned') {
+                return dept.totalNotScanned > 0;
+            }
+        }
+        return true;
+    });
   }, [aggregatedDepartments, scanStatus]);
+
 
   const groupedByDate = useMemo(() => {
     const groups = new Map<string, AggregatedDepartment[]>();
@@ -321,46 +368,55 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
                   const linkWorkdate = dept.workdate;
                   const deptLevel = getDeptLevel(dept);
 
-                  let totalRowLevel = deptLevel;
+                  let effectiveDeptLevel = deptLevel;
                   if (dept.isTotalRow && dept.deptcode.startsWith('TOTAL_')) {
-                    const parentDeptcode = dept.deptcode.replace('TOTAL_', '');
-                    totalRowLevel = getDeptLevel({ ...dept, deptcode: parentDeptcode });
+                    const originalDeptCode = dept.deptcode.replace('TOTAL_', '');
+                    effectiveDeptLevel = getDeptLevel({ ...dept, deptcode: originalDeptCode });
                   }
 
-                  const paddingLeft = dept.isTotalRow ? 0 : (deptLevel - 1) * 25;
+
+                  const paddingLeft = dept.isTotalRow ? 0 : (effectiveDeptLevel - 1) * 25;
 
                   const allZeroValues = dept.totalScanned === 0 && dept.totalNotScanned === 0 && dept.totalPerson === 0;
 
                   let rowBgClass = '';
                   if (dept.isTotalRow) {
-                    if (totalRowLevel === 1) {
+                    if (effectiveDeptLevel === 1) {
                       rowBgClass = 'bg-yellow-300 font-bold';
-                    } else if (totalRowLevel === 2) {
+                    } else if (effectiveDeptLevel === 2) {
                       rowBgClass = 'bg-blue-300 font-bold';
-                    } else if (totalRowLevel === 3) {
+                    } else if (effectiveDeptLevel === 3) {
                       rowBgClass = 'bg-green-200 font-bold';
+                    } else {
+                        rowBgClass = 'bg-gray-300 font-bold';
                     }
                   } else {
-                    rowBgClass = levelColors[deptLevel - 1] || 'bg-white';
+                    rowBgClass = levelColors[effectiveDeptLevel - 1] || 'bg-white';
                   }
 
-                  const verticalPaddingClass = (deptLevel === 1 || deptLevel === 2 || dept.isTotalRow) ? 'py-3' : 'py-2';
+
+                  const verticalPaddingClass = (effectiveDeptLevel === 1 || effectiveDeptLevel === 2 || dept.isTotalRow) ? 'py-3' : 'py-2';
                   const displayedDeptCode = dept.isTotalRow ? '' : dept.deptcode;
-                  const displaySBU = dept.isTotalRow || deptLevel === 2 ? '' : dept.deptsbu;
-                  const displaySTD = dept.isTotalRow || deptLevel === 2 ? '' : dept.deptstd;
+                  const displaySBU = dept.isTotalRow || effectiveDeptLevel === 2 ? '' : dept.deptsbu;
+                  const displaySTD = dept.isTotalRow || effectiveDeptLevel === 2 ? '' : dept.deptstd;
 
                   let displayedTotalScanned = '';
                   let displayedTotalNotScanned = '';
                   let displayedTotalPerson = '';
 
-                  if (dept.isTotalRow || deptLevel >= 3) {
+                  if (dept.isTotalRow || effectiveDeptLevel >= 3) {
                     displayedTotalScanned = dept.totalScanned.toString();
                     displayedTotalNotScanned = dept.totalNotScanned.toString();
                     displayedTotalPerson = dept.totalPerson.toString();
                   }
 
-                  // ตรรกะ: ซ่อนไอคอนถ้าเป็นแถวรวม (isTotalRow) หรือ (deptLevel น้อยกว่า 4 และค่าทั้งหมดเป็นศูนย์)
-                  const shouldHideIcon = dept.isTotalRow || (deptLevel < 4 && allZeroValues);
+                  // Modified: The icon should be hidden if:
+                  // 1. It's a total row (dept.isTotalRow)
+                  // OR
+                  // 2. It's a Level 1 or Level 2 department (effectiveDeptLevel === 1 || effectiveDeptLevel === 2)
+                  // OR
+                  // 3. It's a Level 3 department AND all Scan/No Scan/Person values are zero (effectiveDeptLevel === 3 && allZeroValues)
+                  const shouldHideIcon = dept.isTotalRow || effectiveDeptLevel === 1 || effectiveDeptLevel === 2 || (effectiveDeptLevel === 3 && allZeroValues);
 
                   const handleLinkClick = () => {
                     if (typeof window !== 'undefined') {
