@@ -4,8 +4,8 @@ import { NextResponse } from 'next/server';
 const BACKEND_LINE_USERS_URL = "http://10.35.10.47:2007/api/LineUsers";
 
 // GET Handler สำหรับดึงข้อมูล LineUser ด้วย ID
-export async function GET(req: Request, { params }: { params: { id: string } }) {
-  const id = params.id?.trim();
+export async function GET(req: Request, params: { params: { id: string } }) {
+  const id = params.params.id?.trim();
 
   if (!id || isNaN(Number(id))) {
     return NextResponse.json({ message: 'Invalid or missing ID in GET request.' }, { status: 400 });
@@ -29,8 +29,8 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 }
 
 // PUT Handler สำหรับอัปเดต LineUser ด้วย ID
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
-  const id = params.id?.trim();
+export async function PUT(req: Request, params: { params: { id: string } }) {
+  const id = params.params.id?.trim();
 
   if (!id || isNaN(Number(id))) {
     return NextResponse.json({ message: 'Invalid or missing ID in PUT request.' }, { status: 400 });
@@ -74,8 +74,8 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 }
 
 // DELETE Handler สำหรับลบ LineUser ด้วย ID
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
-  const id = params.id?.trim();
+export async function DELETE(req: Request, params: { params: { id: string } }) {
+  const id = params.params.id?.trim();
 
   if (!id || isNaN(Number(id))) {
     return NextResponse.json({ message: 'Invalid or missing ID in DELETE request.' }, { status: 400 });

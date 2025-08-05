@@ -210,8 +210,6 @@ def fetch_employee_data_from_apis():
              print(f"[ERROR] EmployeeActive API did not return a list. Response: {active_employees}")
              active_employees = []
 
-        # สร้าง Dictionary ชั่วคราวเพื่อใช้ empCode ในการค้นหา (เพื่อเชื่อมกับ LineUsers)
-        # และใช้ workdayId เป็น key หลักใน combined_employee_data
         empcode_to_workdayid_map = {} 
         for emp in active_employees:
             workday_id = str(emp.get('workdayId')) # ดึง workdayId โดยตรง
@@ -288,8 +286,9 @@ def fetch_scans_from_api(target_date, combined_employee_data):
         print("[WARNING] No Workday IDs with associated WeCom IDs found to query scans for. Returning empty list.", flush=True)
         return []
 
-    # จำกัดจำนวน workdayIds ใน URL เพื่อหลีกเลี่ยง URL ที่ยาวเกินไป (ถ้ามีพนักงานเยอะมาก)
-    # หาก API มีข้อจำกัด หรือมีพนักงานเป็นพันคน อาจต้องแบ่งการเรียก API
+    # จำกัดจำนวน workdayIds ใน URL query string เพื่อหลีกเลี่ยง URL ที่ยาวเกินไป
+    # หากมี workday_ids_params มากเกินไป อาจจะต้องส่งเป็น POST request พร้อม body แทน
+    # สำหรับตอนนี้ สมมติว่าไม่เกินขีดจำกัด
     workday_ids_params = "&".join([f"workdayIds={wid}" for wid in all_workday_ids_with_wecom])
     
     # สร้าง URL สำหรับเรียก API ScanSummary
@@ -306,9 +305,7 @@ def fetch_scans_from_api(target_date, combined_employee_data):
             return []
 
         processed_scans = []
-        # เนื่องจาก Response Structure ไม่มี 'dailySummaries' array ภายนอก
-        # แต่เป็น list ของ objects ที่แต่ละ object คือข้อมูลหนึ่งวัน (หรือหนึ่งสแกน)
-        # เราจะประมวลผลแต่ละ item ใน scan_summary_data โดยตรง
+       
         for summary_item in scan_summary_data:
             # ใช้ key names ตาม Response ที่คุณให้มา
             person_workday_id_from_scan_api = str(summary_item.get('workdayId')) 
@@ -340,34 +337,38 @@ def fetch_scans_from_api(target_date, combined_employee_data):
                 first_scan_dt = None
                 if first_scan_time_str:
                     try:
+                        # พยายาม parse เป็น HH:MM:SS ก่อน
                         time_obj = datetime.strptime(first_scan_time_str, '%H:%M:%S').time()
                         first_scan_dt = datetime.combine(scan_date, time_obj)
                     except ValueError:
-                        # ลอง parse ด้วย dateutil.parser.isoparse เผื่อเป็น ISO format
+                        # ถ้าไม่ใช่ HH:MM:SS ลอง parse ด้วย dateutil.parser.isoparse (ซึ่งรองรับ ISO, หรือ formats อื่นๆ ที่ยืดหยุ่นกว่า)
                         try:
-                            first_scan_dt = parser.isoparse(first_scan_time_str)
-                            if first_scan_dt.date() != scan_date:
-                                 first_scan_dt = datetime.combine(scan_date, first_scan_dt.time())
+                            parsed_dt = parser.isoparse(first_scan_time_str)
+                            # ถ้า parse ได้ แต่เป็นวันที่อื่น ให้ใช้เวลาจาก parsed_dt แต่ใช้วันที่ของ scan_date
+                            if parsed_dt.date() != scan_date:
+                                 first_scan_dt = datetime.combine(scan_date, parsed_dt.time())
+                            else:
+                                first_scan_dt = parsed_dt # ถ้าวันที่ตรงกัน ก็ใช้ datetime object นั้นเลย
                         except ValueError:
                             print(f"[ERROR] Could not parse scanIn time for Workday ID {person_workday_id_from_scan_api} on {scan_date}: {first_scan_time_str}", flush=True)
                         
                 last_scan_dt = None
                 if last_scan_time_str: # scanOut อาจเป็น null
                     try:
+                        # พยายาม parse เป็น HH:MM:SS ก่อน
                         time_obj = datetime.strptime(last_scan_time_str, '%H:%M:%S').time()
                         last_scan_dt = datetime.combine(scan_date, time_obj)
                     except ValueError:
-                        # ลอง parse ด้วย dateutil.parser.isoparse เผื่อเป็น ISO format
+                        # ถ้าไม่ใช่ HH:MM:SS ลอง parse ด้วย dateutil.parser.isoparse
                         try:
-                            last_scan_dt = parser.isoparse(last_scan_time_str)
-                            if last_scan_dt.date() != scan_date:
-                                last_scan_dt = datetime.combine(scan_date, last_scan_dt.time())
+                            parsed_dt = parser.isoparse(last_scan_time_str)
+                            if parsed_dt.date() != scan_date:
+                                last_scan_dt = datetime.combine(scan_date, parsed_dt.time())
+                            else:
+                                last_scan_dt = parsed_dt
                         except ValueError:
                             print(f"[ERROR] Could not parse scanOut time for Workday ID {person_workday_id_from_scan_api} on {scan_date}: {last_scan_time_str}", flush=True)
 
-                # เพิ่มข้อมูลเข้า processed_scans เฉพาะวันที่ตรง
-                # Note: หากมี scanIn/scanOut เป็น null แต่สถานะเป็น "มาทำงาน" อาจจะยังต้องการรวมด้วย
-                # แต่หลักการแจ้งเตือนเราจะดูที่ firstscantime และ lastscantime เป็นหลัก
                 if first_scan_dt or last_scan_dt: # เพิ่มเฉพาะรายการที่มีข้อมูลสแกนจริงๆ
                     processed_scans.append({
                         "person_code": person_workday_id_from_scan_api, # ตอนนี้ person_code คือ workdayId
@@ -404,6 +405,7 @@ def fetch_total_scan_in_api(current_date, combined_employee_data):
     """
     print(f"[DEBUG] Calculating total scan-in count internally from active employees with WeCom IDs.", flush=True)
     # นับจำนวนพนักงานที่มี wecom_user_id ซึ่งถือว่าเป็นพนักงานที่ "active และมีช่องทางรับแจ้งเตือน"
+    # ณ จุดนี้ เราสมมติว่าทุกคนที่มี WeCom ID ถือว่าเป็นการ "scan-in" หรือเป็นเป้าหมายที่เราติดตาม
     return sum(1 for emp_info in combined_employee_data.values() if emp_info["wecom_user_id"])
 
 
@@ -418,7 +420,7 @@ def poll_and_notify():
     print(f"[DEBUG] Loaded total_scan_in_status: {total_scan_in_status}", flush=True)
 
     wecom_access_token = None
-    token_expiry_time = datetime.now() # Initialize token expiry to force a refresh on first run
+    token_expiry_time = datetime.now() 
     
     print("--- เริ่มการ Poll ข้อมูลจาก API ---", flush=True)
     print(f"Attempting to load state from: {LAST_POLL_STATE_FILE}", flush=True)
@@ -446,25 +448,33 @@ def poll_and_notify():
                 time.sleep(POLL_INTERVAL_SECONDS)
                 continue
 
-            # --- Individual Scan Notifications ---
-            # ใช้ datetime.now().date() เสมอ หาก TEST_DATE ไม่ได้ถูกกำหนด
-            # เนื่องจากคุณบอกว่าต้องการข้อมูลของ "วันที่ปัจจุบัน"
             current_date_for_scan = TEST_DATE if TEST_DATE else datetime.now().date()
-            current_time_for_poll = TEST_DATE if TEST_DATE else datetime.now() # ยังคงใช้ datetime.now() สำหรับเวลาที่ใช้ในการเปรียบเทียบ state
+            # ยังคงใช้ datetime.now() สำหรับเวลาที่ใช้ในการเปรียบเทียบ state ของ last_polled_dt
+            current_time_for_poll_save = datetime.now() 
 
             print(f"[DEBUG] Running fetch_scans_from_api for date: {current_date_for_scan}", flush=True)
             # ส่ง combined_employee_data ที่ตอนนี้มี workdayId เป็น key หลักไปให้
             new_scans = fetch_scans_from_api(current_date_for_scan, combined_employee_data)
             print(f"[DEBUG] Scan API returned {len(new_scans)} rows for {current_date_for_scan}.", flush=True)
 
-            today_start_of_day = datetime.combine(current_date_for_scan, dt_time_obj.min)
-            max_current_scan_time = max(last_polled_dt, today_start_of_day)
+            # อัปเดต notified_status สำหรับวันใหม่ ถ้าวันเปลี่ยน
+            if total_scan_in_status['date'] != current_date_for_scan:
+                print(f"New day detected ({current_date_for_scan}). Resetting notified_status and total_scan_in_status.")
+                notified_status = {} # Reset notified_status สำหรับวันใหม่
+                total_scan_in_status = {'total_count': 0, 'last_notified_time': None, 'date': current_date_for_scan}
+                save_notified_status(notified_status)
+                save_total_scan_in_status(total_scan_in_status['total_count'], total_scan_in_status['last_notified_time'], total_scan_in_status['date'])
+            
+            # max_current_scan_time ใช้สำหรับบันทึก last_polled_dt เท่านั้น
+            # เพื่อให้มั่นใจว่าครั้งหน้าจะเริ่มดึงข้อมูลจากเวลาที่ใหม่ที่สุดที่เห็น
+            max_current_scan_time_for_save = last_polled_dt 
+            if TEST_DATE is None: # ถ้าไม่ได้อยู่ใน test mode ให้ใช้เวลาปัจจุบันในการเปรียบเทียบ
+                max_current_scan_time_for_save = datetime.now()
 
 
             if new_scans:
                 print(f"Found {len(new_scans)} new or updated scan records.")
-                # ใช้ defaultdict เพื่อรวมข้อมูลสแกนของบุคคลเดียวกันในวันเดียวกัน
-                # (กรณีที่ API อาจคืนค่าหลายรายการสำหรับคนเดียวกันในวันเดียวกัน และเราต้องการ first/last)
+                # ใช้ defaultdict เพื่อเก็บข้อมูลสแกนของแต่ละบุคคลในแต่ละวัน
                 scans_by_person_date = defaultdict(lambda: {
                     'full_name': '', 
                     'wecom_user_id': '', 
@@ -475,7 +485,6 @@ def poll_and_notify():
                 })
                 
                 for row in new_scans:
-                    # เพิ่ม emp_code ในการ unpack tuple
                     person_code, full_name, workdate, firstscantime, lastscantime, wecom_user_id, emp_code = row
                     
                     if not workdate:
@@ -489,71 +498,67 @@ def poll_and_notify():
                     scans_by_person_date[key]['workdate'] = workdate_key
                     scans_by_person_date[key]['emp_code'] = emp_code 
                     
-                    # ถ้ามีเวลาสแกนเข้า และเป็นเวลาที่เร็วกว่าที่เคยเจอ ให้ update
+                    # อัปเดต first_in_time หากพบเวลาที่เร็วกว่า
                     if firstscantime and firstscantime < scans_by_person_date[key]['first_in_time']:
                         scans_by_person_date[key]['first_in_time'] = firstscantime
                     
-                    # ถ้ามีเวลาสแกนออก และเป็นเวลาที่ช้ากว่าที่เคยเจอ ให้ update
+                    # อัปเดต last_out_time หากพบเวลาที่ช้ากว่า
                     if lastscantime and lastscantime > scans_by_person_date[key]['last_out_time']:
                         scans_by_person_date[key]['last_out_time'] = lastscantime
                     
-                    # อัปเดต max_current_scan_time เพื่อใช้ในการบันทึก last_polled_dt
-                    if firstscantime and firstscantime > max_current_scan_time:
-                        max_current_scan_time = firstscantime
-                    if lastscantime and lastscantime > max_current_scan_time:
-                        max_current_scan_time = lastscantime
+                    # อัปเดต max_current_scan_time_for_save เพื่อบันทึก last_polled_dt ที่ใหม่ที่สุด
+                    if firstscantime and firstscantime > max_current_scan_time_for_save:
+                        max_current_scan_time_for_save = firstscantime
+                    if lastscantime and lastscantime > max_current_scan_time_for_save:
+                        max_current_scan_time_for_save = lastscantime
 
+                # ประมวลผลและส่งข้อความแจ้งเตือน
                 for (person_code, workdate_key), data in scans_by_person_date.items():
-                    # เรากรองข้อมูลที่ fetch_scans_from_api มาแล้วว่าต้องเป็น current_date_for_scan
-                    # แต่อันนี้เป็นการยืนยันอีกครั้ง
                     if workdate_key != current_date_for_scan:
-                        continue
+                        continue # ตรวจสอบให้แน่ใจว่าเป็นข้อมูลของวันที่ปัจจุบัน
 
+                    # ดึงสถานะปัจจุบันของบุคคลนี้
                     user_status = notified_status.get(person_code, {'first_in_time': None, 'last_out_time': None})
                     message_parts = []
+                    should_notify = False
                     
                     # ตรวจสอบการแจ้งเตือน "เข้างาน"
-                    # เงื่อนไข: มีเวลาสแกนเข้า และ (ยังไม่เคยแจ้ง หรือ เวลาที่ได้มาเร็วกว่าที่เคยแจ้ง หรือ เวลาที่ได้มาใหม่กว่า last_polled_dt)
+                    # เงื่อนไข: มีเวลาสแกนเข้า และ (ยังไม่เคยแจ้ง หรือ เวลาที่ได้มาเร็วกว่าที่เคยแจ้ง)
                     if data['first_in_time'] != datetime.max and \
                        (user_status['first_in_time'] is None or \
-                        data['first_in_time'] < user_status['first_in_time'] or \
-                        data['first_in_time'] > last_polled_dt): # ตรวจสอบว่ามีการเปลี่ยนแปลงที่ใหม่กว่าการ poll ครั้งล่าสุด
+                        data['first_in_time'] < user_status['first_in_time']):
                         message_parts.append(f"🕖 In: {safe_strftime(data['first_in_time'], '%H:%M:%S')} ({safe_strftime(data['workdate'], '%d/%m/%Y')})")
                         user_status['first_in_time'] = data['first_in_time']
+                        should_notify = True
                         
                     # ตรวจสอบการแจ้งเตือน "เลิกงาน"
-                    # เงื่อนไข: มีเวลาสแกนออก และ (ยังไม่เคยแจ้ง หรือ เวลาที่ได้มาใหม่กว่าที่เคยแจ้ง หรือ เวลาที่ได้มาใหม่กว่า last_polled_dt)
+                    # เงื่อนไข: มีเวลาสแกนออก และ (ยังไม่เคยแจ้ง หรือ เวลาที่ได้มาใหม่กว่าที่เคยแจ้ง)
                     if data['last_out_time'] != datetime.min and \
                        (user_status['last_out_time'] is None or \
-                        data['last_out_time'] > user_status['last_out_time'] or \
-                        data['last_out_time'] > last_polled_dt): # ตรวจสอบว่ามีการเปลี่ยนแปลงที่ใหม่กว่าการ poll ครั้งล่าสุด
+                        data['last_out_time'] > user_status['last_out_time']):
                         message_parts.append(f"🕓 Out: {safe_strftime(data['last_out_time'], '%H:%M:%S')} ({safe_strftime(data['workdate'], '%d/%m/%Y')})")
                         user_status['last_out_time'] = data['last_out_time']
+                        should_notify = True
                     
-                    if message_parts:
+                    if should_notify and message_parts:
                         full_message = f"***New Scan Notification***\nName: {data['full_name']}\nEmployee Code: {data['emp_code']}\n" + "\n".join(message_parts)
                         if data['wecom_user_id']:
                             print(f"[DEBUG] About to send to user_id: {data['wecom_user_id']} (Workday ID: {person_code})")
                             send_wecom_message(wecom_access_token, data['wecom_user_id'], full_message)
                         else:
                             print(f"Warning: No WeCom User ID for {data['full_name']} (Workday ID: {person_code}). Message not sent.")
+                        
+                        # อัปเดตสถานะใน notified_status หลังจากส่งข้อความ
                         notified_status[person_code] = user_status
-                        save_notified_status(notified_status)
+                        save_notified_status(notified_status) # บันทึกทันทีหลังอัปเดตสถานะบุคคล
             
-            # อัปเดต last_polled_dt หลังจากประมวลผลการสแกนทั้งหมด
-            # เพื่อให้รอบถัดไปเริ่มตรวจจากเวลาล่าสุดที่มีข้อมูลการสแกนจริงๆ
-            # ถ้าไม่มี new_scans เลยในรอบนี้ ก็ยังคงอัปเดต last_polled_dt เป็นเวลาปัจจุบัน
-            save_last_polled_time(max_current_scan_time if new_scans else datetime.now())
+            # บันทึกเวลาที่ Poll ล่าสุด
+            # ควรบันทึกเวลาที่ใหม่ที่สุดที่ได้เห็นข้อมูลในรอบนี้
+            save_last_polled_time(max_current_scan_time_for_save) 
             
-            current_date = TEST_DATE if TEST_DATE else datetime.now().date()
-            
-            if total_scan_in_status['date'] != current_date:
-                print(f"New day detected. Resetting total scan-in status for {current_date}.")
-                total_scan_in_status = {'total_count': 0, 'last_notified_time': None, 'date': current_date}
-                save_total_scan_in_status(total_scan_in_status['total_count'], total_scan_in_status['last_notified_time'], total_scan_in_status['date'])
-            
-            current_total_scan_in = fetch_total_scan_in_api(current_date, combined_employee_data)
-            print(f"Current total scan-in for {current_date}: {current_total_scan_in} people.")
+            # Logic สำหรับ total scan-in notification (ยังคงเดิม)
+            current_total_scan_in = fetch_total_scan_in_api(current_date_for_scan, combined_employee_data)
+            print(f"Current total scan-in for {current_date_for_scan}: {current_total_scan_in} people.")
             
         except requests.exceptions.RequestException as e:
             print(f"ข้อผิดพลาด WeCom API หรือเครือข่าย: {e}")
@@ -649,6 +654,3 @@ if __name__ == "__main__":
 ############ --------testmode----------#############
 
 ##  python wecomsend.py --test-mode --test-date 2025-07-25(เปลี่ยนเป็นวันที่ต้องการทดสอบ)
-
-
-

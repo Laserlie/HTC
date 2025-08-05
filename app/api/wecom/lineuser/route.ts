@@ -4,7 +4,8 @@ import { NextResponse } from 'next/server';
 const BACKEND_LINE_USERS_URL = "http://10.35.10.47:2007/api/LineUsers";
 
 // GET Handler สำหรับดึงข้อมูล LineUser ทั้งหมด (Path: /api/wecom/lineuser)
-export async function GET(req: Request) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function GET(_req: Request) { 
     try {
         const response = await axios.get(BACKEND_LINE_USERS_URL);
         return NextResponse.json(response.data, { status: response.status });
@@ -22,7 +23,7 @@ export async function GET(req: Request) {
     }
 }
 
-// POST Handler สำหรับสร้าง LineUser ใหม่ (Path: /api/wecom/lineuser)
+
 export async function POST(req: Request) {
     try {
         const body = await req.json();
