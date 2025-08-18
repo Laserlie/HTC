@@ -32,7 +32,7 @@ const AttendanceCardSummary = ({ totalScanned, totalNotScanned, from, to, deptCo
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 items-stretch">
         <Link href={createReportLink('all')} passHref className="!no-underline">
           <div
-            className="flex flex-col items-center justify-center bg-blue-100 text-blue-800 px-6 py-5 rounded-2xl shadow-md h-full transition-transform hover:scale-105 hover:shadow-lg cursor-pointer relative"
+            className="flex flex-col items-center justify-center bg-blue-100 text-blue-800 px-6 py-5 rounded-xl shadow-md h-full transition-transform hover:scale-105 hover:shadow-lg cursor-pointer relative"
             title="คลิกเพื่อดูเพิ่มเติม"
           >
             <div className="flex items-center gap-4 w-full justify-start">
@@ -49,7 +49,7 @@ const AttendanceCardSummary = ({ totalScanned, totalNotScanned, from, to, deptCo
 
         <Link href={createReportLink('scanned')} passHref className="!no-underline">
           <div
-            className="flex flex-col items-center justify-center bg-green-100 text-green-800 px-6 py-5 rounded-2xl shadow-md h-full transition-transform hover:scale-105 hover:shadow-lg cursor-pointer relative"
+            className="flex flex-col items-center justify-center bg-green-100 text-green-800 px-6 py-5 rounded-xl shadow-md h-full transition-transform hover:scale-105 hover:shadow-lg cursor-pointer relative"
             title="คลิกเพื่อดูเพิ่มเติม"
           >
             <div className="flex items-center gap-4 w-full justify-start">
@@ -68,7 +68,7 @@ const AttendanceCardSummary = ({ totalScanned, totalNotScanned, from, to, deptCo
 
         <Link href={createReportLink('not_scanned')} passHref className="!no-underline">
           <div
-            className="flex flex-col items-center justify-center bg-red-100 text-red-800 px-6 py-5 rounded-2xl shadow-md h-full transition-transform hover:scale-105 hover:shadow-lg cursor-pointer relative"
+            className="flex flex-col items-center justify-center bg-red-100 text-red-800 px-6 py-5 rounded-xl shadow-md h-full transition-transform hover:scale-105 hover:shadow-lg cursor-pointer relative"
             title="คลิกเพื่อดูเพิ่มเติม"
           >
             <div className="flex items-center gap-4 w-full justify-start">

@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@tanstack/react-table": "^8.21.3",
     "axios": "^1.6.0",
     "chart.js": "^4.4.9",
     "chartjs-plugin-datalabels": "^2.2.0",

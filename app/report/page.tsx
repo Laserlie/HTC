@@ -59,27 +59,27 @@ function ReportPageContent() {
       const newLevelCodeToNameMap = new Map<string, string>();
       rawData.forEach(item => {
         if (item.deptcode && item.deptname) {
-          // 1. Map the full 8-digit deptcode to its specific deptname
+          
           newLevelCodeToNameMap.set(item.deptcode, item.deptname);
 
-          // 2. Also map the abbreviated codes (level 1, 2, 3) to their corresponding names
-          //    This assumes that the rawData will contain items for the aggregate levels (e.g., 06000000 for 'Platform')
-          if (item.deptcode.endsWith('000000') && item.deptcode.length === 8) { // Level 1 (e.g., 06000000 -> Platform)
+         
+         
+          if (item.deptcode.endsWith('000000') && item.deptcode.length === 8) { 
             const level1Code = item.deptcode.substring(0, 2);
             newLevelCodeToNameMap.set(level1Code, item.deptname);
-          } else if (item.deptcode.endsWith('0000') && item.deptcode.length === 8) { // Level 2 (e.g., 06020000 -> P&O)
+          } else if (item.deptcode.endsWith('0000') && item.deptcode.length === 8) { 
             const level2Code = item.deptcode.substring(0, 4);
             newLevelCodeToNameMap.set(level2Code, item.deptname);
-          } else if (item.deptcode.endsWith('00') && item.deptcode.length === 8) { // Level 3 (e.g., 06020100 -> IT or 06030000 -> HR)
+          } else if (item.deptcode.endsWith('00') && item.deptcode.length === 8) { 
             const level3Code = item.deptcode.substring(0, 6);
-            // Only set if not already more specifically set by a full code (e.g. 06020100 maps 060201 to IT directly)
+           
             if (!newLevelCodeToNameMap.has(level3Code) || (newLevelCodeToNameMap.get(level3Code) || '').length < item.deptname.length) {
               newLevelCodeToNameMap.set(level3Code, item.deptname);
             }
           }
         }
       });
-      setLevelCodeToNameMap(newLevelCodeToNameMap); // Update state with the new map
+      setLevelCodeToNameMap(newLevelCodeToNameMap);
 
       const filteredRawData = rawData.filter(item => {
         if (!item.deptcode) return false;
@@ -140,11 +140,11 @@ function ReportPageContent() {
             countperson: currentCountPerson,
             late: currentLate,
             factoryCode: level1,
-            factoryName: newLevelCodeToNameMap.get(level1) || `โรงงาน ${level1}`, // Use map for factory name
+            factoryName: newLevelCodeToNameMap.get(level1) || `โรงงาน ${level1}`, 
             mainDepartmentCode: level2,
-            mainDepartmentName: newLevelCodeToNameMap.get(level2) || `แผนกหลัก ${level2}`, // Use map for main dept name
+            mainDepartmentName: newLevelCodeToNameMap.get(level2) || `แผนกหลัก ${level2}`, 
             subDepartmentCode: level3,
-            subDepartmentName: newLevelCodeToNameMap.get(level3) || `แผนกย่อย/ส่วนงาน ${level3}`, // Use map for sub dept name
+            subDepartmentName: newLevelCodeToNameMap.get(level3) || `แผนกย่อย/ส่วนงาน ${level3}`,
             originalFullDeptcode: item.deptcode,
           });
         }

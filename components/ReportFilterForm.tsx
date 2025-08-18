@@ -229,13 +229,13 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 bg-white p-4 rounded-xl shadow">
+    <form onSubmit={handleSubmit} className="space-y-4 bg-white p-4 rounded-xl shadow-lg">
       <div className="grid grid-cols-1 md:grid-cols-6 gap-4"> 
         <div>
           <label className="block mb-1 font-medium">From</label>
           <input
             type="date"
-            className="w-full border rounded px-2 py-1"
+            className="w-full border rounded-lg px-2 py-1 shadow-sm"
             value={from}
             onChange={(e) => setFrom(e.target.value)}
             required
@@ -245,7 +245,7 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
           <label className="block mb-1 font-medium">To</label>
           <input
             type="date"
-            className="w-full border rounded px-2 py-1"
+            className="w-full border rounded-lg px-2 py-1 shadow-sm"
             value={to}
             onChange={(e) => setTo(e.target.value)}
             required
@@ -254,7 +254,7 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
         <div>
           <label className="block mb-1 font-medium">Factory</label>
           <select
-            className="w-full border rounded px-2 py-1"
+            className="w-full border rounded-lg px-2 py-2 shadow-sm"
             value={factoryId}
             onChange={(e) => {
               setFactoryId(e.target.value);
@@ -276,7 +276,7 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
         <div>
           <label className="block mb-1 font-medium">Department</label>
           <select
-            className="w-full border rounded px-2 py-1"
+            className="w-full border rounded-lg px-2 py-2 shadow-sm"
             value={mainDepartmentId}
             onChange={(e) => {
               setMainDepartmentId(e.target.value);
@@ -297,7 +297,7 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
         <div>
           <label className="block mb-1 font-medium">Division</label>
           <select
-            className="w-full border rounded px-2 py-1"
+            className="w-full border rounded-lg px-2 py-2 shadow-sm"
             value={subDepartmentId}
             onChange={(e) => {
                 setSubDepartmentId(e.target.value);
@@ -317,7 +317,7 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
         <div className="md:col-span-1"> 
           <label className="block mb-1 font-medium">Status</label>
           <select
-            className="w-full border rounded px-2 py-1"
+            className="w-full border rounded-lg px-2 py-2 shadow-sm"
             value={scanStatus}
             onChange={(e) => setScanStatus(e.target.value)}
             disabled={loadingData || !from || !to}
@@ -348,7 +348,7 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
       </div>
       <button
         type="submit"
-        className="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800 flex items-center justify-center"
+        className="bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-800 flex items-center justify-center shadow-l"
         disabled={!from || !to || loadingData}
       >
         Search

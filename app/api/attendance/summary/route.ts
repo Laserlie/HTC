@@ -9,6 +9,7 @@ interface SummaryData {
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const date = searchParams.get('date');
+  const deptCode = searchParams.get('deptCode'); // เพิ่มการรับค่า deptCode
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 
   if (!date || !dateRegex.test(date)) {
@@ -19,17 +20,29 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const result = await db.query(
-      `SELECT
+    let queryText = `
+      SELECT
           COALESCE(SUM(countscan), 0) AS "totalScanned",      
           COALESCE(SUM(countnotscan), 0) AS "totalNotScanned" 
        FROM
           public.vw_manpower
        WHERE
-          workdate = $1;
-      `,
-      [date]
-    );
+          workdate = $1
+    `;
+    const queryParams = [date];
+
+    // เพิ่มการตรวจสอบว่า deptCode มีสองหลักแรกเป็นตัวเลข
+    const deptCodeRegex = /^\d{2}/;
+
+    // เพิ่มเงื่อนไขการกรองด้วย deptCode ถ้ามีการส่งค่ามาและตรงตามรูปแบบที่กำหนด
+    if (deptCode && deptCodeRegex.test(deptCode)) {
+      queryText += ` AND deptcodelevel1 = $2`;
+      queryParams.push(deptCode);
+    }
+    
+    queryText += `;`; // ปิดท้าย query
+
+    const result = await db.query(queryText, queryParams);
 
     const rawSummary = result.rows[0] as SummaryData || {};
 

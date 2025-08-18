@@ -1,25 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/services/db';
 
+// กำหนด Type ของข้อมูลสำหรับแต่ละแถวที่ได้จากฐานข้อมูล
+// (Define the data type for each row from the database)
+type Detail = {
+  workdate: string;
+  person_code: string;
+  htcpersoncode: string;
+  deptcode: string;
+  deptname: string;
+  full_name: string;
+  department_full_paths: string;
+  firstscantime: string | null;
+  lastscantime: string | null;
+  shiftname: string;
+  PersonType: string;
+};
+
 export async function GET(req: NextRequest) {
   try {
-    console.log('API: Start processing request');
+    console.log('API: Start processing report detail request');
     const { searchParams } = new URL(req.url);
-    const deptcode = searchParams.get('deptcode');
-    const from = searchParams.get('from');
-    const to = searchParams.get('to');
 
-    const today = new Date().toISOString().split('T')[0];
-    const finalFrom = from && from !== 'null' && from !== 'undefined' ? from : today;
-    const finalTo = to && to !== 'null' && to !== 'undefined' ? to : finalFrom;
+    const deptcodesParam = searchParams.get('deptcodes');
+    const workdateParam = searchParams.get('workdate');
 
-    if (!deptcode || deptcode === 'undefined' || deptcode === 'null' || deptcode === '') {
-      console.error('API Error: Missing or invalid deptcode received:', deptcode);
+    if (!deptcodesParam || deptcodesParam === '' || !workdateParam || workdateParam === '') {
+      console.error('API Error: Missing required parameters: deptcodes or workdate');
       return NextResponse.json(
-        { error: 'รหัสแผนกไม่ถูกต้อง หรือไม่ได้ระบุ' },
+        { error: 'รหัสแผนกหรือวันที่ไม่ถูกต้อง' },
         { status: 400 }
       );
     }
+
+    const deptCodesArray = deptcodesParam.split(',');
+    const workDatesArray = workdateParam.split(',');
+
+    console.log('API: Processing deptcodes:', deptCodesArray);
+    console.log('API: Processing workdates:', workDatesArray);
+
+    const deptPlaceholders = deptCodesArray.map((_, index) => `$${index + 1}`).join(',');
+    const workdatePlaceholders = workDatesArray.map((_, index) => `$${deptCodesArray.length + 1 + index}`).join(',');
+    
+    const sqlParams = [...deptCodesArray, ...workDatesArray];
 
     const sql = `
       SELECT
@@ -28,7 +51,6 @@ export async function GET(req: NextRequest) {
         htcpersoncode,
         deptcode,
         deptname,
-        htcpersoncode,
         full_name,
         department_full_paths,
         firstscantime,
@@ -36,25 +58,36 @@ export async function GET(req: NextRequest) {
         shiftname,
         "PersonType"
       FROM public.vw_manpower_detail
-      WHERE deptcode = $1
-        AND workdate BETWEEN $2 AND $3
+      WHERE deptcode IN (${deptPlaceholders})
+        AND workdate IN (${workdatePlaceholders})
       ORDER BY workdate, full_name
     `;
 
-    console.log(`API: Executing SQL with params: deptcode=${deptcode}, from=${finalFrom}, to=${finalTo}`);
+    console.log('API: Executing SQL query with params:', sqlParams);
     console.log(`API: SQL Query: ${sql}`);
 
-    const result = await db.query(sql, [deptcode, finalFrom, finalTo]);
+    const result = await db.query(sql, sqlParams);
 
     console.log('API: Query executed successfully');
 
+    const dataByDate: Record<string, Detail[]> = {};
+    // แก้ไข: ระบุชนิดของ 'row' ให้ชัดเจนเพื่อแก้ไข Type Error
+    // (Fix: Explicitly type 'row' to resolve the Type Error)
+    result.rows.forEach((row: Detail) => {
+      if (!dataByDate[row.workdate]) {
+        dataByDate[row.workdate] = [];
+      }
+      dataByDate[row.workdate].push(row);
+    });
+
     const deptName = result.rows.length > 0 ? result.rows[0].deptname : 'ไม่พบชื่อแผนก';
 
-    console.log(`API: Found ${result.rows.length} records for deptcode: ${deptcode}`);
+    console.log(`API: Found ${result.rows.length} records`);
 
     return NextResponse.json(
       {
         deptname: deptName,
+        dataByDate: dataByDate,
         detil: result.rows,
       },
       { status: 200 }

@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, FileText, Settings } from 'lucide-react';
+import { Home, FileText, Settings, Clock } from 'lucide-react';
 
 const navItems = [
   { name: 'Dashboard', href: '/dashboard', icon: <Home size={18} /> },
   { name: 'Report', href: '/report', icon: <FileText size={18} /> },
+  { name: 'Report Weekly', href: '/report2', icon: <Clock size={18} /> },
   { name: 'WeCom Settings', href: '/settings/wecom', icon: <Settings size={18} /> },
 ];
 
@@ -18,7 +19,7 @@ export default function Sidebar() {
       </div>
       <nav className="flex flex-col p-4 gap-2">
         {navItems.map((item) => {
-          const active = pathname === item.href;
+          const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
           return (
             <Link
               key={item.name}

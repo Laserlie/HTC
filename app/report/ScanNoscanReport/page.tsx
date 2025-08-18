@@ -66,16 +66,12 @@ const ScanNoscanReportPageInner = () => {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const loaderRef = useRef<HTMLDivElement | null>(null);
 
-  const uniqueDeptPrefixes = useMemo(() => {
-    const prefixes = new Set<string>();
-    allEmployees.forEach(emp => {
-      if (emp.deptcode && emp.deptcode.length >= 2) {
-        prefixes.add(emp.deptcode.substring(0, 2));
-      }
-    });
-    const sortedPrefixes = Array.from(prefixes).sort();
-    return sortedPrefixes;
-  }, [allEmployees]);
+  const deptPrefixes = useMemo(() => ([
+    { value: "06", label: "Platform" },
+    { value: "07", label: "AC EMC Micro" },
+    { value: "08", label: "RF EMC Micro" },
+    { value: "09", label: "FUL FILL" },
+  ]), []);
 
 
   const fetchEmployees = useCallback(async () => {
@@ -228,21 +224,21 @@ const ScanNoscanReportPageInner = () => {
       </p>
 
       <div className="flex justify-left mb-8 text-left p-1">
-        <label htmlFor="deptPrefixFilter" className="sr-only text-left">เลือกฝ่ายโรงงาน : </label>
-        <select
-          id="deptPrefixFilter"
-          value={selectedDeptPrefix}
-          onChange={(e) => setSelectedDeptPrefix(e.target.value)}
-          className="block  max-w-xs p-1 border border-gray-300 rounded-md shadow-sm text-xs focus:ring-blue-500 focus:border-blue-500  "
-        >
-          <option value="">ทั้งหมด</option>
-          {uniqueDeptPrefixes.map(prefix => (
-            <option key={prefix} value={prefix}>
-              ฝ่ายโรงงาน {prefix}
-            </option>
-          ))}
-        </select>
-      </div>
+      <label htmlFor="deptPrefixFilter" className="sr-only text-left">เลือกฝ่ายโรงงาน : </label>
+      <select
+        id="deptPrefixFilter"
+        value={selectedDeptPrefix}
+        onChange={(e) => setSelectedDeptPrefix(e.target.value)}
+        className="block  max-w-xs p-1 border border-gray-300 rounded-md shadow-sm text-xs focus:ring-blue-500 focus:border-blue-500  "
+      >
+        <option value="">ทั้งหมด</option>
+        {deptPrefixes.map(prefix => (
+          <option key={prefix.value} value={prefix.value}>
+            {prefix.label}
+          </option>
+        ))}
+      </select>
+    </div>
 
 
 

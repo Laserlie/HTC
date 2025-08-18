@@ -21,6 +21,7 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend, Title,
 
 type Props = {
   apiEndpoint: string;
+  deptCode: string;
 };
 
 type DepartmentChartData = {
@@ -30,7 +31,14 @@ type DepartmentChartData = {
   notScannedCount: number;
 };
 
-export default function DepartmentChartsContainer({ apiEndpoint }: Props) {
+const departmentNames: { [key: string]: string } = {
+  '06': 'Platform',
+  '07': 'AC EMC Micro',
+  '08': 'RF EMC Micro',
+  '09': 'FUL FILL',
+};
+
+export default function DepartmentChartsContainer({ apiEndpoint, deptCode }: Props) {
   const [data, setData] = useState<DepartmentChartData[]>([]);
   const [loading, setLoading] = useState(true);
   const [inViewScanned, setInViewScanned] = useState(false);
@@ -100,7 +108,9 @@ export default function DepartmentChartsContainer({ apiEndpoint }: Props) {
       </div>
     );
   }
-
+  
+  const factoryTitle = deptCode === 'all' ? 'แผนก' : departmentNames[deptCode];
+  
   const departmentDataMap = new Map<string, DepartmentChartData>();
   data.forEach(item => {
     departmentDataMap.set(item.department, item);
@@ -115,7 +125,6 @@ export default function DepartmentChartsContainer({ apiEndpoint }: Props) {
         attendancePercentage: parseFloat(attendancePercentage.toFixed(2)), 
       };
     })
-    .filter((d) => d.scannedCount > 0) 
     .sort((a, b) => b.attendancePercentage - a.attendancePercentage); 
 
   const chartDataScanned = {
@@ -144,7 +153,7 @@ export default function DepartmentChartsContainer({ apiEndpoint }: Props) {
       },
       title: {
         display: true,
-        text: 'เปอร์เซ็นต์การเข้างานของพนักงานตามแผนก',
+        text: `เปอร์เซ็นต์การเข้างานของพนักงาน ${factoryTitle}`,
         position: 'top',
         align: 'start',
         font: {
@@ -199,7 +208,7 @@ export default function DepartmentChartsContainer({ apiEndpoint }: Props) {
     animation: inViewScanned ? animationOptions : false,
     scales: {
       x: {
-        title: { display: true, text: 'แผนก' },
+        title: { display: true, text: '' },
         ticks: { autoSkip: false, maxRotation: 90, minRotation: 45 },
       },
       y: {
@@ -220,7 +229,6 @@ export default function DepartmentChartsContainer({ apiEndpoint }: Props) {
         notScannedPercentage: parseFloat(notScannedPercentage.toFixed(2)), 
       };
     })
-    .filter((d) => d.notScannedCount > 0) 
     .sort((a, b) => b.notScannedPercentage - a.notScannedPercentage); 
 
   const chartDataNotScanned = {
@@ -244,7 +252,7 @@ export default function DepartmentChartsContainer({ apiEndpoint }: Props) {
       },
       title: {
         display: true,
-        text: 'เปอร์เซ็นต์พนักงานที่ยังไม่สแกนตามแผนก',
+        text: `เปอร์เซ็นต์พนักงานที่ยังไม่สแกน ${factoryTitle}`,
         position: 'top',
         align: 'start',
         font: {
@@ -299,7 +307,7 @@ export default function DepartmentChartsContainer({ apiEndpoint }: Props) {
     animation: inViewNotScanned ? animationOptions : false,
     scales: {
       x: {
-        title: { display: true, text: 'แผนก' },
+        title: { display: true, text: '' },
         ticks: { autoSkip: false, maxRotation: 90, minRotation: 45 },
       },
       y: {
@@ -311,11 +319,8 @@ export default function DepartmentChartsContainer({ apiEndpoint }: Props) {
     },
   };
 
-  if (allScannedData.length === 0 && allNotScannedData.length === 0) {
-    return <div className="text-center text-gray-500">ไม่พบข้อมูลสำหรับแสดงกราฟ</div>;
-  }
-
-  const maxDepartments = Math.max(allScannedData.length, allNotScannedData.length);
+  const allDepartmentLabels = Array.from(departmentDataMap.keys());
+  const maxDepartments = allDepartmentLabels.length;
   const baseBarWidth = 50;
   const calculatedChartWidth = Math.max(400, maxDepartments * baseBarWidth);
 

@@ -348,7 +348,7 @@ export default function WeComSettingsForm() {
 
     return (
         
-        <div className="w-full min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="w-full min-h-screen bg-gradient-to-br from-gray-50 to-gray-50 flex flex-col items-center py-12 px-4 sm:px-6 lg:px-8">
   <div className="w-full  bg-white rounded-xl shadow-xl p-8 sm:p-10 border border-gray-200">
     <div className="flex items-center mb-6">
       <h2 className="text-3xl font-extrabold text-gray-900 flex-grow">
@@ -359,7 +359,7 @@ export default function WeComSettingsForm() {
       จัดการ WeCom ID สำหรับพนักงาน เพื่อเปิดใช้การแจ้งเตือนผ่าน WeCom
     </p>
 
-    <div className="mb-8 p-6 bg-blue-50 rounded-lg border border-blue-200 shadow-inner">
+    <div className="mb-8 p-6 bg-gray-50 rounded-lg border border-blue-200 shadow-xl">
       <h3 className="text-xl font-bold text-blue-700 mb-4 flex items-center">
         <i className="fas fa-building mr-3 text-blue-500"></i> เลือกแผนก
       </h3>
