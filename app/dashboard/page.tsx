@@ -7,7 +7,13 @@ import Spinner from '@/components/ui/Spinner';
 
 const DepartmentBarChart = dynamic(
   () => import('@/components/DepartmentBarChart'),
-  { ssr: false }
+  { ssr: false,
+    loading: () => (
+      <div className="flex justify-center items-center p-4 min-h-[200px]">
+        <Spinner />
+      </div>
+    ),
+   }
 );
 
 const ManpowerTable = dynamic(

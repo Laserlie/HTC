@@ -4,21 +4,22 @@ import { NextResponse } from 'next/server';
 const BACKEND_LINE_USERS_URL = "http://10.35.10.47:2007/api/LineUsers";
 
 // GET Handler สำหรับดึงข้อมูล LineUser ด้วย ID
-export async function GET(req: Request, params: { params: { id: string } }) {
-  const id = params.params.id?.trim();
+export async function GET(req: Request, params: { params: Promise<{ id: string }> }) {
+  const { id } = await params.params;
+  const trimmedId = id?.trim();
 
-  if (!id || isNaN(Number(id))) {
+  if (!trimmedId || isNaN(Number(trimmedId))) {
     return NextResponse.json({ message: 'Invalid or missing ID in GET request.' }, { status: 400 });
   }
 
   try {
-    const response = await axios.get(`${BACKEND_LINE_USERS_URL}/${id}`);
+    const response = await axios.get(`${BACKEND_LINE_USERS_URL}/${trimmedId}`);
     return NextResponse.json(response.data, { status: response.status });
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
         console.error(`Error in LineUser proxy (GET by ID):`, error.message);
         return NextResponse.json({
-            message: `Failed to fetch Line User with ID ${id} via proxy`,
+            message: `Failed to fetch Line User with ID ${trimmedId} via proxy`,
             details: error.response?.data || error.message,
         }, { status: error.response?.status || 500 });
     } else {
@@ -29,25 +30,26 @@ export async function GET(req: Request, params: { params: { id: string } }) {
 }
 
 // PUT Handler สำหรับอัปเดต LineUser ด้วย ID
-export async function PUT(req: Request, params: { params: { id: string } }) {
-  const id = params.params.id?.trim();
+export async function PUT(req: Request, params: { params: Promise<{ id: string }> }) {
+  const { id } = await params.params;
+  const trimmedId = id?.trim();
 
-  if (!id || isNaN(Number(id))) {
+  if (!trimmedId || isNaN(Number(trimmedId))) {
     return NextResponse.json({ message: 'Invalid or missing ID in PUT request.' }, { status: 400 });
   }
 
   try {
     const body = await req.json();
 
-    if (!body || Number(body.id) !== Number(id)) {
+    if (!body || Number(body.id) !== Number(trimmedId)) {
       return NextResponse.json({ message: 'body.id must match URL id.' }, { status: 400 });
     }
 
-    const response = await axios.put(`${BACKEND_LINE_USERS_URL}/${id}`, body);
+    const response = await axios.put(`${BACKEND_LINE_USERS_URL}/${trimmedId}`, body);
 
     // ตรวจสอบสถานะ 204 No Content โดยเฉพาะ
     if (response.status === 204) {
-      console.info(`PUT request to ${BACKEND_LINE_USERS_URL}/${id} succeeded with 204 No Content.`);
+      console.info(`PUT request to ${BACKEND_LINE_USERS_URL}/${trimmedId} succeeded with 204 No Content.`);
       // ส่ง Response กลับโดยไม่มี body
       return new NextResponse(null, { status: 204 });
     }
@@ -63,7 +65,7 @@ export async function PUT(req: Request, params: { params: { id: string } }) {
             return new NextResponse(null, { status: 204 });
         }
         return NextResponse.json({
-            message: `Failed to update Line User with ID ${id} via proxy`,
+            message: `Failed to update Line User with ID ${trimmedId} via proxy`,
             details: error.response?.data || error.message,
         }, { status: error.response?.status || 500 });
     } else {
@@ -74,18 +76,19 @@ export async function PUT(req: Request, params: { params: { id: string } }) {
 }
 
 // DELETE Handler สำหรับลบ LineUser ด้วย ID
-export async function DELETE(req: Request, params: { params: { id: string } }) {
-  const id = params.params.id?.trim();
+export async function DELETE(req: Request, params: { params: Promise<{ id: string }> }) {
+  const { id } = await params.params;
+  const trimmedId = id?.trim();
 
-  if (!id || isNaN(Number(id))) {
+  if (!trimmedId || isNaN(Number(trimmedId))) {
     return NextResponse.json({ message: 'Invalid or missing ID in DELETE request.' }, { status: 400 });
   }
 
   try {
-    const response = await axios.delete(`${BACKEND_LINE_USERS_URL}/${id}`);
+    const response = await axios.delete(`${BACKEND_LINE_USERS_URL}/${trimmedId}`);
     
     if (response.status === 204) {
-        console.info(`DELETE request to ${BACKEND_LINE_USERS_URL}/${id} succeeded with 204 No Content.`);
+        console.info(`DELETE request to ${BACKEND_LINE_USERS_URL}/${trimmedId} succeeded with 204 No Content.`);
         return new NextResponse(null, { status: 204 });
     }
 
@@ -97,7 +100,7 @@ export async function DELETE(req: Request, params: { params: { id: string } }) {
              return new NextResponse(null, { status: 204 });
         }
         return NextResponse.json({
-            message: `Failed to delete Line User with ID ${id} via proxy`,
+            message: `Failed to delete Line User with ID ${trimmedId} via proxy`,
             details: error.response?.data || error.message,
         }, { status: error.response?.status || 500 });
     } else {

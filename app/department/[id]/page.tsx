@@ -74,10 +74,17 @@ export default function DepartmentDetailPage() {
     return null;
   }
 
+  // You can fill this map with actual mappings if needed
+  const levelCodeToNameMap = new Map<string, string>();
+
   return (
     <div className="p-6 space-y-4">
       <h1 className="text-2xl font-bold">แผนก : {department.name}</h1>
-      <DepartmentTable employees={department.employees} scanStatus="all" />
+      <DepartmentTable
+        employees={department.employees}
+        scanStatus="all"
+        levelCodeToNameMap={levelCodeToNameMap}
+      />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { PiSpinnerGapBold } from 'react-icons/pi';
 import { ArrowLeft } from 'lucide-react';
+import Spinner from '@/components/ui/Spinner';
 
 type AttendanceRecord = {
   person_code: string;
@@ -189,7 +190,7 @@ export default function ReportPersonDetailPage() {
 
       {loading && !personInfo ? (
         <div className="flex justify-center py-10">
-          <PiSpinnerGapBold size={36} className="text-primary animate-spin" />
+          <Spinner/>
         </div>
       ) : personInfo ? (
         <>
@@ -228,7 +229,7 @@ export default function ReportPersonDetailPage() {
 
           {loading ? (
             <div className="flex justify-center py-10">
-              <PiSpinnerGapBold size={36} className="text-primary animate-spin" />
+              <Spinner />
             </div>
           ) : (
             <>

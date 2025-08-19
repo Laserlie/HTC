@@ -2,9 +2,10 @@
 
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { PiSpinnerGapBold, PiFileMagnifyingGlassBold } from 'react-icons/pi';
+import {PiFileMagnifyingGlassBold } from 'react-icons/pi';
 import { ArrowLeft } from 'lucide-react';
 import { FaCheckCircle, FaExclamationCircle, FaUsers } from 'react-icons/fa';
+import Spinner from '@/components/ui/Spinner';
 
 // ขยาย Type ของ Detail ให้มี workdate
 // (Extend the Detail type to include workdate)
@@ -472,8 +473,8 @@ export default function ReportDetailPage() {
       )}
 
       {loading ? (
-        <div className="flex justify-center py-10 text-gray-500 animate-spin">
-          <PiSpinnerGapBold size={36} className="text-primary" />
+        <div className="flex justify-center items-center  bg-gray-100">
+                <Spinner />
         </div>
       ) : details.length > 0 ? (
         <>

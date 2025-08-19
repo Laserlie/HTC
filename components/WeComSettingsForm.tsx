@@ -2,7 +2,7 @@
 
 import axios from 'axios';
 import { useEffect, useState, useMemo, useCallback } from 'react';
-
+import Spinner from './ui/Spinner';
 // --- Interfaces สำหรับโครงสร้างข้อมูล ---
 
 interface LineUser {
@@ -342,7 +342,9 @@ export default function WeComSettingsForm() {
     };
 
     // การแสดงผล UI (JSX)
-    if (loading) return <div className="flex items-center justify-center min-h-screen text-gray-700">กำลังโหลดข้อมูล...</div>;
+    if (loading) return  <div className="flex justify-center items-center h-screen bg-gray-100">
+                    <Spinner />
+            </div>;
     if (error && !saving) return <div className="flex items-center justify-center min-h-screen text-red-600 font-semibold">เกิดข้อผิดพลาด: {error}</div>;
     if (!departments || departments.length === 0) return <div className="flex items-center justify-center min-h-screen text-gray-700">ไม่พบข้อมูลแผนก</div>;
 
