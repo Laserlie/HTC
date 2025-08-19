@@ -390,21 +390,21 @@ const Report2: React.FC = () => {
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-5">
                 {/* Card 1: Total Employees */}
-                <div className="bg-white rounded-xl shadow-md p-6">
+                <div className="bg-blue-100 rounded-xl shadow-md p-6 ">
                     <div className="flex items-center">
-                        <div className="p-3 bg-blue-100 rounded-full  ">
+                        <div className="p-3 bg-blue-200 rounded-full  ">
                             <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                             </svg>
                         </div>
                         <div className="ml-4">
-                            <p className="text-sm text-gray-500">พนักงานทั้งหมด</p>
-                            <p className="text-3xl font-bold text-gray-800">{summaryData.totalEmployees} คน</p>
+                            <p className="text-sm text-blue-800">พนักงานทั้งหมด</p>
+                            <p className="text-3xl font-bold text-blue-800">{summaryData.totalEmployees} คน</p>
                         </div>
                     </div>
                 </div>
                 {/* Card 2: Normal Employees */}
-                <div className="bg-white rounded-xl shadow-md p-6">
+                <div className="bg-green-100 rounded-xl shadow-md p-6">
                     <div className="flex items-center">
                         <div className="p-3 bg-green-100 rounded-full">
                             <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -412,13 +412,13 @@ const Report2: React.FC = () => {
                             </svg>
                         </div>
                         <div className="ml-4">
-                            <p className="text-sm text-gray-500">ปกติ (≤ 60 ชม.)</p>
-                            <p className="text-3xl font-bold text-green-600">{summaryData.normalEmployees} คน</p>
+                            <p className="text-sm text-green-800">ปกติ (≤ 60 ชม.)</p>
+                            <p className="text-3xl font-bold text-green-700">{summaryData.normalEmployees} คน</p>
                         </div>
                     </div>
                 </div>
                 {/* Card 3: Overtime Employees */}
-                <div className="bg-white rounded-xl shadow-md p-6">
+                <div className="bg-red-100 rounded-xl shadow-md p-6 ">
                     <div className="flex items-center">
                         <div className="p-3 bg-red-100 rounded-full">
                             <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -426,7 +426,7 @@ const Report2: React.FC = () => {
                             </svg>
                         </div>
                         <div className="ml-4">
-                            <p className="text-sm text-gray-500">เกิน 60 ชม. ในสัปดาห์</p>
+                            <p className="text-sm text-red-500">เกิน 60 ชม. ในสัปดาห์</p>
                             <p className="text-3xl font-bold text-red-600">{summaryData.overtimeEmployees} คน</p>
                         </div>
                     </div>
@@ -458,7 +458,7 @@ const Report2: React.FC = () => {
                         >
                             <option value={10}>10</option>
                             <option value={20}>20</option>
-                            <option value={40}>40</option>
+                            <option value={40}>50</option>
                             <option value={100}>100</option>
                             <option value={filteredEmployees.length}>ทั้งหมด</option>
                         </select>
@@ -469,9 +469,9 @@ const Report2: React.FC = () => {
                     <table className="w-full">
                         <thead className="bg-gray-100">
                             <tr>
-                                <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase tracking-wider w-1/12">รหัส</th>
-                                <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase tracking-wider w-2/12">แผนก</th>
-                                <th className="px-6 py-3 text-left text-s font-medium text-gray-500 uppercase tracking-wider w-2/12">ชื่อ-นามสกุล</th>
+                                <th className="px-6 py-3 text-left text-s font-medium text-gray-600 uppercase tracking-wider w-1/12">รหัส</th>
+                                <th className="px-6 py-3 text-left text-s font-medium text-gray-600 uppercase tracking-wider w-2/12">แผนก</th>
+                                <th className="px-6 py-3 text-left text-s font-medium text-gray-600 uppercase tracking-wider w-2/12">ชื่อ-นามสกุล</th>
                                 {[1, 2, 3, 4, 5].map((weekNum) => (
                                     <th 
                                         key={`week-header-${weekNum}`}

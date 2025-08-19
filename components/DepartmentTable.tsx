@@ -231,8 +231,7 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
 
   const filteredDepartments = useMemo(() => {
     return aggregatedDepartments;
-  }, [aggregatedDepartments, scanStatus]);
-
+  }, [aggregatedDepartments]);
 
   const groupedByDate = useMemo(() => {
     const groups = new Map<string, AggregatedDepartment[]>();
@@ -406,7 +405,7 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
     });
 
     return finalGroups.sort(([dateA], [dateB]) => dateA.localeCompare(dateB));
-  }, [filteredDepartments]);
+  }, [filteredDepartments, employees, levelCodeToNameMap]);
 
 
   useEffect(() => {

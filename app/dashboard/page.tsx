@@ -31,6 +31,14 @@ export default function DashboardPage() {
   const [totalNotScanned, setTotalNotScanned] = useState(0);
   const [selectedFactory, setSelectedFactory] = useState('all'); 
 
+  // Add currentTime state for live clock
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   type SummaryData = {
     totalScanned: number;
     totalNotScanned: number;
@@ -83,22 +91,29 @@ export default function DashboardPage() {
   return (
     <div className="p-4 sm:p-6 space-y-6"> 
      <section className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <h1 className="text-2xl sm:text-3xl font-semibold">ภาพรวมวันที่ {selectedDate}</h1>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-center gap-2">
+          <h1 className="text-3xl sm:text-5xl font-extrabold text-center">DATE {selectedDate}</h1>
+          <div justify-center className="flex-1 text-center sm:text-right mt-2 sm:mt-0">
+            <span className="text-lg sm:text-2xl font-semibold text-gray-500">
+              {currentTime.toLocaleTimeString()}
+            </span>
+          </div>
           <div className="flex gap-2 items-center">
-            <input 
+
+            { <input   // ฟังก์ชั่นนี้ใช้สำหรับเลือกวันที่
               type="date" 
               value={selectedDate} 
               onChange={(e) => setSelectedDate(e.target.value)}
               className="border px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring focus:border-blue-300 text-base"
-            />
+            /> }
+            
             <select
               id="factorySelect"
               value={selectedFactory}
               onChange={(e) => setSelectedFactory(e.target.value)}
-              className="border px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring focus:border-blue-300 w-[160px] sm:w-auto text-base"
+              className="border px-3 py-3 rounded-md shadow-sm focus:outline-none focus:ring focus:border-blue-300 w-[160px] sm:w-auto text-base"
             >
-              <option value="all">ทั้งหมด</option>
+              <option value="all">All</option>
               <option value="06">Platform</option>
               <option value="07">AC EMC Micro</option>
               <option value="08">RF EMC Micro</option>
@@ -115,15 +130,15 @@ export default function DashboardPage() {
         />
       </section>
 
-      <section className="space-y-4">
-        <h1 className="text-xl sm:text-2xl font-semibold">Department Overview</h1> 
+      <section className="space-y-4 bg-gray-50 p-4 rounded-lg shadow-lg">
+        <h1 className="text-xl sm:text-6xl font-bold ">Department Overview</h1> 
         <DepartmentBarChart apiEndpoint={barChartApiEndpoint} deptCode={selectedFactory} />
       </section>
 
-      <section className="space-y-4">
+      <section className="space-y-4 bg-gray-50 p-4 rounded-lg shadow-lg">
        
         <div className="mb-4 flex flex-row justify-between items-center gap-2">
-          <h1 className="text-xl sm:text-2xl font-semibold">Manpower Monitoring</h1>
+          <h1 className="text-xl sm:text-6xl font-bold">Manpower Monitoring</h1>
         </div>
         <div className="overflow-x-auto">
           <ManpowerTable

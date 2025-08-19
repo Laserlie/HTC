@@ -370,7 +370,7 @@ export function ManpowerTable({ selectedDate, scanStatus, deptcodelevel1Filter }
   ];
 
   return (
-    <div className="overflow-x-auto bg-blue-50 rounded-xl shadow p-7">
+    <div className="overflow-x-auto bg-gray-50 rounded-xl shadow-lg p-7">
       <table className="min-w-full text-sm text-center border-collapse ">
         <thead className="border border-blue-500 rounded-md text-white bg-blue-800 ">
           <tr>

@@ -265,7 +265,7 @@ export default function ReportDetailPage() {
 
       return (
         <div key={workdate} className="border-b pb-4 mb-4">
-          <h3 className="text-xl font-bold mb-4">วันที่: {workdate}</h3>
+          <h3 className="text-xl font-bold mb-4">วันที่ {workdate}</h3>
 
           {/* การ์ดสรุปสำหรับแต่ละวัน */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 items-stretch">
@@ -326,7 +326,7 @@ export default function ReportDetailPage() {
                   {/* ตารางสำหรับพนักงานที่ยังไม่สแกน (No Scan) */}
                   {notScannedWithName.length > 0 && (
                     <>
-                      <h5 className="text-sm font-medium text-red-600">No Scan ({notScannedWithName.length} คน)</h5>
+                      <h5 className="text-sm font-lg text-red-600">No Scan {notScannedWithName.length} คน</h5>
                       <table className="min-w-full bg-white rounded shadow text-sm mb-4">
                         <thead className="bg-red-100 text-left">
                           <tr>
@@ -372,7 +372,7 @@ export default function ReportDetailPage() {
                   {/* ตารางสำหรับพนักงานที่สแกนแล้ว (Scanned) */}
                   {scannedWithName.length > 0 && (
                     <>
-                      <h5 className="text-sm font-medium text-green-600">Scanned ({scannedWithName.length} คน)</h5>
+                      <h5 className="text-sm font-lg text-green-600">Scanned {scannedWithName.length} คน</h5>
                       <table className="min-w-full bg-white rounded shadow text-sm">
                         <thead className="bg-green-100 text-left">
                           <tr>
@@ -440,12 +440,12 @@ export default function ReportDetailPage() {
         <span>Back</span>
       </button>
 
-      <h1 className="text-2xl font-bold">รายงานแผนก</h1>
-      <h2 className="text-lg font-semibold">{Object.values(deptInfo).join(', ')}</h2>
+      <h1 className="text-xl font-bold">รายงานแผนก</h1>
+      <h2 className="text-xl font-bold">{Object.values(deptInfo).join(', ')}</h2>
 
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex flex-col items-start gap-1">
-          <span className="text-gray-700 text-sm font-medium">วันเริ่มต้น:</span>
+          <span className="text-gray-700 text-sm font-medium">วันเริ่มต้น</span>
           <input
             type="date"
             value={startDate}
@@ -454,7 +454,7 @@ export default function ReportDetailPage() {
           />
         </label>
         <label className="flex flex-col items-start gap-1">
-          <span className="text-gray-700 text-sm font-medium">วันสิ้นสุด:</span>
+          <span className="text-gray-700 text-sm font-medium">วันสิ้นสุด</span>
           <input
             type="date"
             value={endDate}

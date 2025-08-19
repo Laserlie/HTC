@@ -327,7 +327,7 @@ export default function DepartmentChartsContainer({ apiEndpoint, deptCode }: Pro
   return (
     <div className="flex flex-col md:flex-row gap-8 justify-center items-start">
       {allScannedData.length > 0 && (
-        <div className="bg-white p-4 rounded-lg shadow w-full md:w-1/2 overflow-x-auto" ref={chartScannedRef}>
+        <div className="bg-white p-4 rounded-lg shadow-lg w-full md:w-1/2 overflow-x-auto" ref={chartScannedRef}>
           <div style={{ height: '400px', width: `${calculatedChartWidth}px` }}>
             <Bar data={chartDataScanned} options={optionsScanned} />
           </div>
@@ -335,7 +335,7 @@ export default function DepartmentChartsContainer({ apiEndpoint, deptCode }: Pro
       )}
 
       {allNotScannedData.length > 0 && (
-        <div className="bg-white p-4 rounded-lg shadow w-full md:w-1/2 overflow-x-auto" ref={chartNotScannedRef}>
+        <div className="bg-white p-4 rounded-lg shadow-lg w-full md:w-1/2 overflow-x-auto" ref={chartNotScannedRef}>
           <div style={{ height: '400px', width: `${calculatedChartWidth}px` }}>
             <Bar data={chartDataNotScanned} options={optionsNotScanned} />
           </div>
