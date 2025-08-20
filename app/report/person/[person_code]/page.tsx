@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
-import { PiSpinnerGapBold } from 'react-icons/pi';
 import { ArrowLeft } from 'lucide-react';
 import Spinner from '@/components/ui/Spinner';
 

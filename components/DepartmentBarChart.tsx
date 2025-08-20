@@ -109,7 +109,7 @@ export default function DepartmentChartsContainer({ apiEndpoint, deptCode }: Pro
     );
   }
   
-  const factoryTitle = deptCode === 'all' ? 'แผนก' : departmentNames[deptCode];
+  const factoryTitle = deptCode === 'all' ? 'ทุกโรงงาน' : departmentNames[deptCode];
   
   const departmentDataMap = new Map<string, DepartmentChartData>();
   data.forEach(item => {
@@ -153,7 +153,7 @@ export default function DepartmentChartsContainer({ apiEndpoint, deptCode }: Pro
       },
       title: {
         display: true,
-        text: `เปอร์เซ็นต์การเข้างานของพนักงาน ${factoryTitle}`,
+        text: `เปอร์เซ็นต์การเข้างานของพนักงาน${factoryTitle}`,
         position: 'top',
         align: 'start',
         font: {
@@ -252,7 +252,7 @@ export default function DepartmentChartsContainer({ apiEndpoint, deptCode }: Pro
       },
       title: {
         display: true,
-        text: `เปอร์เซ็นต์พนักงานที่ยังไม่สแกน ${factoryTitle}`,
+        text: `เปอร์เซ็นต์พนักงานที่ยังไม่สแกนของพนักงาน${factoryTitle}`,
         position: 'top',
         align: 'start',
         font: {

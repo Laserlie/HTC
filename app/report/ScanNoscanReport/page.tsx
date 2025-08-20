@@ -193,7 +193,7 @@ const ScanNoscanReportPageInner = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen bg-gray-50">
+      <div className="flex justify-center items-center h-screen">
         <Spinner />
       </div>
     );
@@ -305,7 +305,7 @@ const ScanNoscanReportPageInner = () => {
           </table>
           {visibleCount < flatEmployees.length && (
             <div ref={loaderRef} className="flex justify-center my-4">
-              <span className="px-4 py-2 bg-blue-100 text-blue-600 rounded shadow text-sm animate-pulse">
+              <span className="px-4 py-2 text-gray-600 rounded shadow text-sm animate-pulse">
                 กำลังโหลด...
               </span>
             </div>

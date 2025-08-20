@@ -299,7 +299,7 @@ const Report2: React.FC = () => {
                     <input
                         type="text"
                         placeholder="ค้นหาชื่อหรือรหัสพนักงาน..."
-                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 flex-grow"
+                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 flex-grow shadow-md "
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -307,7 +307,7 @@ const Report2: React.FC = () => {
                         id="statusFilter"
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
-                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 shadow-md"
                     >
                         <option value="">สถานะทั้งหมด</option>
                         <option value="noral">ปกติ (≤ 60 ชม.)</option>
@@ -318,7 +318,7 @@ const Report2: React.FC = () => {
                         id="weekFilter"
                         value={weekFilter}
                         onChange={e => setWeekFilter(Number(e.target.value))}
-                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 shadow-md"
                     >
                         <option value={0}>ทุกสัปดาห์</option>
                         <option value={1}>Week 1</option>
@@ -336,7 +336,7 @@ const Report2: React.FC = () => {
                             setDivisionFilter('');
                             setDepartmentFilter('');
                         }}
-                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 shadow-md"
                     >
                         <option value="">โรงงานทั้งหมด</option>
                         {factoryOptions.map(option => (
@@ -351,7 +351,7 @@ const Report2: React.FC = () => {
                             setDivisionFilter(e.target.value);
                             setDepartmentFilter('');
                         }}
-                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 shadow-md"
                         disabled={!factoryFilter}
                     >
                         <option value="">ฝ่ายทั้งหมด</option>
@@ -364,7 +364,7 @@ const Report2: React.FC = () => {
                         id="departmentFilter"
                         value={departmentFilter}
                         onChange={(e) => setDepartmentFilter(e.target.value)}
-                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 shadow-md"
                         disabled={!divisionFilter}
                     >
                         <option value="">แผนกทั้งหมด</option>
@@ -375,7 +375,7 @@ const Report2: React.FC = () => {
 
                     <button
                         type="submit"
-                        className="bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-900 flex items-center justify-center min-w-[100px]"
+                        className="bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-900 flex items-center justify-center min-w-[100px] shadow-lg"
                         disabled={loadingData}
                     >
                         ค้นหา

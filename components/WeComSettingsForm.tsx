@@ -41,6 +41,8 @@ export default function WeComSettingsForm() {
     const [wecomIdMap, setWecomIdMap] = useState<Map<string, { weComId: string; backendId?: number; workdayId?: string; originalLineUser?: LineUser }>>(new Map());
     const [originalWecomIdMap, setOriginalWecomIdMap] = useState<Map<string, { weComId: string; backendId?: number; workdayId?: string; originalLineUser?: LineUser }>>(new Map());
     const [selectedDepartmentId, setSelectedDepartmentId] = useState<string>('');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [searchResults, setSearchResults] = useState<{ deptId: string; deptName: string; employeeName: string; employeeId: string }[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -166,16 +168,41 @@ export default function WeComSettingsForm() {
         }
     }, [success, error]);
 
-    // กรองพนักงานตามแผนกที่เลือกและเรียงลำดับ
-    const currentDepartmentEmployees = useMemo(() => {
-        if (!selectedDepartmentId) return [];
-        const dept = departments.find(d => d.id === selectedDepartmentId);
-        return dept ? dept.employees.sort((a, b) => {
-            const nameA = a.name ?? '';
-            const nameB = b.name ?? '';
-            return nameA.localeCompare(nameB);
-        }) : [];
-    }, [selectedDepartmentId, departments]);
+  // กรองพนักงานตามแผนกที่เลือกและเรียงลำดับ
+  const currentDepartmentEmployees = useMemo(() => {
+    if (!selectedDepartmentId) return [];
+    const dept = departments.find(d => d.id === selectedDepartmentId);
+    return dept ? dept.employees.sort((a, b) => {
+      const nameA = a.name ?? '';
+      const nameB = b.name ?? '';
+      return nameA.localeCompare(nameB);
+    }) : [];
+  }, [selectedDepartmentId, departments]);
+
+  // ฟังก์ชันค้นหา
+  useEffect(() => {
+    if (!searchTerm) {
+      setSearchResults([]);
+      return;
+    }
+    const lower = searchTerm.toLowerCase();
+    const results: { deptId: string; deptName: string; employeeName: string; employeeId: string }[] = [];
+    departments.forEach(dept => {
+      // ตรงชื่อแผนก
+      if (dept.name.toLowerCase().includes(lower)) {
+        results.push({ deptId: dept.id, deptName: dept.name, employeeName: '', employeeId: '' });
+      }
+      dept.employees.forEach(emp => {
+        if (
+          emp.name.toLowerCase().includes(lower) ||
+          emp.id.toLowerCase().includes(lower)
+        ) {
+          results.push({ deptId: dept.id, deptName: dept.name, employeeName: emp.name, employeeId: emp.id });
+        }
+      });
+    });
+    setSearchResults(results);
+  }, [searchTerm, departments]);
 
     // Handle การเปลี่ยนแปลง WeCom ID ในช่อง input
     const handleWeComIdChange = useCallback((employeeId: string, newWeComId: string, backendId?: number, workdayId?: string) => {
@@ -350,45 +377,52 @@ export default function WeComSettingsForm() {
 
     return (
         
-        <div className="w-full min-h-screen bg-gradient-to-br from-gray-50 to-gray-50 flex flex-col items-center py-12 px-4 sm:px-6 lg:px-8">
-  <div className="w-full  bg-white rounded-xl shadow-xl p-8 sm:p-10 border border-gray-200">
-    <div className="flex items-center mb-6">
-      <h2 className="text-3xl font-extrabold text-gray-900 flex-grow">
+        <div className="container mx-auto px-4 py-4">
+          <h2 className="text-3xl font-extrabold text-gray-900 flex-grow">
         <span className="text-blue-600">Wecom ID</span> Settings
       </h2>
-    </div>
-    <p className="text-gray-600 text-base mb-8 border-b border-blue-100 pb-5">
+      <p className="text-gray-600 text-base mb-8 border-b border-blue-100 pb-5 mt-[8px]">
       จัดการ WeCom ID สำหรับพนักงาน เพื่อเปิดใช้การแจ้งเตือนผ่าน WeCom
     </p>
 
-    <div className="mb-8 p-6 bg-gray-50 rounded-lg border border-blue-200 shadow-xl">
-      <h3 className="text-xl font-bold text-blue-700 mb-4 flex items-center">
-        <i className="fas fa-building mr-3 text-blue-500"></i> เลือกแผนก
+    {}
+  <div className="w-full  bg-white rounded-xl shadow-lg p-2 py-[24px] border border-gray-200 mb-2">
+    <div className="flex items-center mb-3">
+    </div>
+      <h3 className="text-xl font-bold text-gray-700 mb-2 flex items-center">
+        <i className="fas fa-building mr-3 text-gray-800"></i> ค้นหาด้วยชื่อ, รหัสพนักงาน หรือชื่อแผนก
       </h3>
       <div className="relative">
-        <select
-          value={selectedDepartmentId}
-          onChange={(e) => setSelectedDepartmentId(e.target.value)}
-          className="block w-full px-5 py-3 text-base text-gray-800 bg-white border border-blue-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none transition duration-200 ease-in-out"
-        >
-          <option value="">-- กรุณาเลือกแผนก... --</option>
-          {departments.map((dept) => (
-            <option key={dept.id} value={dept.id}>
-              {dept.name} ({dept.employees.length} คน)
-            </option>
-          ))}
-        </select>
-        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-blue-600">
-          <svg className="fill-current h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 6.096 6.924 4.682 8.338l4.611 4.612z" />
-          </svg>
-        </div>
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          placeholder="ค้นหาชื่อ, รหัสพนักงาน หรือชื่อแผนก..."
+          className="block w-full px-5 py-3 text-base text-gray-800 bg-white border border-blue-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out"
+        />
+        {searchTerm && searchResults.length > 0 && (
+          <ul className="absolute z-10 w-full bg-white border border-blue-200 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto">
+            {searchResults.map((result, idx) => (
+              <li
+                key={idx}
+                className="px-4 py-2 hover:bg-blue-100 cursor-pointer text-gray-800"
+                onClick={() => {
+                  setSelectedDepartmentId(result.deptId);
+                  setSearchTerm('');
+                }}
+              >
+                {result.employeeName
+                  ? `${result.employeeName} (${result.employeeId}) - ${result.deptName}`
+                  : `${result.deptName}`}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
-
     {selectedDepartmentId && (
-      <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-7 mb-8">
-        <h4 className="text-xl font-bold text-gray-800 mb-5 pb-4 border-b border-gray-200 flex items-center">
+      <div className="bg-white rounded-xl shadow-lg border border-gray-200  mb-4">
+        <h4 className="text-xl font-bold text-gray-800 mb-5 pb-4 border-b border-gray-200 flex items-center py-4">
           <i className="fas fa-users mr-3 text-gray-600"></i>
           รายชื่อพนักงานในแผนก: <span className="text-blue-600 ml-2">{departments.find((d) => d.id === selectedDepartmentId)?.name}</span>
         </h4>
@@ -463,9 +497,13 @@ export default function WeComSettingsForm() {
       </div>
     )}
 
+    <div className='py-4'>
     <button
       onClick={handleSaveAllWeComIds}
-      className="w-full inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-lg text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-400 disabled:opacity-60 disabled:cursor-not-allowed transform transition duration-150 ease-in-out hover:scale-105"
+      className="w-full inline-flex justify-center items-center px-6 py-3 border
+       border-transparent text-base font-medium rounded-lg shadow-lg text-white bg-green-500 hover:bg-green-700
+        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-60 disabled:cursor-not-allowed 
+        transform transition duration-150 ease-in-out hover:scale-105"
       disabled={saving}
     >
       {saving ? (
@@ -494,6 +532,6 @@ export default function WeComSettingsForm() {
       </div>
     )}
   </div>
-</div>
+  </div>
     );
-}
+  }
