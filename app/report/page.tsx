@@ -1,7 +1,7 @@
 // pages/report/page.tsx
 'use client';
 
-import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ReportFilterForm from '../../components/ReportFilterForm';
 import { DepartmentTable } from '../../components/DepartmentTable';
@@ -28,154 +28,124 @@ function ReportPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [filters, setFilters] = useState(() => getInitialFilters(searchParams));
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [hasSearched, setHasSearched] = useState(() => {
-    const params = getInitialFilters(searchParams);
-    return !!(params.from && params.to);
-  });
-  const [levelCodeToNameMap, setLevelCodeToNameMap] = useState<Map<string, string>>(new Map()); // Added state for the map
+  const [loading, setLoading] = useState(false);
+  const [levelCodeToNameMap, setLevelCodeToNameMap] = useState<Map<string, string>>(new Map());
+  const [filters, setFilters] = useState(() => getInitialFilters(searchParams));
 
-  const searchParamsString = searchParams?.toString();
-
+  // รวม useEffect ทั้งหมดไว้ที่เดียวเพื่อจัดการการเปลี่ยนแปลงของ URL
   useEffect(() => {
-    setFilters(getInitialFilters(searchParams));
-    setHasSearched(!!(searchParams.get('from') && searchParams.get('to')));
-  }, [searchParams, searchParamsString]);
+    const newFilters = getInitialFilters(searchParams);
+    const hasSearched = !!(newFilters.from && newFilters.to);
 
-  const fetchAndProcessData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (filters.from) params.append('from', filters.from);
-      if (filters.to) params.append('to', filters.to);
-      const res = await fetch(`/api/manpower?${params.toString()}`);
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
-      }
-      const rawData: ReportApiRawData[] = await res.json();
-
-      const newLevelCodeToNameMap = new Map<string, string>();
-      rawData.forEach(item => {
-        if (item.deptcode && item.deptname) {
-          
-          newLevelCodeToNameMap.set(item.deptcode, item.deptname);
-
-         
-         
-          if (item.deptcode.endsWith('000000') && item.deptcode.length === 8) { 
-            const level1Code = item.deptcode.substring(0, 2);
-            newLevelCodeToNameMap.set(level1Code, item.deptname);
-          } else if (item.deptcode.endsWith('0000') && item.deptcode.length === 8) { 
-            const level2Code = item.deptcode.substring(0, 4);
-            newLevelCodeToNameMap.set(level2Code, item.deptname);
-          } else if (item.deptcode.endsWith('00') && item.deptcode.length === 8) { 
-            const level3Code = item.deptcode.substring(0, 6);
-           
-            if (!newLevelCodeToNameMap.has(level3Code) || (newLevelCodeToNameMap.get(level3Code) || '').length < item.deptname.length) {
-              newLevelCodeToNameMap.set(level3Code, item.deptname);
-            }
-          }
-        }
-      });
-      setLevelCodeToNameMap(newLevelCodeToNameMap);
-
-      const filteredRawData = rawData.filter(item => {
-        if (!item.deptcode) return false;
-
-        const { level1, level2, level3 } = parseDeptCode(item.deptcode);
-
-        if (filters.factoryId && level1 !== filters.factoryId) {
-          return false;
-        }
-        if (filters.mainDepartmentId && level2 !== filters.mainDepartmentId) {
-          return false;
-        }
-        if (filters.subDepartmentId && level3 !== filters.subDepartmentId) {
-          return false;
-        }
-
-        const countScanVal = parseInt(item.countscan || '0');
-        const countNotScanVal = parseInt(item.countnotscan || '0');
-
-        if (filters.employeeId === 'scanned' && countScanVal === 0) {
-          return false;
-        }
-        if (filters.employeeId === 'not_scanned' && countNotScanVal === 0) {
-          return false;
-        }
-        return true;
-      });
-
-      const groupedData = new Map<string, Employee>();
-
-      filteredRawData.forEach(item => {
-        const groupKey = `${item.workdate}-${item.deptcode}`;
-        const currentCountScan = parseInt(item.countscan || '0');
-        const currentCountNotScan = parseInt(item.countnotscan || '0');
-        const currentCountPerson = parseInt(item.countperson || '0');
-        const currentLate = parseInt(item.late || '0');
-
-        if (groupedData.has(groupKey)) {
-          const existingEmployee = groupedData.get(groupKey)!;
-          existingEmployee.countscan += currentCountScan;
-          existingEmployee.countnotscan += currentCountNotScan;
-          existingEmployee.countperson += currentCountPerson;
-          existingEmployee.late += currentLate;
-        } else {
-          const { level1, level2, level3 } = item.deptcode ? parseDeptCode(item.deptcode) : { level1: '', level2: '', level3: '' };
-
-          groupedData.set(groupKey, {
-            employeeId: item.employeeId || '',
-            groupid: item.groupid || '',
-            groupname: item.groupname || '',
-            workdate: item.workdate || '',
-            deptcode: item.deptcode, // Use full deptcode for original reference
-            deptname: newLevelCodeToNameMap.get(item.deptcode) || item.deptname || '', // Use map for specific deptname
-            deptsbu: item.deptsbu || '',
-            deptstd: item.deptstd !== undefined ? item.deptstd : null,
-            countscan: currentCountScan,
-            countnotscan: currentCountNotScan,
-            countperson: currentCountPerson,
-            late: currentLate,
-            factoryCode: level1,
-            factoryName: newLevelCodeToNameMap.get(level1) || `โรงงาน ${level1}`, 
-            mainDepartmentCode: level2,
-            mainDepartmentName: newLevelCodeToNameMap.get(level2) || `แผนกหลัก ${level2}`, 
-            subDepartmentCode: level3,
-            subDepartmentName: newLevelCodeToNameMap.get(level3) || `แผนกย่อย/ส่วนงาน ${level3}`,
-            originalFullDeptcode: item.deptcode,
-          });
-        }
-      });
-
-      const processedData: Employee[] = Array.from(groupedData.values());
-      processedData.sort((a, b) => {
-        if (a.workdate !== b.workdate) return a.workdate.localeCompare(b.workdate);
-        return a.originalFullDeptcode.localeCompare(b.originalFullDeptcode);
-      });
-
-      setFilteredEmployees(processedData);
-    } catch (err) {
-      console.error('Error fetching or processing data:', err);
-      setFilteredEmployees([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [filters]);
-
-  useEffect(() => {
     if (hasSearched) {
+      setLoading(true);
+      const fetchAndProcessData = async () => {
+        try {
+          const params = new URLSearchParams();
+          if (newFilters.from) params.append('from', newFilters.from);
+          if (newFilters.to) params.append('to', newFilters.to);
+          const res = await fetch(`/api/manpower?${params.toString()}`);
+          if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+          }
+          const rawData: ReportApiRawData[] = await res.json();
+
+          const newLevelCodeToNameMap = new Map<string, string>();
+          rawData.forEach(item => {
+            if (item.deptcode && item.deptname) {
+              newLevelCodeToNameMap.set(item.deptcode, item.deptname);
+              if (item.deptcode.endsWith('000000') && item.deptcode.length === 8) {
+                const level1Code = item.deptcode.substring(0, 2);
+                newLevelCodeToNameMap.set(level1Code, item.deptname);
+              } else if (item.deptcode.endsWith('0000') && item.deptcode.length === 8) {
+                const level2Code = item.deptcode.substring(0, 4);
+                newLevelCodeToNameMap.set(level2Code, item.deptname);
+              } else if (item.deptcode.endsWith('00') && item.deptcode.length === 8) {
+                const level3Code = item.deptcode.substring(0, 6);
+                if (!newLevelCodeToNameMap.has(level3Code) || (newLevelCodeToNameMap.get(level3Code) || '').length < item.deptname.length) {
+                  newLevelCodeToNameMap.set(level3Code, item.deptname);
+                }
+              }
+            }
+          });
+          setLevelCodeToNameMap(newLevelCodeToNameMap);
+
+          const filteredRawData = rawData.filter(item => {
+            if (!item.deptcode) return false;
+            const { level1, level2, level3 } = parseDeptCode(item.deptcode);
+            if (newFilters.factoryId && level1 !== newFilters.factoryId) return false;
+            if (newFilters.mainDepartmentId && level2 !== newFilters.mainDepartmentId) return false;
+            if (newFilters.subDepartmentId && level3 !== newFilters.subDepartmentId) return false;
+            const countScanVal = parseInt(item.countscan || '0');
+            const countNotScanVal = parseInt(item.countnotscan || '0');
+            if (newFilters.employeeId === 'scanned' && countScanVal === 0) return false;
+            if (newFilters.employeeId === 'not_scanned' && countNotScanVal === 0) return false;
+            return true;
+          });
+
+          const groupedData = new Map<string, Employee>();
+          filteredRawData.forEach(item => {
+            const groupKey = `${item.workdate}-${item.deptcode}`;
+            const currentCountScan = parseInt(item.countscan || '0');
+            const currentCountNotScan = parseInt(item.countnotscan || '0');
+            const currentCountPerson = parseInt(item.countperson || '0');
+            const currentLate = parseInt(item.late || '0');
+
+            if (groupedData.has(groupKey)) {
+              const existingEmployee = groupedData.get(groupKey)!;
+              existingEmployee.countscan += currentCountScan;
+              existingEmployee.countnotscan += currentCountNotScan;
+              existingEmployee.countperson += currentCountPerson;
+              existingEmployee.late += currentLate;
+            } else {
+              const { level1, level2, level3 } = item.deptcode ? parseDeptCode(item.deptcode) : { level1: '', level2: '', level3: '' };
+              groupedData.set(groupKey, {
+                employeeId: item.employeeId || '',
+                groupid: item.groupid || '',
+                groupname: item.groupname || '',
+                workdate: item.workdate || '',
+                deptcode: item.deptcode,
+                deptname: newLevelCodeToNameMap.get(item.deptcode) || item.deptname || '',
+                deptsbu: item.deptsbu || '',
+                deptstd: item.deptstd !== undefined ? item.deptstd : null,
+                countscan: currentCountScan,
+                countnotscan: currentCountNotScan,
+                countperson: currentCountPerson,
+                late: currentLate,
+                factoryCode: level1,
+                factoryName: newLevelCodeToNameMap.get(level1) || `โรงงาน ${level1}`,
+                mainDepartmentCode: level2,
+                mainDepartmentName: newLevelCodeToNameMap.get(level2) || `แผนกหลัก ${level2}`,
+                subDepartmentCode: level3,
+                subDepartmentName: newLevelCodeToNameMap.get(level3) || `แผนกย่อย/ส่วนงาน ${level3}`,
+                originalFullDeptcode: item.deptcode,
+              });
+            }
+          });
+
+          const processedData: Employee[] = Array.from(groupedData.values());
+          processedData.sort((a, b) => {
+            if (a.workdate !== b.workdate) return a.workdate.localeCompare(b.workdate);
+            return a.originalFullDeptcode.localeCompare(b.originalFullDeptcode);
+          });
+          setFilteredEmployees(processedData);
+        } catch (err) {
+          console.error('Error fetching or processing data:', err);
+          setFilteredEmployees([]);
+        } finally {
+          setLoading(false);
+        }
+      };
       fetchAndProcessData();
+    } else {
+      setLoading(false);
+      setFilteredEmployees([]);
     }
-  }, [fetchAndProcessData, hasSearched]);
+  }, [searchParams]);
 
   const handleSearch = (newFilters: typeof filters) => {
-    setFilters(newFilters);
-    setHasSearched(true);
-
-    // Update URL query string
+    // อัปเดต URL โดยใช้ router.replace เพื่อไม่เพิ่มประวัติในเบราว์เซอร์
     const params = new URLSearchParams();
     if (newFilters.from) params.set('from', newFilters.from);
     if (newFilters.to) params.set('to', newFilters.to);
@@ -183,17 +153,14 @@ function ReportPageContent() {
     if (newFilters.mainDepartmentId) params.set('mainDepartmentId', newFilters.mainDepartmentId);
     if (newFilters.subDepartmentId) params.set('subDepartmentId', newFilters.subDepartmentId);
     if (newFilters.employeeId && newFilters.employeeId !== 'all') params.set('employeeId', newFilters.employeeId);
-
     router.replace(`/report?${params.toString()}`);
   };
 
   return (
     <div className="container mx-auto p-4 space-y-6">
       <h1 className="text-2xl font-bold text-gray-800">Scan Data List</h1>
-
       <ReportFilterForm onSearch={handleSearch} initialFilters={filters} />
-
-      {!hasSearched ? (
+      {!filters.from || !filters.to ? (
         <div className="text-center text-gray-500 py-8">กรุณาเลือกช่วงวันที่และกด Search เพื่อแสดงข้อมูล</div>
       ) : loading ? (
         <Spinner />
@@ -201,8 +168,7 @@ function ReportPageContent() {
         <DepartmentTable
           employees={filteredEmployees}
           scanStatus={filters.employeeId}
-          levelCodeToNameMap={levelCodeToNameMap} // Pass the map
-          // filters={filters} // Removed filters prop
+          levelCodeToNameMap={levelCodeToNameMap}
         />
       )}
     </div>

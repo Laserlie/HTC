@@ -343,8 +343,7 @@ def wecom_webhook():
 
                 logging.debug(f"[{request_id}] Raw signature_str: {signature_str}")
                 logging.debug(f"[{request_id}] Calculated signature: {calculated_signature}")
-                logging.debug(f"[{request_id}] Received signature: {msg_signature}")
-
+                logging.debug(f"[{request_id}] Received signature: {msg_signature}")            
 
                 if calculated_signature != msg_signature:
                     logging.error(f"[{request_id}] Signature verification failed! Calculated: {calculated_signature}, Received: {msg_signature}")
@@ -431,12 +430,17 @@ def wecom_webhook():
                 if received_text.strip().lower() == 'help' or received_text.strip() == '0':
                     logging.info(f"[{request_id}] Processing command 'help' or '0'")
                     reply_text = (
-                        "คำสั่งที่รองรับ:\n"
+                         "คำสั่งที่รองรับ:\n"
                         "0 หรือ help: แสดงรายการคำสั่งนี้\n"
+                        "\n"
                         "1 หรือ 1/YYYY-MM-DD: สรุปการสแกนเข้า-ออกของทั้งแผนก\n"
+                        "\n"
                         "2 : สรุปการสแกนเข้า-ออกส่วนตัวประจำวัน\n"
+                        "\n"
                         "3 หรือ 3/WorkdayID หรือ 3/WorkdayID/YYYY-MM: สรุปการสแกนเข้า-ออกส่วนตัวประจำเดือน (ถ้าไม่ระบุ WorkdayID จะเป็นของคุณ)\n"
+                        "\n"
                         "4 : รายชื่อพนักงานในแผนกของคุณ\n"
+                        "\n"
                         "5 : แสดงรายการวันหยุดประจำปีปัจจุบัน" 
                     )
                 
@@ -780,9 +784,18 @@ if __name__ == '__main__':
         logging.error(f"WeComCrypto test initialization failed: {e}")
         sys.exit(1)
 
-    app.run(host='0.0.0.0', port=5001,debug=False)
+    app.run(host='0.0.0.0', port=5000,debug=False)
 
 
 #step to use
 # run wecomcallback.py
-# new terminal, run lt --port 5001 --subdomain htcfacescan
+
+#-------------------------#
+# download cloudflared (public URL)
+
+# in terminal or cmd in path at download cloudflared
+#paste "cloudflared.exe tunnel --url http://127.0.0.1:5001 --protocol http2"
+#ps.1 file name must be the same as when downloaded.
+
+#Take the link and paste it into wecom web (Receive Messages via API)
+#ps.2 everytime to close terminal path at run cloudflared. new run path, you will change new link in wecom web (Receive Messages via API) too

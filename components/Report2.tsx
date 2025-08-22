@@ -1,23 +1,12 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
-//import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table';
 
-// Interfaces for data structure
-interface Employee {
-    id: string;
-    name: string;
-    department: string;
-    departmentName: string;
-    deptCode: string;
-    hours: number[]; // Contains w1-w5 data
-    currentUsedHours: number;
-    hoursLeft: number;
-}
-
-// Interface for the hours API data
+// Interface for the hours API data (updated)
 interface EmployeeHoursApiRawData {
     div: string;
+    deptcode: string;
+    full_name: string;
     sec: string;
     empid: string;
     w1: number;
@@ -29,13 +18,16 @@ interface EmployeeHoursApiRawData {
     hours_left: number;
 }
 
-// Interface for the employee details API data
-interface EmployeeDetailsApiRawData {
-    workdayId: string;
-    empCode: string;
-    empName: string;
+// Interfaces for data structure (no change)
+interface Employee {
+    id: string;
+    name: string;
+    department: string;
+    departmentName: string;
     deptCode: string;
-    deptName: string;
+    hours: number[]; // Contains w1-w5 data
+    currentUsedHours: number;
+    hoursLeft: number;
 }
 
 // Helper function to parse department code string
@@ -69,43 +61,24 @@ const Report2: React.FC = () => {
     // State for week filter
     const [weekFilter, setWeekFilter] = useState<number>(0);
 
-    // useEffect to fetch data from two APIs and merge them
+    // useEffect to fetch data from the single updated API
     useEffect(() => {
         setLoadingData(true);
 
-        const fetchEmployeeHours = fetch(`http://10.35.10.47:2007/api/LineUsers/GetEmployeeHours`)
+        fetch(`http://10.35.10.47:2007/api/LineUsers/GetEmployeeHours`)
             .then(res => {
                 if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
                 return res.json();
-            });
-
-        const fetchEmployeeDetails = fetch(`http://10.35.10.47:2007/api/LineNotify/EmployeeActive`)
-            .then(res => {
-                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                return res.json();
-            });
-
-        Promise.all([fetchEmployeeHours, fetchEmployeeDetails])
-            .then(([hoursData, detailsData]: [EmployeeHoursApiRawData[], EmployeeDetailsApiRawData[]]) => {
-                if (Array.isArray(hoursData) && Array.isArray(detailsData)) {
-                    // Create a map for quick lookup of employee details by workdayId/empid
-                    const employeeDetailsMap = new Map<string, EmployeeDetailsApiRawData>();
-                    detailsData.forEach(item => {
-                        employeeDetailsMap.set(item.workdayId, item);
-                    });
-
-                    // Map the hours data, combining with details data
+            })
+            .then((hoursData: EmployeeHoursApiRawData[]) => {
+                if (Array.isArray(hoursData)) {
                     const formattedEmployees: Employee[] = hoursData.map(hoursItem => {
-                        const detailsItem = employeeDetailsMap.get(hoursItem.empid);
-                        const empName = detailsItem?.empName || hoursItem.empid;
-                        const deptName = detailsItem?.deptName || `${hoursItem.div}-${hoursItem.sec}`;
-                        const deptCode = detailsItem?.deptCode || '00000000';
-
+                        const deptCode = hoursItem.deptcode || '00000000';
                         return {
                             id: hoursItem.empid,
-                            name: empName,
+                            name: hoursItem.full_name || hoursItem.empid,
                             department: hoursItem.div,
-                            departmentName: deptName,
+                            departmentName: hoursItem.div, 
                             deptCode: deptCode,
                             hours: [hoursItem.w1, hoursItem.w2, hoursItem.w3, hoursItem.w4, hoursItem.w5],
                             currentUsedHours: hoursItem.current_date_use_hour,
@@ -145,10 +118,10 @@ const Report2: React.FC = () => {
             }
             
             // Hierarchical filter logic - Corrected to use deptCode
-            const { factory, division } = parseDeptCode(employee.deptCode);
+            const { factory, division, department } = parseDeptCode(employee.deptCode);
             const matchesFactory = !factoryFilter || (factory === factoryFilter);
-            const matchesDivision = !divisionFilter || (factory === factoryFilter && division === divisionFilter);
-            const matchesDepartment = !departmentFilter || (employee.deptCode === departmentFilter);
+            const matchesDivision = !divisionFilter || (division === divisionFilter);
+            const matchesDepartment = !departmentFilter || (department === departmentFilter);
 
             return matchesSearch && matchesStatus && matchesFactory && matchesDivision && matchesDepartment;
         });
@@ -160,8 +133,7 @@ const Report2: React.FC = () => {
         allEmployees.forEach(emp => {
             const { factory } = parseDeptCode(emp.deptCode);
             if (factory && !options.has(factory)) {
-                 // Use the full department name as the name for the factory code
-                options.set(factory, emp.departmentName);
+                options.set(factory, emp.departmentName); // Use departmentName for display
             }
         });
         return Array.from(options.entries()).map(([code, name]) => ({ code, name }));
@@ -172,24 +144,21 @@ const Report2: React.FC = () => {
         allEmployees.forEach(emp => {
             const { factory, division } = parseDeptCode(emp.deptCode);
             if (factory === factoryFilter && division && division !== '00' && !options.has(division)) {
-                // Use the full department name as the name for the division code
-                options.set(division, emp.departmentName);
+                options.set(division, emp.departmentName); // Use departmentName for display
             }
         });
         return Array.from(options.entries()).map(([code, name]) => ({ code, name }));
     }, [allEmployees, factoryFilter]);
     
-    // Updated to return a list of unique department names, linked to their codes
+    // The department filter is updated to use the full deptCode for filtering and the full name for display
     const departmentOptions = useMemo(() => {
         const uniqueDepartments = new Map<string, { code: string; name: string }>();
         allEmployees.forEach(emp => {
-            const { factory, division } = parseDeptCode(emp.deptCode);
+            const { factory, division, department } = parseDeptCode(emp.deptCode);
             if (factory === factoryFilter && division === divisionFilter && emp.departmentName) {
-                // Use the department name as the key to ensure uniqueness
                 uniqueDepartments.set(emp.departmentName, { code: emp.deptCode, name: emp.departmentName });
             }
         });
-        // Convert the map values to an array and sort by name
         return Array.from(uniqueDepartments.values()).sort((a, b) => a.name.localeCompare(b.name));
     }, [allEmployees, factoryFilter, divisionFilter]);
 
@@ -310,7 +279,7 @@ const Report2: React.FC = () => {
                         className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 shadow-md"
                     >
                         <option value="">สถานะทั้งหมด</option>
-                        <option value="noral">ปกติ (≤ 60 ชม.)</option>
+                        <option value="normal">ปกติ (≤ 60 ชม.)</option>
                         <option value="overtime">เกินเวลา (&gt; 60 ชม.)</option>
                     </select>
                     {/* Week Filter Dropdown */}
@@ -528,6 +497,7 @@ const Report2: React.FC = () => {
                                 })
                             ) : (
                                 <tr>
+                                    <td colSpan={10} className="text-center py-8 text-gray-500">ไม่พบข้อมูลพนักงาน</td>
                                 </tr>
                             )}
                         </tbody>
