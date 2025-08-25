@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 
-// Interface for the hours API data (updated)
+
 interface EmployeeHoursApiRawData {
     div: string;
     deptcode: string;
@@ -18,14 +18,14 @@ interface EmployeeHoursApiRawData {
     hours_left: number;
 }
 
-// Interfaces for data structure (no change)
+
 interface Employee {
     id: string;
     name: string;
     department: string;
     departmentName: string;
     deptCode: string;
-    hours: number[]; // Contains w1-w5 data
+    hours: number[];
     currentUsedHours: number;
     hoursLeft: number;
 }
@@ -43,12 +43,21 @@ const parseDeptCode = (deptCode: string) => {
 };
 
 const Report2: React.FC = () => {
-    // State to manage filters
-    const [searchTerm, setSearchTerm] = useState<string>('');
-    const [statusFilter, setStatusFilter] = useState<string>('');
-    const [factoryFilter, setFactoryFilter] = useState<string>('');
-    const [divisionFilter, setDivisionFilter] = useState<string>('');
-    const [departmentFilter, setDepartmentFilter] = useState<string>('');
+   
+    const [searchTermInput, setSearchTermInput] = useState<string>('');
+    const [statusFilterInput, setStatusFilterInput] = useState<string>('');
+    const [factoryFilterInput, setFactoryFilterInput] = useState<string>('');
+    const [divisionFilterInput, setDivisionFilterInput] = useState<string>('');
+    const [departmentFilterInput, setDepartmentFilterInput] = useState<string>('');
+    const [weekFilterInput, setWeekFilterInput] = useState<number>(0);
+
+    
+    const [activeSearchTerm, setActiveSearchTerm] = useState<string>('');
+    const [activeStatusFilter, setActiveStatusFilter] = useState<string>('');
+    const [activeFactoryFilter, setActiveFactoryFilter] = useState<string>('');
+    const [activeDivisionFilter, setActiveDivisionFilter] = useState<string>('');
+    const [activeDepartmentFilter, setActiveDepartmentFilter] = useState<string>('');
+    const [activeWeekFilter, setActiveWeekFilter] = useState<number>(0);
     
     // State for pagination
     const [currentPage, setCurrentPage] = useState<number>(1);
@@ -57,9 +66,6 @@ const Report2: React.FC = () => {
     // State for fetched employee data
     const [allEmployees, setAllEmployees] = useState<Employee[]>([]);
     const [loadingData, setLoadingData] = useState<boolean>(false);
-
-    // State for week filter
-    const [weekFilter, setWeekFilter] = useState<number>(0);
 
     // useEffect to fetch data from the single updated API
     useEffect(() => {
@@ -103,29 +109,29 @@ const Report2: React.FC = () => {
     // Memoized filtered data to avoid re-calculating on every render
     const filteredEmployees = useMemo(() => {
         return allEmployees.filter(employee => {
-            const matchesSearch = employee.name.toLowerCase().includes(searchTerm.toLowerCase()) || employee.id.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesSearch = employee.name.toLowerCase().includes(activeSearchTerm.toLowerCase()) || employee.id.toLowerCase().includes(activeSearchTerm.toLowerCase());
             
             let matchesStatus = true;
-            const weekIndex = weekFilter - 1; // Adjust for 0-based array index
+            const weekIndex = activeWeekFilter - 1; // Adjust for 0-based array index
 
-            if (statusFilter && weekFilter > 0) {
+            if (activeStatusFilter && activeWeekFilter > 0) {
                 const hour = employee.hours[weekIndex] || 0;
-                matchesStatus = (statusFilter === 'overtime' && hour > 60) || (statusFilter === 'normal' && hour <= 60 && hour > 0);
-            } else if (statusFilter && weekFilter === 0) {
+                matchesStatus = (activeStatusFilter === 'overtime' && hour > 60) || (activeStatusFilter === 'normal' && hour <= 60 && hour > 0);
+            } else if (activeStatusFilter && activeWeekFilter === 0) {
                 matchesStatus = employee.hours.some(hour =>
-                    (statusFilter === 'overtime' && hour > 60) || (statusFilter === 'normal' && hour <= 60 && hour > 0)
+                    (activeStatusFilter === 'overtime' && hour > 60) || (activeStatusFilter === 'normal' && hour <= 60 && hour > 0)
                 );
             }
             
-            // Hierarchical filter logic - Corrected to use deptCode
+            // ❌ แก้ไข: ใช้ activeDepartmentFilter โดยตรงเพื่อเปรียบเทียบกับ deptCode
             const { factory, division, department } = parseDeptCode(employee.deptCode);
-            const matchesFactory = !factoryFilter || (factory === factoryFilter);
-            const matchesDivision = !divisionFilter || (division === divisionFilter);
-            const matchesDepartment = !departmentFilter || (department === departmentFilter);
+            const matchesFactory = !activeFactoryFilter || (factory === activeFactoryFilter);
+            const matchesDivision = !activeDivisionFilter || (division === activeDivisionFilter);
+            const matchesDepartment = !activeDepartmentFilter || (employee.deptCode === activeDepartmentFilter);
 
             return matchesSearch && matchesStatus && matchesFactory && matchesDivision && matchesDepartment;
         });
-    }, [searchTerm, statusFilter, factoryFilter, divisionFilter, departmentFilter, allEmployees, weekFilter]);
+    }, [activeSearchTerm, activeStatusFilter, activeFactoryFilter, activeDivisionFilter, activeDepartmentFilter, allEmployees, activeWeekFilter]);
 
     // Memoized unique options for each dropdown
     const factoryOptions = useMemo(() => {
@@ -133,7 +139,7 @@ const Report2: React.FC = () => {
         allEmployees.forEach(emp => {
             const { factory } = parseDeptCode(emp.deptCode);
             if (factory && !options.has(factory)) {
-                options.set(factory, emp.departmentName); // Use departmentName for display
+                options.set(factory, emp.departmentName); 
             }
         });
         return Array.from(options.entries()).map(([code, name]) => ({ code, name }));
@@ -143,24 +149,24 @@ const Report2: React.FC = () => {
         const options = new Map<string, string>();
         allEmployees.forEach(emp => {
             const { factory, division } = parseDeptCode(emp.deptCode);
-            if (factory === factoryFilter && division && division !== '00' && !options.has(division)) {
-                options.set(division, emp.departmentName); // Use departmentName for display
+            if (factory === factoryFilterInput && division && division !== '00' && !options.has(division)) {
+                options.set(division, emp.departmentName);
             }
         });
         return Array.from(options.entries()).map(([code, name]) => ({ code, name }));
-    }, [allEmployees, factoryFilter]);
+    }, [allEmployees, factoryFilterInput]);
     
-    // The department filter is updated to use the full deptCode for filtering and the full name for display
+    // ✅ แก้ไข: ใช้ deptCode เป็น key ใน Map เพื่อป้องกันชื่อแผนกซ้ำ
     const departmentOptions = useMemo(() => {
         const uniqueDepartments = new Map<string, { code: string; name: string }>();
         allEmployees.forEach(emp => {
             const { factory, division } = parseDeptCode(emp.deptCode);
-            if (factory === factoryFilter && division === divisionFilter && emp.departmentName) {
-                uniqueDepartments.set(emp.departmentName, { code: emp.deptCode, name: emp.departmentName });
+            if (factory === factoryFilterInput && division === divisionFilterInput && emp.departmentName) {
+                uniqueDepartments.set(emp.deptCode, { code: emp.deptCode, name: emp.departmentName });
             }
         });
         return Array.from(uniqueDepartments.values()).sort((a, b) => a.name.localeCompare(b.name));
-    }, [allEmployees, factoryFilter, divisionFilter]);
+    }, [allEmployees, factoryFilterInput, divisionFilterInput]);
 
     // Memoized paginated data to display
     const paginatedEmployees = useMemo(() => {
@@ -175,8 +181,8 @@ const Report2: React.FC = () => {
         let overtimeEmployees = 0;
         let normalEmployees = 0;
 
-        if (weekFilter > 0) {
-            const weekIndex = weekFilter - 1;
+        if (activeWeekFilter > 0) {
+            const weekIndex = activeWeekFilter - 1;
             overtimeEmployees = filteredEmployees.filter(emp => (emp.hours[weekIndex] || 0) > 60).length;
             normalEmployees = filteredEmployees.filter(emp => (emp.hours[weekIndex] || 0) <= 60 && (emp.hours[weekIndex] || 0) > 0).length;
         } else {
@@ -185,15 +191,15 @@ const Report2: React.FC = () => {
         }
         
         return { totalEmployees, normalEmployees, overtimeEmployees };
-    }, [filteredEmployees, weekFilter]);
+    }, [filteredEmployees, activeWeekFilter]);
 
     const handleExportToCSV = () => {
         // Dynamic headers based on weekFilter
         let headers = ['รหัส', 'ชื่อ-นามสกุล', 'แผนก'];
-        if (weekFilter === 0) {
+        if (activeWeekFilter === 0) {
             headers = [...headers, 'Week1', 'Week2', 'Week3', 'Week4', 'Week5', 'ทำงานไปแล้ว (Weekล่าสุด)', 'เหลือชั่วโมงทำงาน (Weekล่าสุด)'];
         } else {
-            headers = [...headers, `Week ${weekFilter}`, 'ทำงานไปแล้ว', 'เหลือชั่วโมงทำงาน'];
+            headers = [...headers, `Week ${activeWeekFilter}`, 'ทำงานไปแล้ว', 'เหลือชั่วโมงทำงาน'];
         }
 
         const csvContent = [
@@ -204,7 +210,7 @@ const Report2: React.FC = () => {
                     `"${emp.name}"`,
                     `"${emp.departmentName}"`,
                 ];
-                if (weekFilter === 0) {
+                if (activeWeekFilter === 0) {
                     // Export all weeks if no specific week is filtered
                     const latestWeekIndex = emp.hours.length - 1 - [...emp.hours].reverse().findIndex(hour => hour > 0);
                     const latestUsedHours = latestWeekIndex !== -1 ? emp.hours[latestWeekIndex] : 0;
@@ -213,7 +219,7 @@ const Report2: React.FC = () => {
                     rowData = [...rowData, ...emp.hours.map(String), String(latestUsedHours), String(hoursLeftCalculated)];
                 } else {
                     // Export only the selected week's data
-                    const selectedWeekHours = emp.hours[weekFilter - 1] || 0;
+                    const selectedWeekHours = emp.hours[activeWeekFilter - 1] || 0;
                     const hoursLeftCalculated = 60 - selectedWeekHours;
                     rowData = [...rowData, String(selectedWeekHours), String(selectedWeekHours), String(hoursLeftCalculated)];
                 }
@@ -233,13 +239,20 @@ const Report2: React.FC = () => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        setActiveSearchTerm(searchTermInput);
+        setActiveStatusFilter(statusFilterInput);
+        setActiveFactoryFilter(factoryFilterInput);
+        setActiveDivisionFilter(divisionFilterInput);
+        setActiveDepartmentFilter(departmentFilterInput);
+        setActiveWeekFilter(weekFilterInput);
+
         console.log('Searching with filters:', {
-            searchTerm,
-            statusFilter,
-            factoryFilter,
-            divisionFilter,
-            departmentFilter,
-            weekFilter
+            searchTermInput,
+            statusFilterInput,
+            factoryFilterInput,
+            divisionFilterInput,
+            departmentFilterInput,
+            weekFilterInput
         });
         setCurrentPage(1);
     };
@@ -247,7 +260,7 @@ const Report2: React.FC = () => {
     // Handlers for pagination
     const handleRowsPerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setRowsPerPage(Number(e.target.value));
-        setCurrentPage(1); // Reset to the first page when the row count changes
+        setCurrentPage(1);
     };
 
     return (
@@ -269,13 +282,13 @@ const Report2: React.FC = () => {
                         type="text"
                         placeholder="ค้นหาชื่อหรือรหัสพนักงาน..."
                         className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 flex-grow shadow-md "
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        value={searchTermInput}
+                        onChange={(e) => setSearchTermInput(e.target.value)}
                     />
                     <select
                         id="statusFilter"
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
+                        value={statusFilterInput}
+                        onChange={(e) => setStatusFilterInput(e.target.value)}
                         className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 shadow-md"
                     >
                         <option value="">สถานะทั้งหมด</option>
@@ -285,8 +298,8 @@ const Report2: React.FC = () => {
                     {/* Week Filter Dropdown */}
                     <select
                         id="weekFilter"
-                        value={weekFilter}
-                        onChange={e => setWeekFilter(Number(e.target.value))}
+                        value={weekFilterInput}
+                        onChange={e => setWeekFilterInput(Number(e.target.value))}
                         className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 shadow-md"
                     >
                         <option value={0}>ทุกสัปดาห์</option>
@@ -299,11 +312,11 @@ const Report2: React.FC = () => {
                     {/* Updated Factory dropdown to show names */}
                     <select
                         id="factoryFilter"
-                        value={factoryFilter}
+                        value={factoryFilterInput}
                         onChange={(e) => {
-                            setFactoryFilter(e.target.value);
-                            setDivisionFilter('');
-                            setDepartmentFilter('');
+                            setFactoryFilterInput(e.target.value);
+                            setDivisionFilterInput('');
+                            setDepartmentFilterInput('');
                         }}
                         className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 shadow-md"
                     >
@@ -315,13 +328,13 @@ const Report2: React.FC = () => {
                     {/* Updated Division dropdown to show names */}
                     <select
                         id="divisionFilter"
-                        value={divisionFilter}
+                        value={divisionFilterInput}
                         onChange={(e) => {
-                            setDivisionFilter(e.target.value);
-                            setDepartmentFilter('');
+                            setDivisionFilterInput(e.target.value);
+                            setDepartmentFilterInput('');
                         }}
                         className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 shadow-md"
-                        disabled={!factoryFilter}
+                        disabled={!factoryFilterInput}
                     >
                         <option value="">ฝ่ายทั้งหมด</option>
                         {divisionOptions.map(option => (
@@ -331,10 +344,10 @@ const Report2: React.FC = () => {
                     {/* The department filter is updated to ensure unique names */}
                     <select
                         id="departmentFilter"
-                        value={departmentFilter}
-                        onChange={(e) => setDepartmentFilter(e.target.value)}
+                        value={departmentFilterInput}
+                        onChange={(e) => setDepartmentFilterInput(e.target.value)}
                         className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 shadow-md"
-                        disabled={!divisionFilter}
+                        disabled={!divisionFilterInput}
                     >
                         <option value="">แผนกทั้งหมด</option>
                         {departmentOptions.map((option, idx) => (
@@ -361,7 +374,7 @@ const Report2: React.FC = () => {
                 {/* Card 1: Total Employees */}
                 <div className="bg-blue-100 rounded-xl shadow-md p-6 ">
                     <div className="flex items-center">
-                        <div className="p-3 bg-blue-200 rounded-full  ">
+                        <div className="p-3 bg-blue-200 rounded-full  ">
                             <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                             </svg>
@@ -444,16 +457,16 @@ const Report2: React.FC = () => {
                                 {[1, 2, 3, 4, 5].map((weekNum) => (
                                     <th 
                                         key={`week-header-${weekNum}`}
-                                        className={`px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider ${weekFilter === weekNum ? 'bg-indigo-100' : ''}`}
+                                        className={`px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider ${activeWeekFilter === weekNum ? 'bg-indigo-100' : ''}`}
                                     >
                                         Week {weekNum}
                                     </th>
                                 ))}
                                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    ทำงานไปแล้ว <br/> ({weekFilter === 0 ? 'Weekล่าสุด' : `Week ${weekFilter}`})
+                                    ทำงานไปแล้ว <br/> ({activeWeekFilter === 0 ? 'Weekล่าสุด' : `Week ${activeWeekFilter}`})
                                 </th>
                                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    เหลือชั่วโมงทำงาน <br/> ({weekFilter === 0 ? 'Weekล่าสุด' : `Week ${weekFilter}`})
+                                    เหลือชั่วโมงทำงาน <br/> ({activeWeekFilter === 0 ? 'Weekล่าสุด' : `Week ${activeWeekFilter}`})
                                 </th>
                             </tr>
                         </thead>
@@ -461,7 +474,7 @@ const Report2: React.FC = () => {
                             {paginatedEmployees.length > 0 ? (
                                 paginatedEmployees.map(employee => {
                                     // Logic to find the latest week or use the filtered week
-                                    const latestWeekIndex = weekFilter > 0 ? weekFilter - 1 : employee.hours.length - 1 - [...employee.hours].reverse().findIndex(hour => hour > 0);
+                                    const latestWeekIndex = activeWeekFilter > 0 ? activeWeekFilter - 1 : employee.hours.length - 1 - [...employee.hours].reverse().findIndex(hour => hour > 0);
                                     const latestUsedHours = latestWeekIndex !== -1 ? (employee.hours[latestWeekIndex] || 0) : 0;
                                     const hoursLeftCalculated = 60 - latestUsedHours; // Assuming 60 hours is the maximum
 
@@ -482,7 +495,7 @@ const Report2: React.FC = () => {
                                                 }
 
                                                 // Highlight the cell if it's the selected week
-                                                const highlightClass = weekFilter === weekNum ? 'bg-indigo-50' : '';
+                                                const highlightClass = activeWeekFilter === weekNum ? 'bg-indigo-50' : '';
 
                                                 return (
                                                     <td key={index} className={`px-6 py-4 whitespace-nowrap text-sm text-center ${cellColorClass} ${highlightClass}`}>
