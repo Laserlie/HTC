@@ -124,7 +124,7 @@ const Report2: React.FC = () => {
             }
             
             // ❌ แก้ไข: ใช้ activeDepartmentFilter โดยตรงเพื่อเปรียบเทียบกับ deptCode
-            const { factory, division, department } = parseDeptCode(employee.deptCode);
+            const { factory, division} = parseDeptCode(employee.deptCode);
             const matchesFactory = !activeFactoryFilter || (factory === activeFactoryFilter);
             const matchesDivision = !activeDivisionFilter || (division === activeDivisionFilter);
             const matchesDepartment = !activeDepartmentFilter || (employee.deptCode === activeDepartmentFilter);

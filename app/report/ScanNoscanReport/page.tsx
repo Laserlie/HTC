@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useEffect, useState, useCallback, useMemo, useRef, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import Spinner from '@/components/ui/Spinner';
-import { ArrowLeft } from 'lucide-react';
+import { useSearchParams} from 'next/navigation';
+import Spinner from '@/components/ui/Spinner'; 
 
 type EmployeeDetail = {
   workdate: string;
@@ -55,7 +54,6 @@ const ScanNoscanReportPageInner = () => {
   const from = searchParams.get('from');
   const to = searchParams.get('to');
   const initialDeptCodeFromUrl = searchParams.get('deptcode');
-  const router = useRouter();
 
   const [allEmployees, setAllEmployees] = useState<EmployeeDetail[]>([]);
   const [employees, setEmployees] = useState<EmployeeDetail[]>([]);
