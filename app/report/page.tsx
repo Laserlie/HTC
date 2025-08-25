@@ -28,23 +28,25 @@ function ReportPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const [filters, setFilters] = useState(getInitialFilters(searchParams));
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(false);
   const [levelCodeToNameMap, setLevelCodeToNameMap] = useState<Map<string, string>>(new Map());
-  const [filters, setFilters] = useState(() => getInitialFilters(searchParams));
 
-  // รวม useEffect ทั้งหมดไว้ที่เดียวเพื่อจัดการการเปลี่ยนแปลงของ URL
   useEffect(() => {
-    const newFilters = getInitialFilters(searchParams);
-    const hasSearched = !!(newFilters.from && newFilters.to);
+    setFilters(getInitialFilters(searchParams));
+  }, [searchParams]);
+
+  useEffect(() => {
+    const hasSearched = !!(filters.from && filters.to);
 
     if (hasSearched) {
       setLoading(true);
       const fetchAndProcessData = async () => {
         try {
           const params = new URLSearchParams();
-          if (newFilters.from) params.append('from', newFilters.from);
-          if (newFilters.to) params.append('to', newFilters.to);
+          if (filters.from) params.append('from', filters.from);
+          if (filters.to) params.append('to', filters.to);
           const res = await fetch(`/api/manpower?${params.toString()}`);
           if (!res.ok) {
             throw new Error(`HTTP error! status: ${res.status}`);
@@ -74,13 +76,13 @@ function ReportPageContent() {
           const filteredRawData = rawData.filter(item => {
             if (!item.deptcode) return false;
             const { level1, level2, level3 } = parseDeptCode(item.deptcode);
-            if (newFilters.factoryId && level1 !== newFilters.factoryId) return false;
-            if (newFilters.mainDepartmentId && level2 !== newFilters.mainDepartmentId) return false;
-            if (newFilters.subDepartmentId && level3 !== newFilters.subDepartmentId) return false;
+            if (filters.factoryId && level1 !== filters.factoryId) return false;
+            if (filters.mainDepartmentId && level2 !== filters.mainDepartmentId) return false;
+            if (filters.subDepartmentId && level3 !== filters.subDepartmentId) return false;
             const countScanVal = parseInt(item.countscan || '0');
             const countNotScanVal = parseInt(item.countnotscan || '0');
-            if (newFilters.employeeId === 'scanned' && countScanVal === 0) return false;
-            if (newFilters.employeeId === 'not_scanned' && countNotScanVal === 0) return false;
+            if (filters.employeeId === 'scanned' && countScanVal === 0) return false;
+            if (filters.employeeId === 'not_scanned' && countNotScanVal === 0) return false;
             return true;
           });
 
@@ -142,10 +144,9 @@ function ReportPageContent() {
       setLoading(false);
       setFilteredEmployees([]);
     }
-  }, [searchParams]);
+  }, [filters]); // Dependency array: filters
 
   const handleSearch = (newFilters: typeof filters) => {
-    // อัปเดต URL โดยใช้ router.replace เพื่อไม่เพิ่มประวัติในเบราว์เซอร์
     const params = new URLSearchParams();
     if (newFilters.from) params.set('from', newFilters.from);
     if (newFilters.to) params.set('to', newFilters.to);

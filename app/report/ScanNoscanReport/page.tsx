@@ -61,7 +61,6 @@ const ScanNoscanReportPageInner = () => {
   const [employees, setEmployees] = useState<EmployeeDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   const [selectedDeptPrefix, setSelectedDeptPrefix] = useState<string>('');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const loaderRef = useRef<HTMLDivElement | null>(null);
@@ -73,19 +72,15 @@ const ScanNoscanReportPageInner = () => {
     { value: "09", label: "FUL FILL" },
   ]), []);
 
-
   const fetchEmployees = useCallback(async () => {
     setLoading(true);
     setError(null);
-
     try {
       const params = new URLSearchParams();
       if (initialDeptCodeFromUrl) params.append('deptcode', initialDeptCodeFromUrl);
       if (from) params.append('from', from);
       if (to) params.append('to', to);
-
       const response = await fetch(`/api/attendance/report/ScanNoscan?${params.toString()}`);
-
       if (!response.ok) {
         let errorData;
         try {
@@ -95,10 +90,8 @@ const ScanNoscanReportPageInner = () => {
         }
         throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
-
       const data: ApiResponse = await response.json();
       setAllEmployees(data.detil);
-
     } catch (err: unknown) {
       setError('ไม่สามารถดึงข้อมูลพนักงานได้ โปรดลองอีกครั้ง');
       if (err instanceof Error) {
@@ -111,6 +104,14 @@ const ScanNoscanReportPageInner = () => {
     }
   }, [from, to, initialDeptCodeFromUrl]);
 
+  // useEffect สำหรับเรียกข้อมูล API
+  useEffect(() => {
+    if (from && to) { // เพิ่มการตรวจสอบเพื่อให้แน่ใจว่ามีข้อมูลที่จำเป็นก่อนการเรียก API
+      fetchEmployees();
+    }
+  }, [fetchEmployees, from, to]); // เพิ่ม from, to เพื่อให้เรียกใหม่เมื่อค่าเปลี่ยน
+
+  // useEffect สำหรับการกรองข้อมูลหลังจาก allEmployees เปลี่ยน
   useEffect(() => {
     let currentFilteredEmployees = allEmployees;
 
@@ -129,26 +130,23 @@ const ScanNoscanReportPageInner = () => {
     setEmployees(currentFilteredEmployees);
   }, [allEmployees, selectedDeptPrefix, status]);
 
+  // useEffect สำหรับ reset visibleCount เมื่อข้อมูลที่แสดงผลเปลี่ยน
   useEffect(() => {
     setVisibleCount(PAGE_SIZE); 
   }, [allEmployees, selectedDeptPrefix, status]);
 
-  useEffect(() => {
-    fetchEmployees();
-  }, [fetchEmployees]);
-
-  const getPageTitle = () => {
+  const getPageTitle = useCallback(() => {
     switch (status) {
       case 'all': return 'รายงานพนักงานทั้งหมด';
       case 'scanned': return 'รายงานพนักงานที่สแกนแล้ว';
       case 'not_scanned': return 'รายงานพนักงานที่ยังไม่สแกน';
       default: return 'รายงานการเข้างาน';
     }
-  };
+  }, [status]);
 
-  const groupEmployeesByDepartment = (employees: EmployeeDetail[]) => {
+  const groupEmployeesByDepartment = (empList: EmployeeDetail[]) => {
     const grouped: { [key: string]: { deptName: string; employees: EmployeeDetail[] } } = {};
-    employees.forEach(emp => {
+    empList.forEach(emp => {
       if (!grouped[emp.deptcode]) {
         grouped[emp.deptcode] = { deptName: emp.deptname, employees: [] };
       }
@@ -157,7 +155,7 @@ const ScanNoscanReportPageInner = () => {
     return grouped;
   };
 
-  const groupedEmployees = groupEmployeesByDepartment(employees);
+  const groupedEmployees = useMemo(() => groupEmployeesByDepartment(employees), [employees]);
 
   const flatEmployees = useMemo(() => {
     const rows: Array<{ type: 'dept'; deptCode: string; deptName: string; count: number } | { type: 'emp'; employee: EmployeeDetail }> = [];
@@ -175,7 +173,7 @@ const ScanNoscanReportPageInner = () => {
   useEffect(() => {
     if (!loaderRef.current) return;
     if (visibleCount >= flatEmployees.length) return;
-
+    
     const observer = new window.IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
@@ -185,7 +183,7 @@ const ScanNoscanReportPageInner = () => {
       { root: null, rootMargin: '0px', threshold: 1.0 }
     );
     observer.observe(loaderRef.current);
-
+    
     return () => {
       observer.disconnect();
     };
@@ -210,37 +208,31 @@ const ScanNoscanReportPageInner = () => {
   }
 
   return (
-    <div className=" bg-gray-50 min-h-screen">
-      <button
-        onClick={() => router.back()}
-        className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-shadow shadow-md hover:shadow-lg mt-4 ml-4"
-      >
-        <ArrowLeft className="w-5 h-5" />
-        <span>Back</span>
-      </button>
+    <div className="bg-gray-100 min-h-screen">
+    <div className="container mx-auto p-4 space-y-6">
       <p className="text-2xl mb-4 font-extrabold text-center text-gray-600">{getPageTitle()}</p>
       <p className="text-xl text-gray-600 mb-4 text-center">
         วันที่: <span className="font-bold text-gray-800">{to || 'ไม่ได้ระบุ'}</span>
       </p>
 
       <div className="flex justify-left mb-8 text-left p-1">
-      <label htmlFor="deptPrefixFilter" className="sr-only text-left">เลือกฝ่ายโรงงาน : </label>
-      <select
-        id="deptPrefixFilter"
-        value={selectedDeptPrefix}
-        onChange={(e) => setSelectedDeptPrefix(e.target.value)}
-        className="block  max-w-xs p-1 border border-gray-300 rounded-md shadow-sm text-xs focus:ring-blue-500 focus:border-blue-500  "
-      >
-        <option value="">ทั้งหมด</option>
-        {deptPrefixes.map(prefix => (
-          <option key={prefix.value} value={prefix.value}>
-            {prefix.label}
-          </option>
-        ))}
-      </select>
-    </div>
-
-
+        <div className='container mx-auto'>
+        <label htmlFor="deptPrefixFilter" className=" sr-only text-center"> เลือกฝ่ายโรงงาน  </label>
+        <select
+          id="deptPrefixFilter"
+          value={selectedDeptPrefix}
+          onChange={(e) => setSelectedDeptPrefix(e.target.value)}
+          className="w-1/4 border rounded-lg px-2 py-2 shadow-sm"
+        >
+          <option value="">ทั้งหมด</option>
+          {deptPrefixes.map(prefix => (
+            <option key={prefix.value} value={prefix.value}>
+              {prefix.label}
+            </option>
+          ))}
+        </select>
+        </div>
+      </div>
 
       {employees.length === 0 ? (
         <div className="text-center text-gray-500 p-2 bg-white rounded-lg shadow-xl max-w-2xl mx-auto mt-10 border border-gray-200">
@@ -248,16 +240,16 @@ const ScanNoscanReportPageInner = () => {
           <p className="text-lg text-gray-600">โปรดตรวจสอบวันที่หรือรหัสแผนกที่เลือกอีกครั้ง</p>
         </div>
       ) : (
-        <div className="overflow-x-auto bg-white rounded-xl shadow-2xl p-1.5 border border-gray-200">
+        <div className="overflow-x-auto bg-white rounded-xl shadow-xl p-1.5 border border-gray-200">
           <table className="min-w-full divide-y divide-gray-200 ">
-            <thead className="bg-gradient-to-r from-sky-600 to-blue-700 text-gray-600 text-md">
+            <thead className="bg-gradient-to-r from-sky-600 to-blue-700 text-white text-md">
               <tr>
-                <th className="py-3 px-6 text-left font-semibold tracking-wide">Emp ID</th>
-                <th className="py-3 px-6 text-left font-semibold tracking-wide">Name</th>
-                <th className="py-3 px-6 text-left font-semibold tracking-wide">Deptname</th>
-                <th className="py-3 px-6 text-left font-semibold tracking-wide">Workdate</th>
-                <th className="py-3 px-6 text-left font-semibold tracking-wide">Time</th>
-                <th className="py-3 px-6 text-left font-semibold tracking-wide">Status</th>
+                <th className="py-3 px-6 text-left text-blue-700 font-semibold tracking-wide">Emp ID</th>
+                <th className="py-3 px-6 text-left text-blue-700 font-semibold tracking-wide">Name</th>
+                <th className="py-3 px-6 text-left text-blue-700 font-semibold tracking-wide">Deptname</th>
+                <th className="py-3 px-6 text-left text-blue-700 font-semibold tracking-wide">Workdate</th>
+                <th className="py-3 px-6 text-left text-blue-700  font-semibold tracking-wide">Time</th>
+                <th className="py-3 px-6 text-left text-blue-700 font-semibold tracking-wide">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -265,7 +257,7 @@ const ScanNoscanReportPageInner = () => {
                 row.type === 'dept' ? (
                   <tr className="bg-blue-100 text-blue-800 font-semibold" key={`dept-${row.deptCode}-${idx}`}>
                     <td colSpan={6} className="py-3 px-6">
-                      {row.deptName} ( {row.count} )
+                      {row.deptName} ({row.count})
                     </td>
                   </tr>
                 ) : (
@@ -312,6 +304,7 @@ const ScanNoscanReportPageInner = () => {
           )}
         </div>
       )}
+    </div>
     </div>
   );
 };

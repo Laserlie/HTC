@@ -154,7 +154,7 @@ const Report2: React.FC = () => {
     const departmentOptions = useMemo(() => {
         const uniqueDepartments = new Map<string, { code: string; name: string }>();
         allEmployees.forEach(emp => {
-            const { factory, division, department } = parseDeptCode(emp.deptCode);
+            const { factory, division } = parseDeptCode(emp.deptCode);
             if (factory === factoryFilter && division === divisionFilter && emp.departmentName) {
                 uniqueDepartments.set(emp.departmentName, { code: emp.deptCode, name: emp.departmentName });
             }
