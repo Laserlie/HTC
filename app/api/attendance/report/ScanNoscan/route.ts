@@ -1,16 +1,19 @@
+// /api/attendance/report/ScanNoscan/route.ts
+
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/services/db'; 
+import { query } from '@/services/db';
 
 export async function GET(req: NextRequest) {
   try {
-    console.log('API: Start processing request');
     const { searchParams } = new URL(req.url);
     const deptcode = searchParams.get('deptcode');
-    const from = searchParams.get('from');
-    const to = searchParams.get('to');
+
+    // กำหนดวันที่ปัจจุบัน
     const today = new Date().toLocaleDateString('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' });
-    const finalFrom = from && from !== 'null' && from !== 'undefined' ? from : today;
-    const finalTo = to && to !== 'null' && to !== 'undefined' ? to : finalFrom;
+    
+    // ตั้งค่าช่วงวันที่ให้เป็นวันปัจจุบันเท่านั้น
+    const finalFrom = today; 
+    const finalTo = today;
 
     let sql = `
       SELECT
@@ -25,47 +28,31 @@ export async function GET(req: NextRequest) {
         "PersonType"
       FROM public.vw_manpower_detail
       WHERE workdate BETWEEN $1 AND $2
-        AND person_code IS NOT NULL         -- <--- Added: Filter out NULL person_code
-        AND person_code != ''               -- <--- Added: Filter out empty string person_code
+        AND person_code IS NOT NULL
+        AND person_code != ''
     `;
     const queryParams: (string | null)[] = [finalFrom, finalTo];
-
-    let finalDeptName = 'ภาพรวมทั้งหมด';
-
-    if (deptcode && deptcode.toLowerCase() !== 'all' && deptcode !== '' && deptcode !== 'undefined' && deptcode !== 'null') {
+    
+    // เพิ่มเงื่อนไขการกรองตาม deptcode ถ้ามี
+    if (deptcode && deptcode !== 'all') {
       sql += ` AND deptcode = $3`;
       queryParams.push(deptcode);
-      finalDeptName = '';
     }
 
-    sql += ` ORDER BY deptcode, workdate, full_name`; 
+    // เรียกใช้ฟังก์ชัน query
+    const result = await query(sql, queryParams);
 
-    console.log(`API: Executing SQL with params: from=${finalFrom}, to=${finalTo}, deptcode=${deptcode || 'N/A (all)'}`);
-    console.log(`API: SQL Query: ${sql}`);
-    console.log(`API: Query Params: ${queryParams}`);
-
-    const result = await query(sql, queryParams); 
-
-    console.log('API: Query executed successfully');
-
-    if (deptcode && deptcode.toLowerCase() !== 'all' && result.rows.length > 0) {
-      finalDeptName = result.rows[0].deptname;
+    // ส่ง Response กลับในทุกกรณี
+    if (result.rows.length === 0) {
+      return NextResponse.json({ detil: [], message: "No data found" }, { status: 200 });
     }
 
-    console.log(`API: Found ${result.rows.length} records.`);
+    return NextResponse.json({ detil: result.rows }, { status: 200 });
 
-    return NextResponse.json(
-      {
-        deptname: finalDeptName,
-        detil: result.rows,
-      },
-      { status: 200 }
-    );
   } catch (err) {
-    console.error('API Error: attendance/report/ScanNoscan:', err);
-    return NextResponse.json(
-      { error: 'เกิดข้อผิดพลาดในฝั่งเซิร์ฟเวอร์' },
-      { status: 500 }
-    );
+    console.error("API Error:", err);
+    // ส่ง Response กลับเมื่อเกิดข้อผิดพลาด
+    const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+    return NextResponse.json({ error: 'Internal Server Error', message: errorMessage }, { status: 500 });
   }
 }

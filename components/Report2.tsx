@@ -113,22 +113,25 @@ const Report2: React.FC = () => {
             
             let matchesStatus = true;
             const weekIndex = activeWeekFilter - 1; // Adjust for 0-based array index
-
-            if (activeStatusFilter && activeWeekFilter > 0) {
+    
+           
+            if (activeStatusFilter === 'overtime' && activeWeekFilter > 0) {
                 const hour = employee.hours[weekIndex] || 0;
-                matchesStatus = (activeStatusFilter === 'overtime' && hour > 60) || (activeStatusFilter === 'normal' && hour <= 60 && hour > 0);
-            } else if (activeStatusFilter && activeWeekFilter === 0) {
-                matchesStatus = employee.hours.some(hour =>
-                    (activeStatusFilter === 'overtime' && hour > 60) || (activeStatusFilter === 'normal' && hour <= 60 && hour > 0)
-                );
+                matchesStatus = hour > 60;
+            } else if (activeStatusFilter === 'normal' && activeWeekFilter > 0) {
+                const hour = employee.hours[weekIndex] || 0;
+                matchesStatus = hour <= 60;
+            } else if (activeStatusFilter === 'overtime' && activeWeekFilter === 0) {
+                matchesStatus = employee.hours.some(hour => hour > 60);
+            } else if (activeStatusFilter === 'normal' && activeWeekFilter === 0) {
+                matchesStatus = employee.hours.every(hour => hour <= 60);
             }
             
-            // ❌ แก้ไข: ใช้ activeDepartmentFilter โดยตรงเพื่อเปรียบเทียบกับ deptCode
             const { factory, division} = parseDeptCode(employee.deptCode);
             const matchesFactory = !activeFactoryFilter || (factory === activeFactoryFilter);
             const matchesDivision = !activeDivisionFilter || (division === activeDivisionFilter);
             const matchesDepartment = !activeDepartmentFilter || (employee.deptCode === activeDepartmentFilter);
-
+    
             return matchesSearch && matchesStatus && matchesFactory && matchesDivision && matchesDepartment;
         });
     }, [activeSearchTerm, activeStatusFilter, activeFactoryFilter, activeDivisionFilter, activeDepartmentFilter, allEmployees, activeWeekFilter]);
@@ -175,27 +178,34 @@ const Report2: React.FC = () => {
         return filteredEmployees.slice(indexOfFirstRow, indexOfLastRow);
     }, [filteredEmployees, currentPage, rowsPerPage]);
 
-    // Summary data calculations - Updated to respect week filter
-    const summaryData = useMemo(() => {
-        const totalEmployees = filteredEmployees.length;
-        let overtimeEmployees = 0;
-        let normalEmployees = 0;
 
-        if (activeWeekFilter > 0) {
-            const weekIndex = activeWeekFilter - 1;
-            overtimeEmployees = filteredEmployees.filter(emp => (emp.hours[weekIndex] || 0) > 60).length;
-            normalEmployees = filteredEmployees.filter(emp => (emp.hours[weekIndex] || 0) <= 60 && (emp.hours[weekIndex] || 0) > 0).length;
+    const summaryData = useMemo(() => {
+        let normalEmployees = 0;
+        let overtimeEmployees = 0;
+
+        if (activeStatusFilter === 'normal') {
+            normalEmployees = filteredEmployees.length;
+        } else if (activeStatusFilter === 'overtime') {
+            overtimeEmployees = filteredEmployees.length;
         } else {
-            overtimeEmployees = filteredEmployees.filter(emp => emp.hours.some(h => h > 60)).length;
-            normalEmployees = totalEmployees - overtimeEmployees;
+
+            if (activeWeekFilter > 0) {
+                const weekIndex = activeWeekFilter - 1;
+                overtimeEmployees = filteredEmployees.filter(emp => (emp.hours[weekIndex] || 0) > 60).length;
+            } else {
+                overtimeEmployees = filteredEmployees.filter(emp => emp.hours.some(h => h > 60)).length;
+            }
+            normalEmployees = filteredEmployees.length - overtimeEmployees;
         }
         
-        return { totalEmployees, normalEmployees, overtimeEmployees };
-    }, [filteredEmployees, activeWeekFilter]);
+        return { totalEmployees: allEmployees.length, normalEmployees, overtimeEmployees };
+    }, [filteredEmployees, activeStatusFilter, activeWeekFilter, allEmployees]);
+
+    // ---
 
     const handleExportToCSV = () => {
         // Dynamic headers based on weekFilter
-        let headers = ['รหัส', 'ชื่อ-นามสกุล', 'แผนก'];
+        let headers = ['WorkdayID','Deptcode', 'ชื่อ-นามสกุล', 'แผนก'];
         if (activeWeekFilter === 0) {
             headers = [...headers, 'Week1', 'Week2', 'Week3', 'Week4', 'Week5', 'ทำงานไปแล้ว (Weekล่าสุด)', 'เหลือชั่วโมงทำงาน (Weekล่าสุด)'];
         } else {
@@ -208,12 +218,14 @@ const Report2: React.FC = () => {
                 let rowData = [
                     emp.id,
                     `"${emp.name}"`,
+                    `"${emp.deptCode}"`,
                     `"${emp.departmentName}"`,
+
                 ];
                 if (activeWeekFilter === 0) {
                     // Export all weeks if no specific week is filtered
                     const latestWeekIndex = emp.hours.length - 1 - [...emp.hours].reverse().findIndex(hour => hour > 0);
-                    const latestUsedHours = latestWeekIndex !== -1 ? emp.hours[latestWeekIndex] : 0;
+                    const latestUsedHours = latestWeekIndex !== -1 ? (emp.hours[latestWeekIndex] || 0) : 0;
                     const hoursLeftCalculated = 60 - latestUsedHours; // Assuming 60 hours is the maximum
                     
                     rowData = [...rowData, ...emp.hours.map(String), String(latestUsedHours), String(hoursLeftCalculated)];
@@ -234,7 +246,7 @@ const Report2: React.FC = () => {
         link.setAttribute('download', 'รายงานการทำงาน_สัปดาห์.csv');
         document.body.appendChild(link);
         link.click();
-        document.body.removeChild(link);
+        document.body.appendChild(link);
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -381,7 +393,7 @@ const Report2: React.FC = () => {
                         </div>
                         <div className="ml-4">
                             <p className="text-sm text-blue-800">พนักงานทั้งหมด</p>
-                            <p className="text-3xl font-bold text-blue-800">{summaryData.totalEmployees} คน</p>
+                            <p className="text-3xl font-bold text-blue-800">{allEmployees.length} คน</p>
                         </div>
                     </div>
                 </div>
@@ -451,7 +463,8 @@ const Report2: React.FC = () => {
                     <table className="w-full">
                         <thead className="bg-gray-100">
                             <tr>
-                                <th className="px-6 py-3 text-left text-s font-medium text-gray-600 uppercase tracking-wider w-1/12">รหัส</th>
+                                <th className="px-6 py-3 text-left text-s font-medium text-gray-600  tracking-wider w-1/12">Deptcode</th>
+                                <th className="px-6 py-3 text-left text-s font-medium text-gray-600  tracking-wider w-1/12">WorkdayIDs</th>
                                 <th className="px-6 py-3 text-left text-s font-medium text-gray-600 uppercase tracking-wider w-2/12">แผนก</th>
                                 <th className="px-6 py-3 text-left text-s font-medium text-gray-600 uppercase tracking-wider w-2/12">ชื่อ-นามสกุล</th>
                                 {[1, 2, 3, 4, 5].map((weekNum) => (
@@ -480,6 +493,7 @@ const Report2: React.FC = () => {
 
                                     return (
                                         <tr key={employee.id} className={'hover:bg-gray-50'}>
+                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 w-2/12">{employee.deptCode}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 w-1/12">{employee.id}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 w-2/12">{employee.departmentName}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-2/12">{employee.name}</td>
