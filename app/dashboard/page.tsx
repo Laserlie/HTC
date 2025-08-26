@@ -144,7 +144,7 @@ export default function DashboardPage() {
       </section>
 
       <section className="space-y-4 bg-gray-50 p-4 rounded-lg shadow-lg">
-        <div className="mb-4 flex flex-row justify-between items-center gap-2">
+        <div className="mb-2 flex flex-row justify-between items-center gap-2">
           <h1 className="text-xl sm:text-6xl font-bold">Manpower Monitoring</h1>
         </div>
         <div className="overflow-x-auto">

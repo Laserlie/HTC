@@ -106,35 +106,38 @@ const Report2: React.FC = () => {
             });
     }, []);
 
-    // Memoized filtered data to avoid re-calculating on every render
-    const filteredEmployees = useMemo(() => {
-        return allEmployees.filter(employee => {
-            const matchesSearch = employee.name.toLowerCase().includes(activeSearchTerm.toLowerCase()) || employee.id.toLowerCase().includes(activeSearchTerm.toLowerCase());
-            
-            let matchesStatus = true;
-            const weekIndex = activeWeekFilter - 1; // Adjust for 0-based array index
-    
-           
-            if (activeStatusFilter === 'overtime' && activeWeekFilter > 0) {
-                const hour = employee.hours[weekIndex] || 0;
-                matchesStatus = hour > 60;
-            } else if (activeStatusFilter === 'normal' && activeWeekFilter > 0) {
-                const hour = employee.hours[weekIndex] || 0;
-                matchesStatus = hour <= 60;
-            } else if (activeStatusFilter === 'overtime' && activeWeekFilter === 0) {
-                matchesStatus = employee.hours.some(hour => hour > 60);
-            } else if (activeStatusFilter === 'normal' && activeWeekFilter === 0) {
-                matchesStatus = employee.hours.every(hour => hour <= 60);
-            }
-            
-            const { factory, division} = parseDeptCode(employee.deptCode);
-            const matchesFactory = !activeFactoryFilter || (factory === activeFactoryFilter);
-            const matchesDivision = !activeDivisionFilter || (division === activeDivisionFilter);
-            const matchesDepartment = !activeDepartmentFilter || (employee.deptCode === activeDepartmentFilter);
-    
-            return matchesSearch && matchesStatus && matchesFactory && matchesDivision && matchesDepartment;
-        });
-    }, [activeSearchTerm, activeStatusFilter, activeFactoryFilter, activeDivisionFilter, activeDepartmentFilter, allEmployees, activeWeekFilter]);
+
+const filteredEmployees = useMemo(() => {
+    const filtered = allEmployees.filter(employee => {
+        const matchesSearch = employee.name.toLowerCase().includes(activeSearchTerm.toLowerCase()) || 
+              employee.id.toLowerCase().includes(activeSearchTerm.toLowerCase()) ||
+              employee.deptCode.toLowerCase().includes(activeSearchTerm.toLowerCase());
+        
+        let matchesStatus = true;
+        const weekIndex = activeWeekFilter - 1;
+ 
+        if (activeStatusFilter === 'overtime' && activeWeekFilter > 0) {
+            const hour = employee.hours[weekIndex] || 0;
+            matchesStatus = hour > 60;
+        } else if (activeStatusFilter === 'normal' && activeWeekFilter > 0) {
+            const hour = employee.hours[weekIndex] || 0;
+            matchesStatus = hour <= 60;
+        } else if (activeStatusFilter === 'overtime' && activeWeekFilter === 0) {
+            matchesStatus = employee.hours.some(hour => hour > 60);
+        } else if (activeStatusFilter === 'normal' && activeWeekFilter === 0) {
+            matchesStatus = employee.hours.every(hour => hour <= 60);
+        }
+        
+        const { factory, division} = parseDeptCode(employee.deptCode);
+        const matchesFactory = !activeFactoryFilter || (factory === activeFactoryFilter);
+        const matchesDivision = !activeDivisionFilter || (division === activeDivisionFilter);
+        const matchesDepartment = !activeDepartmentFilter || (employee.deptCode === activeDepartmentFilter);
+ 
+        return matchesSearch && matchesStatus && matchesFactory && matchesDivision && matchesDepartment;
+    });
+
+    return filtered.sort((a, b) => a.deptCode.localeCompare(b.deptCode));
+}, [activeSearchTerm, activeStatusFilter, activeFactoryFilter, activeDivisionFilter, activeDepartmentFilter, allEmployees, activeWeekFilter]);
 
     // Memoized unique options for each dropdown
     const factoryOptions = useMemo(() => {
@@ -159,7 +162,6 @@ const Report2: React.FC = () => {
         return Array.from(options.entries()).map(([code, name]) => ({ code, name }));
     }, [allEmployees, factoryFilterInput]);
     
-    // ✅ แก้ไข: ใช้ deptCode เป็น key ใน Map เพื่อป้องกันชื่อแผนกซ้ำ
     const departmentOptions = useMemo(() => {
         const uniqueDepartments = new Map<string, { code: string; name: string }>();
         allEmployees.forEach(emp => {
@@ -205,7 +207,7 @@ const Report2: React.FC = () => {
 
     const handleExportToCSV = () => {
         // Dynamic headers based on weekFilter
-        let headers = ['WorkdayID','Deptcode', 'ชื่อ-นามสกุล', 'แผนก'];
+        let headers = ['WorkdayID','deptcode', 'ชื่อ-สกุล', 'แผนก'];
         if (activeWeekFilter === 0) {
             headers = [...headers, 'Week1', 'Week2', 'Week3', 'Week4', 'Week5', 'ทำงานไปแล้ว (Weekล่าสุด)', 'เหลือชั่วโมงทำงาน (Weekล่าสุด)'];
         } else {
@@ -217,8 +219,8 @@ const Report2: React.FC = () => {
             ...filteredEmployees.map(emp => {
                 let rowData = [
                     emp.id,
-                    `"${emp.name}"`,
                     `"${emp.deptCode}"`,
+                    `"${emp.name}"`,
                     `"${emp.departmentName}"`,
 
                 ];
@@ -243,7 +245,7 @@ const Report2: React.FC = () => {
         const link = document.createElement('a');
         const url = URL.createObjectURL(blob);
         link.setAttribute('href', url);
-        link.setAttribute('download', 'รายงานการทำงาน_สัปดาห์.csv');
+        link.setAttribute('download', 'รายงานการมมาทำงาน_สัปดาห์.csv');
         document.body.appendChild(link);
         link.click();
         document.body.appendChild(link);
@@ -292,8 +294,8 @@ const Report2: React.FC = () => {
                 <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-4 flex-wrap">
                     <input
                         type="text"
-                        placeholder="ค้นหาชื่อหรือรหัสพนักงาน..."
-                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 flex-grow shadow-md "
+                        placeholder="ค้นหาด้วยชื่อ,รหัสพนักงานหรือ deptcode..."
+                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2  focus:ring-blue-500 flex-grow shadow-md "
                         value={searchTermInput}
                         onChange={(e) => setSearchTermInput(e.target.value)}
                     />

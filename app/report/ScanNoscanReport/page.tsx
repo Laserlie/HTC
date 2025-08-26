@@ -266,7 +266,7 @@ const ScanNoscanReportPageInner = () => {
             <p className="text-lg text-gray-600">โปรดตรวจสอบวันที่หรือรหัสแผนกที่เลือกอีกครั้ง</p>
           </div>
         ) : (
-          <div className="overflow-x-auto bg-white rounded-xl shadow-xl p-1.5 border border-gray-200">
+          <div className="overflow-x-auto bg-white rounded-xl shadow-xl p-1.5 border border-gray-200 mb-\">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gradient-to-r from-sky-600 to-blue-700">
                 <tr>
