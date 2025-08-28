@@ -21,9 +21,9 @@ const AttendanceCardSummary = ({ totalScanned, totalNotScanned, from, to, deptCo
   const createReportLink = (status: 'all' | 'scanned' | 'not_scanned') => {
     const params = new URLSearchParams();
     params.append('status', status);
-    params.append('from', from);
-    params.append('to', to);
-    params.append('deptcode', deptCode);
+    // params.append('from', from);
+    // params.append('to', to);
+    // params.append('deptcode', deptCode);
     return `/report/ScanNoscanReport?${params.toString()}`;
   };
 

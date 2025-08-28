@@ -8,12 +8,15 @@ import { DepartmentTable } from '../../components/DepartmentTable';
 import { Employee, ReportApiRawData } from '../types/employee';
 import Spinner from '../../components/ui/Spinner';
 
+
 const parseDeptCode = (fullDeptCode: string) => {
   const level1 = fullDeptCode.length >= 2 ? fullDeptCode.substring(0, 2) : '';
   const level2 = fullDeptCode.length >= 4 ? fullDeptCode.substring(0, 4) : '';
   const level3 = fullDeptCode.length >= 6 ? fullDeptCode.substring(0, 6) : '';
-  return { level1, level2, level3 };
+  const level4 = fullDeptCode.length >= 8 ? fullDeptCode.substring(0, 8) : '';
+  return { level1, level2, level3, level4 };
 };
+
 
 const getInitialFilters = (searchParams: ReturnType<typeof useSearchParams>) => ({
   from: searchParams.get('from') || '',
@@ -21,6 +24,7 @@ const getInitialFilters = (searchParams: ReturnType<typeof useSearchParams>) => 
   factoryId: searchParams.get('factoryId') || '',
   mainDepartmentId: searchParams.get('mainDepartmentId') || '',
   subDepartmentId: searchParams.get('subDepartmentId') || '',
+  divisionId: searchParams.get('divisionId') || '', 
   employeeId: searchParams.get('employeeId') || 'all',
 });
 
@@ -57,28 +61,27 @@ function ReportPageContent() {
           rawData.forEach(item => {
             if (item.deptcode && item.deptname) {
               newLevelCodeToNameMap.set(item.deptcode, item.deptname);
-              if (item.deptcode.endsWith('000000') && item.deptcode.length === 8) {
-                const level1Code = item.deptcode.substring(0, 2);
-                newLevelCodeToNameMap.set(level1Code, item.deptname);
-              } else if (item.deptcode.endsWith('0000') && item.deptcode.length === 8) {
-                const level2Code = item.deptcode.substring(0, 4);
-                newLevelCodeToNameMap.set(level2Code, item.deptname);
-              } else if (item.deptcode.endsWith('00') && item.deptcode.length === 8) {
-                const level3Code = item.deptcode.substring(0, 6);
-                if (!newLevelCodeToNameMap.has(level3Code) || (newLevelCodeToNameMap.get(level3Code) || '').length < item.deptname.length) {
-                  newLevelCodeToNameMap.set(level3Code, item.deptname);
-                }
-              }
+              
+              const { level1, level2, level3, level4 } = parseDeptCode(item.deptcode);
+              if (level1) newLevelCodeToNameMap.set(level1, item.deptname);
+              if (level2) newLevelCodeToNameMap.set(level2, item.deptname);
+              if (level3) newLevelCodeToNameMap.set(level3, item.deptname);
+              if (level4) newLevelCodeToNameMap.set(level4, item.deptname);
             }
           });
           setLevelCodeToNameMap(newLevelCodeToNameMap);
 
           const filteredRawData = rawData.filter(item => {
             if (!item.deptcode) return false;
-            const { level1, level2, level3 } = parseDeptCode(item.deptcode);
+           
+            const { level1, level2, level3, level4 } = parseDeptCode(item.deptcode);
+            
+           
             if (filters.factoryId && level1 !== filters.factoryId) return false;
             if (filters.mainDepartmentId && level2 !== filters.mainDepartmentId) return false;
             if (filters.subDepartmentId && level3 !== filters.subDepartmentId) return false;
+            if (filters.divisionId && level4 !== filters.divisionId) return false;
+
             const countScanVal = parseInt(item.countscan || '0');
             const countNotScanVal = parseInt(item.countnotscan || '0');
             if (filters.employeeId === 'scanned' && countScanVal === 0) return false;
@@ -101,7 +104,8 @@ function ReportPageContent() {
               existingEmployee.countperson += currentCountPerson;
               existingEmployee.late += currentLate;
             } else {
-              const { level1, level2, level3 } = item.deptcode ? parseDeptCode(item.deptcode) : { level1: '', level2: '', level3: '' };
+             
+              const { level1, level2, level3, level4 } = item.deptcode ? parseDeptCode(item.deptcode) : { level1: '', level2: '', level3: '', level4: '' };
               groupedData.set(groupKey, {
                 employeeId: item.employeeId || '',
                 groupid: item.groupid || '',
@@ -121,6 +125,8 @@ function ReportPageContent() {
                 mainDepartmentName: newLevelCodeToNameMap.get(level2) || `แผนกหลัก ${level2}`,
                 subDepartmentCode: level3,
                 subDepartmentName: newLevelCodeToNameMap.get(level3) || `แผนกย่อย/ส่วนงาน ${level3}`,
+                divisionCode: level4,
+                divisionName: newLevelCodeToNameMap.get(level4) || `แผนกย่อย ${level4}`,
                 originalFullDeptcode: item.deptcode,
               });
             }
@@ -153,6 +159,7 @@ function ReportPageContent() {
     if (newFilters.factoryId) params.set('factoryId', newFilters.factoryId);
     if (newFilters.mainDepartmentId) params.set('mainDepartmentId', newFilters.mainDepartmentId);
     if (newFilters.subDepartmentId) params.set('subDepartmentId', newFilters.subDepartmentId);
+    if (newFilters.divisionId) params.set('divisionId', newFilters.divisionId);
     if (newFilters.employeeId && newFilters.employeeId !== 'all') params.set('employeeId', newFilters.employeeId);
     router.replace(`/report?${params.toString()}`);
   };

@@ -11,7 +11,7 @@ export async function GET(req: Request) {
         const params: unknown[] = [];
 
         if (from && to) {
-            query += ' WHERE workdate BETWEEN $1 AND $2';
+            query += ' WHERE workdate >= $1 AND workdate <= $2';
             params.push(from, to);
         } else if (from) {
             query += ' WHERE workdate = $1';

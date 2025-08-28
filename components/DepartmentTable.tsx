@@ -134,7 +134,7 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
         });
       }
     };
-   
+
     Array.from(departmentsMap.values()).forEach(dept => {
       const level = getDeptLevel(dept);
       if (level === 4) {
@@ -437,12 +437,12 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
     );
   }
 
-//สีของแต่ละ Level
+  //สีของแต่ละ Level
   const levelColors = [
     'bg-blue-200', // Level 1: โรงงาน
     'bg-blue-100', // Level 2: ฝ่าย
-    'bg-blue-50',// Level 3: แผนก
-    'bg-white' // Level 4: หน่วยงานย่อย
+    'bg-blue-50',   // Level 3: แผนก
+    'bg-white'      // Level 4: หน่วยงานย่อย
   ];
 
   return (
@@ -450,7 +450,7 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
       {groupedByDate.map(([date, departmentsForDate]) => (
         <div
           key={date}
-          className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden"
+          className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden mb-4"
         >
           <div className="bg-blue-600 text-white p-3 font-bold text-xl">
             {`Date : ${date}`}
@@ -499,13 +499,13 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
 
                   let href = '';
                   if (dept.deptname === 'Grand Total') {
-                      const allLeafCodesForDate = employees
-                          .filter(emp => emp.workdate === linkWorkdate)
-                          .map(emp => emp.originalFullDeptcode || emp.deptcode)
-                          .filter(code => getDeptLevel({ deptcode: code, deptname: '', deptsbu: '', deptstd: '', totalScanned: 0, totalNotScanned: 0, totalPerson: 0, deptcodelevel1: '', deptcodelevel2: '', deptcodelevel3: '', deptcodelevel4: '', workdate: '' }) === 4);
-                      const uniqueLeafCodes = [...new Set(allLeafCodesForDate)].sort();
-                      const deptcodes = uniqueLeafCodes.join(',');
-                      href = `/report/details?deptcodes=${encodeURIComponent(deptcodes)}&workdate=${encodeURIComponent(linkWorkdate)}`;
+                    const allLeafCodesForDate = employees
+                      .filter(emp => emp.workdate === linkWorkdate)
+                      .map(emp => emp.originalFullDeptcode || emp.deptcode)
+                      .filter(code => getDeptLevel({ deptcode: code, deptname: '', deptsbu: '', deptstd: '', totalScanned: 0, totalNotScanned: 0, totalPerson: 0, deptcodelevel1: '', deptcodelevel2: '', deptcodelevel3: '', deptcodelevel4: '', workdate: '' }) === 4);
+                    const uniqueLeafCodes = [...new Set(allLeafCodesForDate)].sort();
+                    const deptcodes = uniqueLeafCodes.join(',');
+                    href = `/report/details?deptcodes=${encodeURIComponent(deptcodes)}&workdate=${encodeURIComponent(linkWorkdate)}`;
                   } else if (dept.isTotalRow) {
                     let filterPrefix = '';
                     if (deptLevel === 1) {

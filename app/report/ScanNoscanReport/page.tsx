@@ -19,9 +19,9 @@ type EmployeeDetail = {
 };
 
 type ApiResponse = {
-  deptname: string;
-  detil: EmployeeDetail[];
-  total_employees_prev_month?: number;
+  deptname: string;
+  detil: EmployeeDetail[];
+  total_employees_prev_month?: number;
 };
 
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error: Error | null }> {
@@ -42,9 +42,9 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
           <h2 className="text-xl font-bold mb-2 flex items-center justify-center">
             <FiAlertTriangle className="mr-2" />
             เกิดข้อผิดพลาดขณะเรนเดอร์!
-            </h2>
-            <p>{this.state.error?.message || 'Unknown error'}</p>
-            </div>
+          </h2>
+          <p>{this.state.error?.message || 'Unknown error'}</p>
+        </div>
       );
     }
     return this.props.children;
@@ -66,27 +66,29 @@ const ScanNoscanReportPageInner = () => {
   const loaderRef = useRef<HTMLDivElement | null>(null);
 
   const deptPrefixes = useMemo(() => ([
-    { value: "06", label: "Platform" },
-    { value: "07", label: "AC EMC Micro" },
-    { value: "08", label: "RF EMC Micro" },
-    { value: "09", label: "FUL FILL" },
-  ]), []);
+    { value: "06", label: "Platform" },
+    { value: "07", label: "AC EMC Micro" },
+    { value: "08", label: "RF EMC Micro" },
+    { value: "09", label: "FUL FILL" },
+  ]), []);
 
   // สร้าง state สำหรับวันที่ปัจจุบัน
   const today = useMemo(() => {
     return new Date().toLocaleDateString('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' });
   }, []);
-
+  const fetchCountRef = useRef(0);
   const fetchEmployees = useCallback(async () => {
+    fetchCountRef.current += 1;
+    console.log(`✅ fetchEmployees called: ${fetchCountRef.current} times`);
+
     setLoading(true);
     setError(null);
     try {
       const params = new URLSearchParams();
-      // ไม่ต้องส่ง from และ to ไปใน URL
       if (initialDeptCodeFromUrl) params.append('deptcode', initialDeptCodeFromUrl);
 
       const response = await fetch(`/api/attendance/report/ScanNoscan?${params.toString()}`);
-      
+
       if (!response.ok) {
         let errorData;
         try {
@@ -108,7 +110,7 @@ const ScanNoscanReportPageInner = () => {
     } finally {
       setLoading(false);
     }
-  }, [initialDeptCodeFromUrl]); // นำ from, to ออกจาก Dependency Array
+  }, [initialDeptCodeFromUrl]);
 
   useEffect(() => {
     // แก้ไขเงื่อนไขการเรียก fetchEmployees ให้เริ่มทำงานทันที
@@ -130,7 +132,7 @@ const ScanNoscanReportPageInner = () => {
     } else if (status === 'not_scanned') {
       currentFiltered = currentFiltered.filter(emp => emp.firstscantime === null);
     }
-    
+
     // Sort employees to ensure consistent grouping
     currentFiltered.sort((a, b) => {
       if (a.deptcode < b.deptcode) return -1;
@@ -297,23 +299,22 @@ const ScanNoscanReportPageInner = () => {
                       </td>
                       <td className="py-2 px-6">
                         <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            !row.employee.firstscantime
-                              ? 'bg-red-100 text-red-800'
-                              : (() => {
-                                const [h, m, s] = row.employee.firstscantime.substring(11, 19).split(':').map(Number);
-                                return h > 8 || (h === 8 && (m > 0 || s > 0))
-                                  ? 'bg-yellow-100 text-yellow-800'
-                                  : 'bg-green-100 text-green-800';
-                              })()
-                          }`}
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${!row.employee.firstscantime
+                            ? 'bg-red-100 text-red-800'
+                            : (() => {
+                              const [h, m, s] = row.employee.firstscantime.substring(11, 19).split(':').map(Number);
+                              return h > 8 || (h === 8 && (m > 0 || s > 0))
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-green-100 text-green-800';
+                            })()
+                            }`}
                         >
                           {!row.employee.firstscantime
                             ? 'ยังไม่สแกน'
                             : (() => {
-                                const [h, m, s] = row.employee.firstscantime.substring(11, 19).split(':').map(Number);
-                                return h > 8 || (h === 8 && (m > 0 || s > 0)) ? 'มาสาย' : 'สแกนแล้ว';
-                              })()}
+                              const [h, m, s] = row.employee.firstscantime.substring(11, 19).split(':').map(Number);
+                              return h > 8 || (h === 8 && (m > 0 || s > 0)) ? 'มาสาย' : 'สแกนแล้ว';
+                            })()}
                         </span>
                       </td>
                     </tr>
@@ -338,7 +339,7 @@ const ScanNoscanReportPageInner = () => {
 export default function PageWithBoundary() {
   return (
     <ErrorBoundary>
-      <Suspense fallback={<div className="flex justify-center items-center h-screen bg-gray-50"><Spinner/></div>}>
+      <Suspense fallback={<div className="flex justify-center items-center h-screen bg-gray-50"><Spinner /></div>}>
         <ScanNoscanReportPageInner />
       </Suspense>
     </ErrorBoundary>
