@@ -342,7 +342,7 @@ const Report2: React.FC = () => {
                         <option value="">All Status</option>
 
                         <option value="normal">Normal (≤ 60 hrs)</option>
-                        <option value="overtime">Overtime (≥ 60 hrs)</option>
+                        <option value="overtime">Overtime ( &gt; 60 hrs)</option>
                     </select>
                     {/* Week Filter Dropdown */}
                     <select
@@ -519,7 +519,7 @@ const Report2: React.FC = () => {
 
                         </div>
                         <div className="ml-4">
-                            <p className="text-sm text-green-800">normal (≤ 60 hr.)</p>
+                            <p className="text-sm text-green-800">normal (≤ 60 hrs.)</p>
 
                             <p className="text-3xl font-bold text-green-700">{summaryData.normalEmployees} people</p>
                         </div>
@@ -537,7 +537,7 @@ const Report2: React.FC = () => {
                         </div>
 
                         <div className="ml-4">
-                            <p className="text-sm text-red-500">More than 60 hours per week</p>
+                            <p className="text-sm text-red-500">More than 60 hrs.</p>
                             <p className="text-3xl font-bold text-red-600">{summaryData.overtimeEmployees} people</p>
                         </div>
                     </div>
@@ -604,11 +604,11 @@ const Report2: React.FC = () => {
 
                                     </th>
                                 ))}
-                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500  tracking-wider">
 
                                     Worked for <br /> ({activeWeekFilter === 0 ? 'Last Week' : `Week ${activeWeekFilter}`})
                                 </th>
-                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500  tracking-wider">
                                     working hours remaining <br /> ({activeWeekFilter === 0 ? 'Last Week' : `Week ${activeWeekFilter}`})
                                 </th>
 
@@ -709,7 +709,6 @@ const Report2: React.FC = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
                     Export CSV
-
                 </button>
             </div>
         </div>
