@@ -32,22 +32,28 @@ export default function DepartmentDetailPage() {
           employeeId: emp.employeeId ?? '',
           groupid: emp.groupid ?? '',
           groupname: emp.groupname ?? '',
-          workdate: emp.workdate ?? '',
-          deptcode: emp.deptcode ?? '',
-          deptname: emp.deptname ?? '',
+          workdate: emp.workdate,
+          deptcode: emp.deptcode,
+          deptname: emp.deptname,
           deptsbu: emp.deptsbu ?? '',
           deptstd: emp.deptstd ?? null,
-          countscan: Number(emp.countscan ?? 0),
-          countnotscan: Number(emp.countnotscan ?? 0),
-          countperson: Number(emp.countperson ?? 0),
-          late: emp.late !== undefined ? Number(emp.late) : 0,
-          factoryCode: '', 
-          factoryName: '',
-          mainDepartmentCode: '',
-          mainDepartmentName: '',
-          subDepartmentCode: '',
-          subDepartmentName: '',
-          originalFullDeptcode: emp.deptcode ?? '',
+
+         
+          countscan: Number(emp.countscan) || 0,
+          countnotscan: Number(emp.countnotscan) || 0,
+          countperson: Number(emp.countperson) || 0,
+          late: Number(emp.late) || 0,
+
+         
+          factoryCode: emp.deptcodelevel1 ?? '',
+          factoryName: 'ชื่อโรงงานที่ได้จากการแปลง',
+          mainDepartmentCode: emp.deptcodelevel2 ?? '',
+          mainDepartmentName: 'ชื่อแผนกหลักที่ได้จากการแปลง',
+          subDepartmentCode: emp.deptcodelevel3 ?? '',
+          subDepartmentName: 'ชื่อแผนกย่อยที่ได้จากการแปลง',
+          divisionCode: emp.deptcodelevel4 ?? '',
+          divisionName: 'ชื่อฝ่ายที่ได้จากการแปลง',
+          originalFullDeptcode: emp.deptcodelevel1 ? `${emp.deptcodelevel1}-${emp.deptcodelevel2}` : '',
         }));
 
         setDepartment({ name: data.name, employees });

@@ -107,26 +107,24 @@ export function ManpowerTable({ selectedDate, scanStatus, deptcodelevel1Filter }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Helper function to get all lowest-level descendant codes
   const getAllDescendantCodes = (dept: AggregatedDepartment, allEmployees: Employee[]): string[] => {
     const level = getDeptLevel(dept);
     if (level === 4) {
       return [dept.deptcode];
     }
-    
+
     const uniqueCodes = new Set<string>();
-    
-    // Get the base code to filter by
-    const baseCode = dept.deptcodelevel1 + (dept.deptcodelevel2 !== '00' ? dept.deptcodelevel2 : '') + 
-                      (dept.deptcodelevel3 !== '00' ? dept.deptcodelevel3 : '');
+
+    const baseCode = dept.deptcodelevel1 + (dept.deptcodelevel2 !== '00' ? dept.deptcodelevel2 : '') +
+      (dept.deptcodelevel3 !== '00' ? dept.deptcodelevel3 : '');
 
     allEmployees
       .filter(emp => emp.deptcode.startsWith(baseCode))
       .forEach(emp => {
         if (emp.deptcodelevel4 !== '00') {
-            uniqueCodes.add(emp.deptcode);
+          uniqueCodes.add(emp.deptcode);
         } else if (emp.deptcodelevel3 !== '00' && emp.deptcodelevel4 === '00') {
-            uniqueCodes.add(emp.deptcode);
+          uniqueCodes.add(emp.deptcode);
         }
       });
 
@@ -208,24 +206,33 @@ export function ManpowerTable({ selectedDate, scanStatus, deptcodelevel1Filter }
       hierarchicalMap.set(dept.deptcode, { dept, children: [] });
     });
 
-    const calculateTotalsIncludingChildren = (deptCode: string): { scanned: number; notScanned: number; person: number } => {
+    // ฟังก์ชันใหม่สำหรับการรวมผลรวม รวมถึง SBU และ STD
+    const calculateTotalsIncludingChildren = (deptCode: string): { scanned: number; notScanned: number; person: number; sbu: number; std: number; } => {
       const entry = hierarchicalMap.get(deptCode);
       if (!entry) {
-        return { scanned: 0, notScanned: 0, person: 0 };
+        return { scanned: 0, notScanned: 0, person: 0, sbu: 0, std: 0 };
       }
 
       let totalScanned = entry.dept.totalScanned;
-      let totalNotScanned = entry.dept.totalNotScanned; 
+      let totalNotScanned = entry.dept.totalNotScanned;
       let totalPerson = entry.dept.totalPerson;
+
+      // แปลง SBU และ STD เป็นตัวเลขเพื่อคำนวณ โดยใช้หลักสุดท้าย
+      const sbuNumber = Number(entry.dept.deptsbu.slice(-3));
+      const stdNumber = Number(entry.dept.deptstd.slice(-3));
+      let totalSbu = isNaN(sbuNumber) ? 0 : sbuNumber;
+      let totalStd = isNaN(stdNumber) ? 0 : stdNumber;
 
       entry.children.forEach(childDept => {
         const childTotals = calculateTotalsIncludingChildren(childDept.deptcode);
         totalScanned += childTotals.scanned;
         totalNotScanned += childTotals.notScanned;
         totalPerson += childTotals.person;
+        totalSbu += childTotals.sbu;
+        totalStd += childTotals.std;
       });
 
-      return { scanned: totalScanned, notScanned: totalNotScanned, person: totalPerson };
+      return { scanned: totalScanned, notScanned: totalNotScanned, person: totalPerson, sbu: totalSbu, std: totalStd };
     };
 
     const topLevelDepartments: AggregatedDepartment[] = [];
@@ -246,7 +253,7 @@ export function ManpowerTable({ selectedDate, scanStatus, deptcodelevel1Filter }
       if (parentCode && hierarchicalMap.has(parentCode)) {
         const parentEntry = hierarchicalMap.get(parentCode);
         if (parentEntry) {
-            parentEntry.children.push(dept);
+          parentEntry.children.push(dept);
         }
       } else {
         topLevelDepartments.push(dept);
@@ -254,45 +261,47 @@ export function ManpowerTable({ selectedDate, scanStatus, deptcodelevel1Filter }
     });
 
     hierarchicalMap.forEach(entry => {
-        entry.children.sort((a, b) => a.deptcode.localeCompare(b.deptcode));
+      entry.children.sort((a, b) => a.deptcode.localeCompare(b.deptcode));
     });
 
     const finalDisplayList: AggregatedDepartment[] = [];
 
     const flattenAndAddTotals = (dept: AggregatedDepartment) => {
-        const entry = hierarchicalMap.get(dept.deptcode);
-        if (!entry) return;
+      const entry = hierarchicalMap.get(dept.deptcode);
+      if (!entry) return;
 
-        const deptLevel = getDeptLevel(entry.dept);
+      const deptLevel = getDeptLevel(entry.dept);
 
-        finalDisplayList.push({ ...entry.dept, isTotalRow: false, isGrandTotal: false });
+      finalDisplayList.push({ ...entry.dept, isTotalRow: false, isGrandTotal: false });
 
-        entry.children.forEach(child => flattenAndAddTotals(child));
+      entry.children.forEach(child => flattenAndAddTotals(child));
 
-        if (deptLevel === 1 || deptLevel === 2 || (deptLevel === 3 && entry.children.length > 0)) {
-            const totalDeptName =
-                deptLevel === 1
-                    ? `Grand Total ${entry.dept.deptname.replace('รวมโรงงาน ', '')}`
-                    : deptLevel === 2
-                    ? `Total ${entry.dept.deptname.replace('รวมฝ่าย ', '')}`
-                    : deptLevel === 3
-                    ? `Total ${entry.dept.deptname.replace('รวมแผนก ', '')}`
-                    : `Total ${entry.dept.deptname}`;
-            const totalDeptCode = `TOTAL_${entry.dept.deptcode}`;
+      if (deptLevel === 1 || deptLevel === 2 || (deptLevel === 3 && entry.children.length > 0)) {
+        const totalDeptName =
+          deptLevel === 1
+            ? `Grand Total ${entry.dept.deptname.replace('รวมโรงงาน ', '')}`
+            : deptLevel === 2
+              ? `Total ${entry.dept.deptname.replace('รวมฝ่าย ', '')}`
+              : deptLevel === 3
+                ? `Total ${entry.dept.deptname.replace('รวมแผนก ', '')}`
+                : `Total ${entry.dept.deptname}`;
+        const totalDeptCode = `TOTAL_${entry.dept.deptcode}`;
 
-            const aggregatedTotalsForCurrentNode = calculateTotalsIncludingChildren(entry.dept.deptcode);
-            
-            finalDisplayList.push({
-                ...entry.dept,
-                deptname: totalDeptName,
-                deptcode: totalDeptCode,
-                isTotalRow: true,
-                isGrandTotal: false,
-                totalScanned: aggregatedTotalsForCurrentNode.scanned,
-                totalNotScanned: aggregatedTotalsForCurrentNode.notScanned,
-                totalPerson: aggregatedTotalsForCurrentNode.person,
-            });
-        }
+        const aggregatedTotalsForCurrentNode = calculateTotalsIncludingChildren(entry.dept.deptcode);
+
+        finalDisplayList.push({
+          ...entry.dept,
+          deptname: totalDeptName,
+          deptcode: totalDeptCode,
+          isTotalRow: true,
+          isGrandTotal: false,
+          totalScanned: aggregatedTotalsForCurrentNode.scanned,
+          totalNotScanned: aggregatedTotalsForCurrentNode.notScanned,
+          totalPerson: aggregatedTotalsForCurrentNode.person,
+          deptsbu: String(aggregatedTotalsForCurrentNode.sbu),
+          deptstd: String(aggregatedTotalsForCurrentNode.std),
+        });
+      }
     };
 
     topLevelDepartments.sort((a, b) => a.deptcode.localeCompare(b.deptcode));
@@ -300,23 +309,24 @@ export function ManpowerTable({ selectedDate, scanStatus, deptcodelevel1Filter }
     topLevelDepartments.forEach(dept => flattenAndAddTotals(dept));
 
     if (topLevelDepartments.length > 1) {
-      // หาผลรวมทั้งหมดโดยใช้ฟังก์ชัน calculateTotalsIncludingChildren
       const totalCountsFromTopLevels = topLevelDepartments.reduce(
         (acc, dept) => {
           const totals = calculateTotalsIncludingChildren(dept.deptcode);
           acc.scanned += totals.scanned;
           acc.notScanned += totals.notScanned;
           acc.person += totals.person;
+          acc.sbu += totals.sbu;
+          acc.std += totals.std;
           return acc;
         },
-        { scanned: 0, notScanned: 0, person: 0 }
+        { scanned: 0, notScanned: 0, person: 0, sbu: 0, std: 0 }
       );
 
       finalDisplayList.push({
         deptcode: 'GRAND_TOTAL',
-        deptname: 'รวมทั้งโรงงานทั้งหมด',
-        deptsbu: '',
-        deptstd: '',
+        deptname: 'All Haier',
+        deptsbu: String(totalCountsFromTopLevels.sbu),
+        deptstd: String(totalCountsFromTopLevels.std),
         totalScanned: totalCountsFromTopLevels.scanned,
         totalNotScanned: totalCountsFromTopLevels.notScanned,
         totalPerson: totalCountsFromTopLevels.person,
@@ -361,12 +371,12 @@ export function ManpowerTable({ selectedDate, scanStatus, deptcodelevel1Filter }
       </div>
     );
   }
-//สีของแต่ละ Level
+  //สีของแต่ละ Level
   const levelColors = [
-    'bg-blue-200',     // Level 1: โรงงาน
-    'bg-blue-100',     // Level 2: ฝ่าย
-    'bg-blue-50',        // Level 3: แผนก
-    'bg-white',     // Level 4: หน่วยงานย่อย
+    'bg-blue-200',     // Level 1: โรงงาน
+    'bg-blue-100',     // Level 2: ฝ่าย
+    'bg-blue-50',      // Level 3: แผนก
+    'bg-white',      // Level 4: หน่วยงานย่อย
   ];
 
   return (
@@ -391,30 +401,31 @@ export function ManpowerTable({ selectedDate, scanStatus, deptcodelevel1Filter }
         <tbody>
           {filteredDepartments.map((dept) => {
             const deptLevel = getDeptLevel(dept);
-            const paddingLeft = (deptLevel - 1) * 25; 
+            const paddingLeft = (deptLevel - 1) * 25;
 
             let rowBgClass = '';
             if (dept.isGrandTotal) {
               rowBgClass = 'bg-red-300 font-extrabold';
             }
             else if (dept.isTotalRow) {
-                if (deptLevel === 1) {
-                    rowBgClass = 'bg-yellow-300 font-bold';
-                }
-                else if (deptLevel === 2) {
-                    rowBgClass = 'bg-blue-300 font-bold';
-                }
-                else if (deptLevel === 3) {
-                    rowBgClass = 'bg-green-200 font-bold';
-                }
+              if (deptLevel === 1) {
+                rowBgClass = 'bg-yellow-300 font-bold';
+              }
+              else if (deptLevel === 2) {
+                rowBgClass = 'bg-blue-300 font-bold';
+              }
+              else if (deptLevel === 3) {
+                rowBgClass = 'bg-green-200 font-bold';
+              }
             } else {
-                rowBgClass = levelColors[deptLevel - 1] || 'bg-white';
+              rowBgClass = levelColors[deptLevel - 1] || 'bg-white';
             }
 
             const verticalPaddingClass = (deptLevel === 1 || deptLevel === 2 || dept.isTotalRow) ? 'py-3' : 'py-2';
-            
-            const displaySBU = dept.isTotalRow || deptLevel === 1 || deptLevel === 2 ? '' : dept.deptsbu;
-            const displaySTD = dept.isTotalRow || deptLevel === 1 || deptLevel === 2 ? '' : dept.deptstd;
+
+            // แก้ไข: ตรวจสอบและแสดงผลเป็นค่าว่างถ้าเป็น NaN หรือ undefined
+            const displaySBU = dept.isTotalRow ? Number(dept.deptsbu).toLocaleString() : dept.deptsbu;
+            const displaySTD = dept.isTotalRow ? Number(dept.deptstd).toLocaleString() : dept.deptstd;
 
             const displayedTotalScanned = dept.totalScanned.toLocaleString();
             const displayedTotalNotScanned = dept.totalNotScanned.toLocaleString();
@@ -425,31 +436,31 @@ export function ManpowerTable({ selectedDate, scanStatus, deptcodelevel1Filter }
                 localStorage.setItem('prevDashboardDate', selectedDate);
               }
             };
-            
+
             let href = '';
-            if (dept.isTotalRow) {
-                const descendantCodes = getAllDescendantCodes(dept, employees);
-                const deptcodes = descendantCodes.join(',');
-                href = `/report/details?deptcodes=${deptcodes}&workdate=${selectedDate}`;
-            } else {
-                const linkDeptcode = dept.deptcode.replace('TOTAL_', '');
-                const linkWorkdate = selectedDate;
-                href = `/report/details?deptcodes=${linkDeptcode}&workdate=${linkWorkdate}`;
+            if (dept.isTotalRow && !dept.isGrandTotal) {
+              const descendantCodes = getAllDescendantCodes(dept, employees);
+              const deptcodes = descendantCodes.join(',');
+              href = `/report/details?deptcodes=${deptcodes}&workdate=${selectedDate}`;
+            } else if (!dept.isTotalRow) {
+              const linkDeptcode = dept.deptcode.replace('TOTAL_', '');
+              const linkWorkdate = selectedDate;
+              href = `/report/details?deptcodes=${linkDeptcode}&workdate=${linkWorkdate}`;
             }
-            
+
             return (
               <tr key={dept.deptcode} className={`${rowBgClass} border-b border-gray-100 last:border-b-0`}>
                 <td className={`px-6 ${verticalPaddingClass}`}>
-                    {dept.isTotalRow ? '' : dept.deptcode}
+                  {dept.isTotalRow ? '' : dept.deptcode}
                 </td>
                 <td className={`px-6 text-left ${verticalPaddingClass}`} style={{ paddingLeft: `${paddingLeft}px` }}>
                   {dept.deptname}
                 </td>
                 <td className={`px-5 ${verticalPaddingClass}`}>
-                    {displaySBU}
+                  {displaySBU}
                 </td>
                 <td className={`px-6 ${verticalPaddingClass}`}>
-                    {displaySTD}
+                  {displaySTD}
                 </td>
                 {scanStatus !== 'not_scanned' && (
                   <td className={`px-6 ${verticalPaddingClass}`}>{displayedTotalScanned}</td>
@@ -477,8 +488,8 @@ export function ManpowerTable({ selectedDate, scanStatus, deptcodelevel1Filter }
           aria-label="Back to top"
         >
           <svg width="38" height="38" viewBox="0 0 38 38" fill="none">
-            <circle cx="19" cy="19" r="19" fill="#16aaff"/>
-            <path d="M11 22L19 15L27 22" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+            <circle cx="19" cy="19" r="19" fill="#16aaff" />
+            <path d="M11 22L19 15L27 22" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
       )}

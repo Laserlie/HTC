@@ -21,9 +21,9 @@ const AttendanceCardSummary = ({ totalScanned, totalNotScanned, from, to, deptCo
   const createReportLink = (status: 'all' | 'scanned' | 'not_scanned') => {
     const params = new URLSearchParams();
     params.append('status', status);
-    // params.append('from', from);
-    // params.append('to', to);
-    // params.append('deptcode', deptCode);
+    params.append('from', from);
+    params.append('to', to);
+    params.append('deptcode', deptCode);
     return `/report/ScanNoscanReport?${params.toString()}`;
   };
 
@@ -33,8 +33,8 @@ const AttendanceCardSummary = ({ totalScanned, totalNotScanned, from, to, deptCo
         <Link href={createReportLink('all')} passHref className="!no-underline">
           <div
             className="flex flex-col items-center justify-center bg-blue-100 text-blue-800 px-6 py-5 rounded-xl shadow-md 
-            h-full transition-transform hover:scale-105 hover:shadow-lg cursor-pointer relative"
-            title="คลิกเพื่อดูเพิ่มเติม"
+            h-full transition-transform hover:scale-105 hover:shadow-lg cursor-pointer relative"
+            title="Click to see more"
           >
             <div className="flex items-center gap-4 w-full justify-start">
               <FaUsers size={36} />
@@ -51,8 +51,8 @@ const AttendanceCardSummary = ({ totalScanned, totalNotScanned, from, to, deptCo
         <Link href={createReportLink('scanned')} passHref className="!no-underline">
           <div
             className="flex flex-col items-center justify-center bg-green-100 text-green-800 px-6 py-5 rounded-xl shadow-md h-full 
-            transition-transform hover:scale-105 hover:shadow-lg cursor-pointer relative"
-            title="คลิกเพื่อดูเพิ่มเติม"
+            transition-transform hover:scale-105 hover:shadow-lg cursor-pointer relative"
+            title="Click to see more"
           >
             <div className="flex items-center gap-4 w-full justify-start">
               <FaCheckCircle size={36} />
@@ -63,7 +63,7 @@ const AttendanceCardSummary = ({ totalScanned, totalNotScanned, from, to, deptCo
             </div>
             <div className="absolute bottom-3 right-4 text-right text-black text-sm">
               <div className='text-lg font-bold text-green-700'>{scannedPercentage.toFixed(2)}%</div>
-              <div>ของพนักงานทั้งหมด</div>
+              <div>Of all employees</div>
             </div>
           </div>
         </Link>
@@ -71,8 +71,8 @@ const AttendanceCardSummary = ({ totalScanned, totalNotScanned, from, to, deptCo
         <Link href={createReportLink('not_scanned')} passHref className="!no-underline">
           <div
             className="flex flex-col items-center justify-center bg-red-100 text-red-800 px-6 py-5 
-            rounded-xl shadow-md h-full transition-transform hover:scale-105 hover:shadow-lg cursor-pointer relative"
-            title="คลิกเพื่อดูเพิ่มเติม"
+            rounded-xl shadow-md h-full transition-transform hover:scale-105 hover:shadow-lg cursor-pointer relative"
+            title="Click to see more"
           >
             <div className="flex items-center gap-4 w-full justify-start">
               <FaExclamationCircle size={36} />
@@ -83,7 +83,7 @@ const AttendanceCardSummary = ({ totalScanned, totalNotScanned, from, to, deptCo
             </div>
             <div className="absolute bottom-3 right-4 text-right text-black text-sm">
               <div className='text-lg font-bold text-red-700'>{notScannedPercentage.toFixed(2)}%</div>
-              <div>ของพนักงานทั้งหมด</div>
+              <div>Of all employees</div>
             </div>
           </div>
         </Link>

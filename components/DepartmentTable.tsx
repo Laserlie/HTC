@@ -21,7 +21,8 @@ export type AggregatedDepartment = {
   workdate: string;
   isTotalRow?: boolean;
 
-
+  sumSbuEndNum?: number;
+  sumStdEndNum?: number;
 };
 
 const getDeptLevel = (dept: AggregatedDepartment): number => {
@@ -78,7 +79,6 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
     }
   };
 
-
   const aggregatedDepartments = useMemo<AggregatedDepartment[]>(() => {
     // 1. สร้าง departmentsMap เฉพาะจาก employees (ไม่บวกค่าจากลูก)
     const departmentsMap = new Map<string, AggregatedDepartment>();
@@ -104,12 +104,20 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
           deptcodelevel4,
           workdate: emp.workdate,
           isTotalRow: false,
+          
+          sumSbuEndNum: Number(emp.deptsbu.slice(-1)) || 0,
+          sumStdEndNum: emp.deptstd ? Number(emp.deptstd.slice(-1)) || 0 : 0,
         });
       } else {
         const dept = departmentsMap.get(groupKey)!;
         dept.totalScanned += Number(emp.countscan);
         dept.totalNotScanned += Number(emp.countnotscan);
         dept.totalPerson += Number(emp.countperson);
+        
+        dept.sumSbuEndNum! += Number(emp.deptsbu.slice(-1)) || 0;
+        if (emp.deptstd) {
+          dept.sumStdEndNum! += Number(emp.deptstd.slice(-1)) || 0;
+        }
       }
     });
 
@@ -131,6 +139,9 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
           deptcodelevel4: parentCode,
           workdate,
           isTotalRow: false,
+          // ✅ สร้างฟิลด์ผลรวมเริ่มต้นเป็น 0
+          sumSbuEndNum: 0,
+          sumStdEndNum: 0,
         });
       }
     };
@@ -174,20 +185,27 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
       if (level === 1) topLevelDepartments.push(dept);
     });
 
-    // 6. ฟังก์ชันคำนวณ total แบบ recursive
-    const calculateTotalsIncludingChildren = (deptKey: string): { scanned: number; notScanned: number; person: number } => {
+    
+    const calculateTotalsIncludingChildren = (deptKey: string): { scanned: number; notScanned: number; person: number; sumSbuEndNum: number; sumStdEndNum: number } => {
       const entry = hierarchicalMap.get(deptKey);
-      if (!entry) return { scanned: 0, notScanned: 0, person: 0 };
+      if (!entry) return { scanned: 0, notScanned: 0, person: 0, sumSbuEndNum: 0, sumStdEndNum: 0 };
       let totalScanned = entry.dept.totalScanned;
       let totalNotScanned = entry.dept.totalNotScanned;
       let totalPerson = entry.dept.totalPerson;
+      
+      let totalSbuEndNum = entry.dept.sumSbuEndNum || 0;
+      let totalStdEndNum = entry.dept.sumStdEndNum || 0;
+
       entry.children.forEach(child => {
         const childTotals = calculateTotalsIncludingChildren(`${child.workdate}-${child.deptcode}`);
         totalScanned += childTotals.scanned;
         totalNotScanned += childTotals.notScanned;
         totalPerson += childTotals.person;
+      
+        totalSbuEndNum += childTotals.sumSbuEndNum;
+        totalStdEndNum += childTotals.sumStdEndNum;
       });
-      return { scanned: totalScanned, notScanned: totalNotScanned, person: totalPerson };
+      return { scanned: totalScanned, notScanned: totalNotScanned, person: totalPerson, sumSbuEndNum: totalSbuEndNum, sumStdEndNum: totalStdEndNum };
     };
 
     // 7. flattenAndAddTotals แบบ ManpowerTable
@@ -218,6 +236,9 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
           totalScanned: aggregatedTotalsForCurrentNode.scanned,
           totalNotScanned: aggregatedTotalsForCurrentNode.notScanned,
           totalPerson: aggregatedTotalsForCurrentNode.person,
+          // ✅ กำหนดค่าจากตัวเลขที่รวมแล้ว
+          sumSbuEndNum: aggregatedTotalsForCurrentNode.sumSbuEndNum,
+          sumStdEndNum: aggregatedTotalsForCurrentNode.sumStdEndNum,
         });
       }
     };
@@ -268,12 +289,20 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
             deptcodelevel4,
             workdate: emp.workdate,
             isTotalRow: false,
+            // ✅ เปลี่ยนเป็นการบวกตัวเลขหลักสุดท้าย
+            sumSbuEndNum: Number(emp.deptsbu.slice(-1)) || 0,
+            sumStdEndNum: emp.deptstd ? Number(emp.deptstd.slice(-1)) || 0 : 0,
           });
         } else {
           const dept = departmentsMapForDate.get(groupKey)!;
           dept.totalScanned += Number(emp.countscan);
           dept.totalNotScanned += Number(emp.countnotscan);
           dept.totalPerson += Number(emp.countperson);
+          // ✅ เพิ่มการบวกค่าตัวเลขหลักสุดท้าย
+          dept.sumSbuEndNum! += Number(emp.deptsbu.slice(-1)) || 0;
+          if (emp.deptstd) {
+            dept.sumStdEndNum! += Number(emp.deptstd.slice(-1)) || 0;
+          }
         }
       });
       // สร้าง parent node ทุกระดับ
@@ -296,6 +325,9 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
               deptcodelevel4: dept.deptcodelevel3,
               workdate: dept.workdate,
               isTotalRow: false,
+              // ✅ สร้างฟิลด์ผลรวมเริ่มต้นเป็น 0
+              sumSbuEndNum: 0,
+              sumStdEndNum: 0,
             });
           }
         }
@@ -316,6 +348,9 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
               deptcodelevel4: dept.deptcodelevel2,
               workdate: dept.workdate,
               isTotalRow: false,
+              // ✅ สร้างฟิลด์ผลรวมเริ่มต้นเป็น 0
+              sumSbuEndNum: 0,
+              sumStdEndNum: 0,
             });
           }
         }
@@ -336,11 +371,14 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
               deptcodelevel4: dept.deptcodelevel1,
               workdate: dept.workdate,
               isTotalRow: false,
+              
+              sumSbuEndNum: 0,
+              sumStdEndNum: 0,
             });
           }
         }
       });
-      // สร้าง hierarchicalMap ของวันนั้น
+      
       const hierarchicalMapForDate = new Map<string, { dept: AggregatedDepartment; children: AggregatedDepartment[] }>();
       departmentsMapForDate.forEach(dept => {
         hierarchicalMapForDate.set(`${dept.workdate}-${dept.deptcode}`, { dept, children: [] });
@@ -359,20 +397,29 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
       // หา topLevelDepartments ของวันนั้น (level 1)
       const topLevelDepartments = Array.from(departmentsMapForDate.values()).filter(dept => getDeptLevel(dept) === 1);
       // ใช้ recursive รวมค่าจาก topLevelDepartments
-      const calculateTotalsIncludingChildren = (deptKey: string): { scanned: number; notScanned: number; person: number } => {
+      const calculateTotalsIncludingChildren = (deptKey: string): { scanned: number; notScanned: number; person: number; sumSbuEndNum: number; sumStdEndNum: number } => {
         const entry = hierarchicalMapForDate.get(deptKey);
-        if (!entry) return { scanned: 0, notScanned: 0, person: 0 };
+        if (!entry) return { scanned: 0, notScanned: 0, person: 0, sumSbuEndNum: 0, sumStdEndNum: 0 };
         let totalScanned = entry.dept.totalScanned;
         let totalNotScanned = entry.dept.totalNotScanned;
         let totalPerson = entry.dept.totalPerson;
+       
+        let totalSbuEndNum = entry.dept.sumSbuEndNum || 0;
+        let totalStdEndNum = entry.dept.sumStdEndNum || 0;
+
         entry.children.forEach(child => {
           const childTotals = calculateTotalsIncludingChildren(`${child.workdate}-${child.deptcode}`);
           totalScanned += childTotals.scanned;
           totalNotScanned += childTotals.notScanned;
           totalPerson += childTotals.person;
+          
+          totalSbuEndNum += childTotals.sumSbuEndNum;
+          totalStdEndNum += childTotals.sumStdEndNum;
         });
-        return { scanned: totalScanned, notScanned: totalNotScanned, person: totalPerson };
+        return { scanned: totalScanned, notScanned: totalNotScanned, person: totalPerson, sumSbuEndNum: totalSbuEndNum, sumStdEndNum: totalStdEndNum };
       };
+      let grandTotalSbuEndNum = 0;
+      let grandTotalStdEndNum = 0;
       let totalScanned = 0;
       let totalNotScanned = 0;
       let totalPerson = 0;
@@ -382,10 +429,12 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
         totalScanned += totals.scanned;
         totalNotScanned += totals.notScanned;
         totalPerson += totals.person;
+        grandTotalSbuEndNum += totals.sumSbuEndNum;
+        grandTotalStdEndNum += totals.sumStdEndNum;
       });
       const grandTotalRow: AggregatedDepartment = {
         deptcode: `GRAND_TOTAL_${date}`,
-        deptname: 'รวมทั้งโรงงานทั้งหมด',
+        deptname: 'All Haier',
         deptsbu: '',
         deptstd: null,
         totalScanned,
@@ -397,6 +446,9 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
         deptcodelevel4: '',
         workdate: date,
         isTotalRow: true,
+        
+        sumSbuEndNum: grandTotalSbuEndNum,
+        sumStdEndNum: grandTotalStdEndNum,
       };
       if (grandTotalRow.totalPerson > 0 || grandTotalRow.totalScanned > 0 || grandTotalRow.totalNotScanned > 0) {
         return [date, [...departments, grandTotalRow]] as [string, AggregatedDepartment[]];
@@ -441,8 +493,8 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
   const levelColors = [
     'bg-blue-200', // Level 1: โรงงาน
     'bg-blue-100', // Level 2: ฝ่าย
-    'bg-blue-50',   // Level 3: แผนก
-    'bg-white'      // Level 4: หน่วยงานย่อย
+    'bg-blue-50',   // Level 3: แผนก
+    'bg-white'      // Level 4: หน่วยงานย่อย
   ];
 
   return (
@@ -485,8 +537,9 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
                   const deptLevel = getDeptLevel({ ...dept, deptcode: effectiveDeptCode });
 
                   const displayedDeptCode = dept.isTotalRow ? '' : dept.deptcode;
-                  const displaySBU = dept.deptsbu;
-                  const displaySTD = dept.deptstd;
+                  
+                  const displaySBU = dept.isTotalRow ? (dept.sumSbuEndNum !== undefined ? dept.sumSbuEndNum.toLocaleString() : '') : dept.deptsbu;
+                  const displaySTD = dept.isTotalRow ? (dept.sumStdEndNum !== undefined ? dept.sumStdEndNum.toLocaleString() : '') : dept.deptstd;
                   const displayedTotalScanned = dept.totalScanned.toLocaleString();
                   const displayedTotalNotScanned = dept.totalNotScanned.toLocaleString();
                   const displayedTotalPerson = dept.totalPerson.toLocaleString();
@@ -498,7 +551,7 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
                   };
 
                   let href = '';
-                  if (dept.deptname === 'Grand Total') {
+                  if (dept.deptname === 'Grand Total' || dept.deptname === 'รวมทั้งโรงงานทั้งหมด') {
                     const allLeafCodesForDate = employees
                       .filter(emp => emp.workdate === linkWorkdate)
                       .map(emp => emp.originalFullDeptcode || emp.deptcode)

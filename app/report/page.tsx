@@ -169,7 +169,7 @@ function ReportPageContent() {
       <h1 className="text-2xl font-bold text-gray-800">Scan Data List</h1>
       <ReportFilterForm onSearch={handleSearch} initialFilters={filters} />
       {!filters.from || !filters.to ? (
-        <div className="text-center text-gray-500 py-8">กรุณาเลือกช่วงวันที่และกด Search เพื่อแสดงข้อมูล</div>
+        <div className="text-center text-gray-500 py-8">Please select a date range and press Search to display the information.</div>
       ) : loading ? (
         <Spinner />
       ) : (

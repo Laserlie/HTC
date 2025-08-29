@@ -89,21 +89,21 @@ const Report2: React.FC = () => {
                 return res.json();
             })
             .then((hoursData: EmployeeHoursApiRawData[]) => {
-          
+
                 if (Array.isArray(hoursData)) {
                     const formattedEmployees: Employee[] = hoursData.map(hoursItem => {
                         const deptCode = hoursItem.deptcode || '00000000';
                         return {
-            
+
                             id: hoursItem.empid,
                             name: hoursItem.full_name || hoursItem.empid,
                             department: hoursItem.div,
-                       
+
                             departmentName: hoursItem.div,
                             deptCode: deptCode,
                             hours: [hoursItem.w1, hoursItem.w2, hoursItem.w3, hoursItem.w4, hoursItem.w5],
                             currentUsedHours: hoursItem.current_date_use_hour,
-   
+
                             hoursLeft: hoursItem.hours_left,
                         };
                     });
@@ -118,7 +118,7 @@ const Report2: React.FC = () => {
                 setAllEmployees([]);
             })
             .finally(() => {
-              
+
                 setLoadingData(false);
             });
     }
@@ -136,7 +136,7 @@ const Report2: React.FC = () => {
                 const hour = employee.hours[weekIndex] || 0;
                 matchesStatus = hour > 60;
             } else if (activeStatusFilter === 'normal' && activeWeekFilter > 0) {
-              
+
                 const hour = employee.hours[weekIndex] || 0;
                 matchesStatus = hour <= 60;
             } else if (activeStatusFilter === 'overtime' && activeWeekFilter === 0) {
@@ -161,7 +161,7 @@ const Report2: React.FC = () => {
             const { factory } = parseDeptCode(emp.deptCode);
             if (factory && !options.has(factory)) {
                 options.set(factory, emp.departmentName);
-            
+
             }
         });
         return Array.from(options.entries()).map(([code, name]) => ({ code, name }));
@@ -173,7 +173,7 @@ const Report2: React.FC = () => {
             if (factory === factoryFilterInput && division && division !== '00' && !options.has(division)) {
                 options.set(division, emp.departmentName);
             }
- 
+
         });
         return Array.from(options.entries()).map(([code, name]) => ({ code, name }));
     }, [allEmployees, factoryFilterInput]);
@@ -183,7 +183,7 @@ const Report2: React.FC = () => {
             const { factory, division } = parseDeptCode(emp.deptCode);
             if (factory === factoryFilterInput && division === divisionFilterInput && emp.departmentName) {
                 uniqueDepartments.set(emp.deptCode, { code: emp.deptCode, name: emp.departmentName });
-     
+
             }
         });
         return Array.from(uniqueDepartments.values()).sort((a, b) => a.name.localeCompare(b.name));
@@ -204,13 +204,13 @@ const Report2: React.FC = () => {
             overtimeEmployees = filteredEmployees.length;
         } else {
 
-         
+
             if (activeWeekFilter > 0) {
                 const weekIndex = activeWeekFilter - 1;
                 overtimeEmployees = filteredEmployees.filter(emp => (emp.hours[weekIndex] || 0) > 60).length;
             } else {
                 overtimeEmployees = filteredEmployees.filter(emp => emp.hours.some(h => h > 60)).length;
-          
+
             }
             normalEmployees = filteredEmployees.length - overtimeEmployees;
         }
@@ -221,11 +221,11 @@ const Report2: React.FC = () => {
 
     const handleExportToCSV = () => {
         // Dynamic headers based on weekFilter
-        let headers = ['WorkdayID', 'deptcode', 'ชื่อ-สกุล', 'แผนก'];
+        let headers = ['WorkdayID', 'deptcode', 'Name-Lastname', 'Department'];
         if (activeWeekFilter === 0) {
-            headers = [...headers, 'Week1', 'Week2', 'Week3', 'Week4', 'Week5', 'ทำงานไปแล้ว (Weekล่าสุด)', 'เหลือชั่วโมงทำงาน (Weekล่าสุด)'];
+            headers = [...headers, 'Week1', 'Week2', 'Week3', 'Week4', 'Week5', 'Worked for (Latest Week)', 'Working hours remaining (Latest Week)'];
         } else {
-            headers = [...headers, `Week ${activeWeekFilter}`, 'ทำงานไปแล้ว', 'เหลือชั่วโมงทำงาน'];
+            headers = [...headers, `Week ${activeWeekFilter}`, 'Worked for', 'Working hours remaining'];
         }
 
         const csvContent = [
@@ -234,7 +234,7 @@ const Report2: React.FC = () => {
                 let rowData = [
                     emp.id,
                     `"${emp.deptCode}"`,
-    
+
                     `"${emp.name}"`,
                     `"${emp.departmentName}"`,
 
@@ -245,7 +245,7 @@ const Report2: React.FC = () => {
                     const latestUsedHours = latestWeekIndex !== -1 ? (emp.hours[latestWeekIndex] || 0) : 0;
                     const hoursLeftCalculated = 60 - latestUsedHours; // Assuming 60 hours is the maximum
 
-     
+
                     rowData = [...rowData, ...emp.hours.map(String), String(latestUsedHours), String(hoursLeftCalculated)];
                 } else {
                     // Export only the selected week's data
@@ -300,8 +300,8 @@ const Report2: React.FC = () => {
     // New helper to format the month name in Thai
     const getThaiMonthName = (month: number) => {
         const monthNames = [
-            'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
-            'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
         ];
         return monthNames[month - 1];
     };
@@ -312,121 +312,118 @@ const Report2: React.FC = () => {
             <div className="bg-white rounded-xl shadow-md p-6 mb-5">
                 <div className="flex items-center justify-between">
                     <div>
-               
-                        <h1 className="text-3xl font-bold text-gray-700 mb-2 ">รายงานการทำงานพนักงานประจำเดือน {getThaiMonthName(dateTimeFil.month)} {dateTimeFil.year}</h1>
-                        <p className="text-gray-600">ชั่วโมงการทำงาน - รายสัปดาห์</p>
+
+                        <h1 className="text-3xl font-bold text-gray-700 mb-2 ">Weekly employee work report for {getThaiMonthName(dateTimeFil.month)} {dateTimeFil.year}</h1>
+                        <p className="text-gray-600">Working hours - Weekly</p>
                     </div>
                 </div>
             </div>
 
-   
+
             {/* Filter and Search */}
             <div className="bg-white rounded-xl shadow-md p-6 mb-8">
                 <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-4 flex-wrap">
                     <input
                         type="text"
-    
-                        placeholder="ค้นหาด้วยชื่อ,รหัสพนักงานหรือ deptcode..."
+
+                        placeholder="Search by name, employee code or deptcode..."
                         className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2  focus:ring-blue-500 flex-grow shadow-md "
                         value={searchTermInput}
-                     
+
                         onChange={(e) => setSearchTermInput(e.target.value)}
                     />
                     <select
                         id="statusFilter"
                         value={statusFilterInput}
-       
+
                         onChange={(e) => setStatusFilterInput(e.target.value)}
                         className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 shadow-md"
                     >
-                        <option value="">สถานะทั้งหมด</option>
-     
-                        <option value="normal">ปกติ (≤ 60 ชม.)</option>
-                        <option value="overtime">เกินเวลา ( ≥ 60 ชม.)</option>
+                        <option value="">All Status</option>
+
+                        <option value="normal">Normal (≤ 60 hrs)</option>
+                        <option value="overtime">Overtime (≥ 60 hrs)</option>
                     </select>
                     {/* Week Filter Dropdown */}
                     <select
                         id="weekFilter"
-           
+
                         value={weekFilterInput}
                         onChange={e => setWeekFilterInput(Number(e.target.value))}
                         className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 shadow-md"
                     >
-          
-                        <option value={0}>ทุกสัปดาห์</option>
+                        <option value={0}>All Weeks</option>
                         <option value={1}>Week 1</option>
                         <option value={2}>Week 2</option>
                         <option value={3}>Week 3</option>
-       
+
                         <option value={4}>Week 4</option>
                         <option value={5}>Week 5</option>
                     </select>
                     <select
-               
+
                         id="monthFilter"
                         value={dateTimeFil.month}
                         onChange={e =>
                             setDateTimeFil(prev => ({
-            
+
                                 ...prev,
                                 month: Number(e.target.value)
                             }))
-                   
+
                         }
                         className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 shadow-md"
                     >
-                        <option value={today.getMonth() + 1}>เดือนล่าสุด</option>
-                 
-                        <option value={1}>มกราคม</option>
-                        <option value={2}>กุมภาพันธ์</option>
-                        <option value={3}>มีนาคม</option>
-                        <option value={4}>เมษายน</option>
-                 
-                        <option value={5}>พฤษภาคม</option>
-                        <option value={6}>มิถุนายน</option>
-                        <option value={7}>กรกฎาคม</option>
-                        <option value={8}>สิงหาคม</option>
-                 
-                        <option value={9}>กันยายน</option>
-                        <option value={10}>ตุลาคม</option>
-                        <option value={11}>พฤษจิกายน</option>
-                        <option value={12}>ธันวาคม</option>
-                 
+                        <option value={today.getMonth() + 1}>Latest Month</option>
+
+                        <option value={1}>January</option>
+                        <option value={2}>February</option>
+                        <option value={3}>March</option>
+                        <option value={4}>April</option>
+                        <option value={5}>May</option>
+                        <option value={6}>June</option>
+                        <option value={7}>July</option>
+                        <option value={8}>August</option>
+                        <option value={9}>September</option>
+                        <option value={10}>October</option>
+                        <option value={11}>November</option>
+                        <option value={12}>December</option>
+
                     </select>
                     <select
                         id="yearFilter"
                         value={dateTimeFil.year}
                         onChange={e =>
-    
+
                             setDateTimeFil(prev => ({
                                 ...prev,
                                 year: Number(e.target.value)
-         
+
                             }))
                         }
                         className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 shadow-md"
                     >
-      
-                        <option value={today.getFullYear()}>ปีล่าสุด</option>
+
+                        <option value={today.getFullYear()}>Latest Year</option>
                         <option value={2025}>2025</option>
                         <option value={2026}>2026</option>
                         <option value={2027}>2027</option>
-      
+
                         <option value={2028}>2028</option>
                         <option value={2029}>2029</option>
                         <option value={2030}>2030</option>
                         <option value={2031}>2031</option>
-      
+
                         <option value={2032}>2032</option>
                         <option value={2033}>2033</option>
                         <option value={2034}>2034</option>
                         <option value={2035}>2035</option>
-      
+
                     </select>
                     {/* Updated Factory dropdown to show names */}
                     <select
                         id="factoryFilter"
-               
+
                         value={factoryFilterInput}
                         onChange={(e) => {
                             setFactoryFilterInput(e.target.value);
@@ -435,8 +432,8 @@ const Report2: React.FC = () => {
                         }}
                         className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 shadow-md"
                     >
-                        <option value="">โรงงานทั้งหมด</option>
-                      
+                        <option value="">All Factories</option>
+
                         {factoryOptions.map(option => (
                             <option key={option.code} value={option.code}>{option.name}</option>
                         ))}
@@ -446,34 +443,34 @@ const Report2: React.FC = () => {
                         id="divisionFilter"
                         value={divisionFilterInput}
                         onChange={(e) => {
- 
+
                             setDivisionFilterInput(e.target.value);
                             setDepartmentFilterInput('');
                         }}
                         className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 shadow-md"
                         disabled={!factoryFilterInput}
                     >
-                        
-                        <option value="">ฝ่ายทั้งหมด</option>
+
+                        <option value="">All Divisions</option>
                         {divisionOptions.map(option => (
                             <option key={option.code} value={option.code}>{option.name}</option>
                         ))}
-                   
+
                     </select>
                     {/* The department filter is updated to ensure unique names */}
                     <select
                         id="departmentFilter"
                         value={departmentFilterInput}
- 
+
                         onChange={(e) => setDepartmentFilterInput(e.target.value)}
                         className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 shadow-md"
                         disabled={!divisionFilterInput}
-                    
+
                     >
-                        <option value="">แผนกทั้งหมด</option>
+                        <option value="">All Departments</option>
                         {departmentOptions.map((option, idx) => (
                             <option key={`${option.code}-${idx}`} value={option.code}>{option.name}</option>
-                  
+
                         ))}
                     </select>
 
@@ -482,11 +479,11 @@ const Report2: React.FC = () => {
                         className="bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-900 flex items-center justify-center min-w-[100px] shadow-lg"
                         disabled={loadingData}
                     >
-                        ค้นหา
+                        Search
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" fill="none" />
                             <line x1="16.5" y1="16.5" x2="21" y2="21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                       
+
                         </svg>
                     </button>
                 </form>
@@ -498,146 +495,146 @@ const Report2: React.FC = () => {
                 <div className="bg-blue-100 rounded-xl shadow-md p-6 ">
                     <div className="flex items-center">
                         <div className="p-3 bg-blue-200 rounded-full  ">
-                          
+
                             <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-       
+
                             </svg>
                         </div>
                         <div className="ml-4">
-                            <p className="text-sm text-blue-800">พนักงานทั้งหมด</p>
-                            <p className="text-3xl font-bold text-blue-800">{allEmployees.length} คน</p>
+                            <p className="text-sm text-blue-800">All employees</p>
+                            <p className="text-3xl font-bold text-blue-800">{allEmployees.length} people</p>
                         </div>
                     </div>
                 </div>
-        
+
                 {/* Card 2: Normal Employees */}
                 <div className="bg-green-100 rounded-xl shadow-md p-6">
                     <div className="flex items-center">
                         <div className="p-3 bg-green-100 rounded-full">
-                  
+
                             <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
-    
+
                         </div>
                         <div className="ml-4">
-                            <p className="text-sm text-green-800">ปกติ (≤ 60 ชม.)</p>
-                      
-                            <p className="text-3xl font-bold text-green-700">{summaryData.normalEmployees} คน</p>
+                            <p className="text-sm text-green-800">normal (≤ 60 hr.)</p>
+
+                            <p className="text-3xl font-bold text-green-700">{summaryData.normalEmployees} people</p>
                         </div>
                     </div>
                 </div>
                 {/* Card 3: Overtime Employees */}
-         
+
                 <div className="bg-red-100 rounded-xl shadow-md p-6 ">
                     <div className="flex items-center">
                         <div className="p-3 bg-red-100 rounded-full">
                             <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-  
+
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
                             </svg>
                         </div>
-  
+
                         <div className="ml-4">
-                            <p className="text-sm text-red-500">เกิน 60 ชม. ในสัปดาห์</p>
-                            <p className="text-3xl font-bold text-red-600">{summaryData.overtimeEmployees} คน</p>
+                            <p className="text-sm text-red-500">More than 60 hours per week</p>
+                            <p className="text-3xl font-bold text-red-600">{summaryData.overtimeEmployees} people</p>
                         </div>
                     </div>
                 </div>
-        
+
             </div>
 
             {loadingData && (
                 <div className="p-8 text-center text-gray-500">
                     <svg className="animate-spin h-8 w-8 text-blue-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
- 
+
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <p>กำลังโหลดข้อมูล...</p>
-               
+                    <p>Loading data...</p>
+
                 </div>
             )}
 
             {/* Employee Table */}
             <div className="bg-white rounded-xl shadow-lg overflow-hidden">
                 <div className="px-6 py-4 bg-blue-700 border-b flex items-center justify-between">
-                    <h2 className="text-xl font-bold text-white">รายละเอียดการทำงานของพนักงาน</h2>
+                    <h2 className="text-xl font-bold text-white">Details of working hours per week</h2>
 
-          
+
                     {/* Rows per page dropdown moved here */}
                     <div className="flex items-center space-x-2">
-                        <span className="text-sm text-white">แสดง </span>
+                        <span className="text-sm text-white">Show </span>
                         <select
-         
+
                             value={rowsPerPage}
                             onChange={handleRowsPerPageChange}
                             className="px-3 py-1 border rounded-lg bg-white text-gray-900"
-                    
+
                         >
                             <option value={10}>10</option>
                             <option value={20}>20</option>
                             <option value={40}>50</option>
-         
+
                             <option value={100}>100</option>
-                            <option value={filteredEmployees.length}>ทั้งหมด</option>
+                            <option value={filteredEmployees.length}>All</option>
                         </select>
                     </div>
-       
+
                 </div>
 
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead className="bg-gray-100">
-                            
+
                             <tr>
                                 <th className="px-6 py-3 text-left text-s font-medium text-gray-600  tracking-wider w-1/12">Deptcode</th>
                                 <th className="px-6 py-3 text-left text-s font-medium text-gray-600  tracking-wider w-1/12">WorkdayIDs</th>
-                  
-                                <th className="px-6 py-3 text-left text-s font-medium text-gray-600 uppercase tracking-wider w-2/12">แผนก</th>
-                                <th className="px-6 py-3 text-left text-s font-medium text-gray-600 uppercase tracking-wider w-2/12">ชื่อ-นามสกุล</th>
+
+                                <th className="px-6 py-3 text-left text-s font-medium text-gray-600  tracking-wider w-2/12">department</th>
+                                <th className="px-6 py-3 text-left text-s font-medium text-gray-600  tracking-wider w-2/12">Name-Lastname</th>
                                 {[1, 2, 3, 4, 5].map((weekNum) => (
                                     <th
                                         key={`week-header-${weekNum}`}
-                      
+
                                         className={`px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider ${activeWeekFilter === weekNum ? 'bg-indigo-100' : ''}`}
                                     >
                                         Week {weekNum}
-                     
+
                                     </th>
                                 ))}
                                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-             
-                                    ทำงานไปแล้ว <br /> ({activeWeekFilter === 0 ? 'Weekล่าสุด' : `Week ${activeWeekFilter}`})
+
+                                    Worked for <br /> ({activeWeekFilter === 0 ? 'Last Week' : `Week ${activeWeekFilter}`})
                                 </th>
                                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    เหลือชั่วโมงทำงาน <br /> ({activeWeekFilter === 0 ? 'Weekล่าสุด' : `Week ${activeWeekFilter}`})
+                                    working hours remaining <br /> ({activeWeekFilter === 0 ? 'Last Week' : `Week ${activeWeekFilter}`})
                                 </th>
-                 
+
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                             {paginatedEmployees.length > 0 ? (
                                 paginatedEmployees.map(employee => {
                                     // Logic to find the latest week or use the filtered week
-                   
+
                                     const latestWeekIndex = activeWeekFilter > 0 ? activeWeekFilter - 1 : employee.hours.length - 1 - [...employee.hours].reverse().findIndex(hour => hour > 0);
                                     const latestUsedHours = latestWeekIndex !== -1 ? (employee.hours[latestWeekIndex] || 0) : 0;
-                 
+
                                     const hoursLeftCalculated = 60 - latestUsedHours; // Assuming 60 hours is the maximum
 
                                     return (
-                                
+
                                         <tr key={employee.id} className={'hover:bg-gray-50'}>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 w-2/12">{employee.deptCode}</td>
-                                        
+
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 w-1/12">{employee.id}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 w-2/12">{employee.departmentName}</td>
-                                       
+
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-2/12">{employee.name}</td>
                                             {employee.hours.map((hour, index) => {
-                                          
+
                                                 const weekNum = index + 1;
                                                 let cellColorClass = 'text-gray-900';
                                                 if (hour > 60) {
@@ -649,14 +646,14 @@ const Report2: React.FC = () => {
                                                 }
 
                                                 // Highlight the cell if it's the selected week
-                                            
+
                                                 const highlightClass = activeWeekFilter === weekNum ? 'bg-indigo-50' : '';
                                                 return (
                                                     <td key={index} className={`px-6 py-4 whitespace-nowrap text-sm text-center ${cellColorClass} ${highlightClass}`}>
-                                       
+
                                                         {hour == null ? 0 : hour}
                                                     </td>
-                         
+
                                                 );
                                             })}
                                             <td className={`px-6 py-4 whitespace-nowrap text-sm text-center ${latestUsedHours > 60 ? 'text-red-600 font-semibold' : 'text-green-600'}`}>{latestUsedHours == null ? 0 : latestUsedHours}</td>
@@ -666,36 +663,36 @@ const Report2: React.FC = () => {
                                 })
                             ) : (
                                 <tr>
-                                    <td colSpan={10} className="text-center py-8 text-gray-500">ไม่พบข้อมูลพนักงาน</td>
+                                    <td colSpan={10} className="text-center py-8 text-gray-500">Employee information not found</td>
                                 </tr>
                             )}
                         </tbody>
-              
+
                     </table>
                 </div>
 
                 {/* Page navigation buttons - remain at the bottom */}
                 <div className="flex justify-end items-center bg-gray-100 p-4 ">
                     <div className="flex items-center space-x-2">
-        
-                        <span className="text-sm text-gray-700">หน้า {currentPage} จาก {Math.ceil(filteredEmployees.length / rowsPerPage)}</span>
+
+                        <span className="text-sm text-gray-700">Page {currentPage} from {Math.ceil(filteredEmployees.length / rowsPerPage)}</span>
                         <button
                             onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                  
+
                             disabled={currentPage === 1}
                             className="px-3 py-1 border rounded-lg disabled:opacity-50 shadow-sm"
                         >
-                            ก่อนหน้า
-   
+                            Previous
+
                         </button>
                         <button
                             onClick={() => setCurrentPage(prev => prev + 1)}
-                     
+
                             disabled={currentPage >= Math.ceil(filteredEmployees.length / rowsPerPage)}
                             className="px-3 py-1 border rounded-lg disabled:opacity-50 shadow-sm"
                         >
-                            ถัดไป
-    
+                            Next
+
                         </button>
                     </div>
                 </div>
@@ -703,7 +700,7 @@ const Report2: React.FC = () => {
 
             {/* Export Button */}
             <div className="mt-8 text-center">
-   
+
                 <button
                     onClick={handleExportToCSV}
                     className="bg-blue-600 hover:bg-blue-900 text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition duration-300"
@@ -712,7 +709,7 @@ const Report2: React.FC = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
                     Export CSV
-  
+
                 </button>
             </div>
         </div>

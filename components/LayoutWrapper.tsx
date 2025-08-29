@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, FileText, Settings, Clock } from 'lucide-react';
+import { Home, FileText, Clock } from 'lucide-react';
 import { ReactNode } from 'react';
 
 // รายการเมนูสำหรับ Sidebar
@@ -10,7 +10,7 @@ const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: <Home className="w-5 h-5" /> },
   { href: '/report', label: 'Report', icon: <FileText className="w-5 h-5" /> },
   { href: '/report2', label: 'Report Weekly', icon: <Clock className="w-5 h-5" /> },
-  { href: '/settings/wecom', label: 'WeCom Settings', icon: <Settings className="w-5 h-5" /> },
+  // { href: '/settings/wecom', label: 'WeCom Settings', icon: <Settings className="w-5 h-5" /> },
 ];
 
 export default function LayoutWrapper({ children }: { children: ReactNode }) {

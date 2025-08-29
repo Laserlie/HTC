@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import {PiFileMagnifyingGlassBold } from 'react-icons/pi';
-import { ArrowLeft } from 'lucide-react';
+import { PiFileMagnifyingGlassBold } from 'react-icons/pi';
+
 import { FaCheckCircle, FaExclamationCircle, FaUsers } from 'react-icons/fa';
 import Spinner from '@/components/ui/Spinner';
 
@@ -17,7 +17,7 @@ type Detail = {
   full_name: string;
   department_full_paths: string;
   deptname: string;
-  PersonType: string;  
+  PersonType: string;
   firstscantime: string | null;
   lastscantime: string | null;
   shiftname: string;
@@ -57,10 +57,6 @@ export default function ReportDetailPage() {
 
   // ย้าย isValidDate เข้าไปใน useCallback
 
-  const goBack = () => {
-    router.back();
-  };
-  
   // แก้ไข: ใช้ useCallback กับ fetchDetails และแก้ type error ใน catch
   const fetchDetails = useCallback(async () => {
     setFetchError(null);
@@ -80,7 +76,7 @@ export default function ReportDetailPage() {
     setLoading(true);
 
     const dateList = getDatesBetween(startDate, endDate);
-    
+
     try {
       const allDetails: Detail[] = [];
       const deptNamesMap: Record<string, string> = {};
@@ -109,17 +105,17 @@ export default function ReportDetailPage() {
       results.forEach(result => {
         if (result && result.dataByDate) {
           Object.keys(result.dataByDate).forEach(date => {
-              result.dataByDate[date].forEach((detail: Omit<Detail, 'workdate'>) => {
-                  allDetails.push({ ...detail, workdate: date });
-                  if (!deptNamesMap[detail.deptcode]) {
-                      deptNamesMap[detail.deptcode] = detail.deptname;
-                  }
-              });
+            result.dataByDate[date].forEach((detail: Omit<Detail, 'workdate'>) => {
+              allDetails.push({ ...detail, workdate: date });
+              if (!deptNamesMap[detail.deptcode]) {
+                deptNamesMap[detail.deptcode] = detail.deptname;
+              }
+            });
           });
         }
       });
       const sortedDetails = (allDetails || []).sort((a: Detail, b: Detail) => {
-          return (a.person_code ?? '').localeCompare((b.person_code ?? ''), undefined, { numeric: true });
+        return (a.person_code ?? '').localeCompare((b.person_code ?? ''), undefined, { numeric: true });
       });
       setDetails(sortedDetails);
       setDeptInfo(deptNamesMap);
@@ -132,12 +128,12 @@ export default function ReportDetailPage() {
       setLoading(false);
     }
   }, [deptcodesParam, startDate, endDate]);
-  
+
   // ใช้ useEffect เพื่อเรียก fetchDetails เมื่อ startDate หรือ endDate เปลี่ยน
   useEffect(() => {
     console.log('useEffect triggered with:', { startDate, endDate, deptcodesParam });
     if (startDate && endDate && deptcodesParam) {
-        fetchDetails();
+      fetchDetails();
     }
   }, [startDate, endDate, deptcodesParam, fetchDetails]);
 
@@ -196,7 +192,7 @@ export default function ReportDetailPage() {
       return '-';
     }
   };
-  
+
   const exportToCSV = () => {
     if (details.length === 0) {
       console.log('ไม่มีข้อมูลให้ Export');
@@ -225,7 +221,7 @@ export default function ReportDetailPage() {
     link.click();
     document.body.removeChild(link);
   };
-  
+
   // จัดกลุ่มข้อมูลตามวันที่และแผนก
   // (Group details by date and department)
   const groupedDetailsByDate = useMemo(() => {
@@ -237,38 +233,35 @@ export default function ReportDetailPage() {
       if (!groups[detail.workdate][detail.deptcode]) {
         groups[detail.workdate][detail.deptcode] = { scanned: [], notScanned: [] };
       }
-      if (detail.firstscantime) {
+      if (detail.full_name && detail.full_name.trim() !== '') {
+        if (detail.firstscantime) {
           groups[detail.workdate][detail.deptcode].scanned.push(detail);
-      } else {
+        } else {
           groups[detail.workdate][detail.deptcode].notScanned.push(detail);
+        }
       }
     });
     return groups;
   }, [details]);
-  
+
   // สร้างส่วนแสดงผลสำหรับแต่ละวันและแผนก
   // (Render section for each date and department)
   const renderReportContent = useMemo(() => {
-    // เรียงลำดับวันที่จากน้อยไปมาก
     const sortedDates = Object.keys(groupedDetailsByDate).sort();
 
     return sortedDates.map((workdate) => {
       const deptGroups = groupedDetailsByDate[workdate];
-      
-      const detailsForDate = Object.values(deptGroups).flatMap(group => [...group.scanned, ...group.notScanned]);
-      // นับเฉพาะ record ที่มีชื่อ-นามสกุล (full_name ไม่ว่างและไม่ null)
-      const filteredDetails = detailsForDate.filter(d => d.full_name && d.full_name.trim() !== '');
-      const totalEmployees = filteredDetails.length;
-      const scannedCount = filteredDetails.filter(d => d.firstscantime).length;
-      const notScannedCount = filteredDetails.filter(d => !d.firstscantime).length;
+      const allDetailsForDate = Object.values(deptGroups).flatMap(group => [...group.scanned, ...group.notScanned]);
+      const totalEmployees = allDetailsForDate.length;
+      const scannedCount = allDetailsForDate.filter(d => d.firstscantime).length;
+      const notScannedCount = allDetailsForDate.filter(d => !d.firstscantime).length;
       const scannedPercentage = totalEmployees > 0 ? (scannedCount / totalEmployees) * 100 : 0;
       const notScannedPercentage = totalEmployees > 0 ? (notScannedCount / totalEmployees) * 100 : 0;
+      const sortedDeptcodes = Object.keys(deptGroups).sort((a, b) => deptInfo[a].localeCompare(deptInfo[b]));
 
       return (
         <div key={workdate} className="border-b pb-4 mb-4">
-          <h3 className="text-xl font-bold mb-4">วันที่ {workdate}</h3>
-
-          {/* การ์ดสรุปสำหรับแต่ละวัน */}
+          <h3 className="text-xl font-bold mb-4">date {workdate}</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 items-stretch">
             <div
               className="flex flex-col items-center justify-center bg-blue-100 text-blue-800 px-6 py-5 rounded-2xl shadow-md h-full transition-transform hover:scale-105 hover:shadow-lg cursor-pointer relative"
@@ -278,7 +271,7 @@ export default function ReportDetailPage() {
                 <FaUsers size={36} />
                 <div className="text-left">
                   <div className="text-2xl font-extrabold">{totalEmployees}</div>
-                  <div className="text-base text-blue-900 font-extrabold">พนักงานทั้งหมด</div>
+                  <div className="text-base text-blue-900 font-extrabold">All employees</div>
                 </div>
               </div>
             </div>
@@ -290,12 +283,12 @@ export default function ReportDetailPage() {
                 <FaCheckCircle size={36} />
                 <div className="text-left">
                   <div className="text-2xl font-extrabold">{scannedCount}</div>
-                  <div className="text-base text-green-900 font-extrabold">สแกนเข้า</div>
+                  <div className="text-base text-green-900 font-extrabold">Scanned</div>
                 </div>
               </div>
               <div className="absolute bottom-3 right-4 text-right text-black text-sm">
                 <div className='text-lg font-bold text-green-700'>{scannedPercentage.toFixed(2)}%</div>
-                <div>ของพนักงานทั้งหมด</div>
+                <div>Of all employees</div>
               </div>
             </div>
             <div
@@ -306,126 +299,129 @@ export default function ReportDetailPage() {
                 <FaExclamationCircle size={36} />
                 <div className="text-left">
                   <div className="text-2xl font-extrabold">{notScannedCount}</div>
-                  <div className="text-base text-red-900 font-extrabold">ไม่สแกน</div>
+                  <div className="text-base text-red-900 font-extrabold">not scan</div>
                 </div>
               </div>
               <div className="absolute bottom-3 right-4 text-right text-black text-sm">
                 <div className='text-lg font-bold text-red-700'>{notScannedPercentage.toFixed(2)}%</div>
-                <div>ของพนักงานทั้งหมด</div>
+                <div>Of all employees</div>
               </div>
             </div>
           </div>
-          
-          {Object.entries(deptGroups).map(([deptcode, detailGroups]) => (
-            (() => {
-              const notScannedWithName = detailGroups.notScanned.filter(row => row.full_name && row.full_name.trim() !== '');
-              const scannedWithName = detailGroups.scanned.filter(row => row.full_name && row.full_name.trim() !== '');
-              if (notScannedWithName.length === 0 && scannedWithName.length === 0) return null;
-              return (
-                <div key={`${workdate}-${deptcode}`} className="mb-6">
-                  <h4 className="text-md font-semibold mt-2 mb-2">{deptInfo[deptcode]}</h4>
-                  {/* ตารางสำหรับพนักงานที่ยังไม่สแกน (No Scan) */}
-                  {notScannedWithName.length > 0 && (
-                    <>
-                      <h5 className="text-sm font-lg text-red-600">No Scan {notScannedWithName.length} คน</h5>
-                      <table className="min-w-full bg-white rounded shadow text-sm mb-4">
-                        <thead className="bg-red-100 text-left">
-                          <tr>
-                            <th className="p-3">HQ Emp Id</th>
-                            <th className="p-3">Emp Id</th>
-                            <th className="p-3">FullName</th>
-                            <th className="p-3">Division</th>
-                            <th className="p-3">Section</th>
-                            <th className="p-3">Type</th>
-                            <th className="p-3">Shift Type</th>
-                            <th className="p-3">Action</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {notScannedWithName.map((row, idx) => (
-                            <tr key={idx} className="hover:bg-red-50">
-                              <td className="p-3">{row.person_code}</td>
-                              <td className="p-3">{row.htcpersoncode}</td>
-                              <td className="p-3">{row.full_name}</td>
-                              <td className="p-3">{row.department_full_paths}</td>
-                              <td className="p-3">{row.deptname}</td>
-                              <td className="p-3">{row.PersonType}</td>
-                              <td className="p-3">{row.shiftname}</td>
-                              <td className="p-3">
-                                <button
-                                  onClick={() => {
-                                    router.push(
-                                      `/report/person/${encodeURIComponent(row.person_code)}?from=${encodeURIComponent(row.workdate)}`
-                                    );
-                                  }}
-                                  className="cursor-pointer"
-                                  title="View Details"
-                                >
-                                  <PiFileMagnifyingGlassBold size={24} className="text-blue-500 hover:text-blue-700" />
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </>
-                  )}
-                  {/* ตารางสำหรับพนักงานที่สแกนแล้ว (Scanned) */}
-                  {scannedWithName.length > 0 && (
-                    <>
-                      <h5 className="text-sm font-lg text-green-600">Scanned {scannedWithName.length} คน</h5>
-                      <table className="min-w-full bg-white rounded shadow text-sm">
-                        <thead className="bg-green-100 text-left">
-                          <tr>
-                            <th className="p-3">HQ Emp Id</th>
-                            <th className="p-3">Emp Id</th>
-                            <th className="p-3">FullName</th>
-                            <th className="p-3">Division</th>
-                            <th className="p-3">Section</th>
-                            <th className="p-3">Type</th>
-                            <th className="p-3">Time In</th>
-                            <th className="p-3">Time Out</th>
-                            <th className="p-3">Over IN</th>
-                            <th className="p-3">Shift Type</th>
-                            <th className="p-3">Action</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {scannedWithName.map((row, idx) => (
-                            <tr key={idx} className="hover:bg-green-50">
-                              <td className="p-3">{row.person_code}</td>
-                              <td className="p-3">{row.htcpersoncode}</td>
-                              <td className="p-3">{row.full_name}</td>
-                              <td className="p-3">{row.department_full_paths}</td>
-                              <td className="p-3">{row.deptname}</td>
-                              <td className="p-3">{row.PersonType}</td>
-                              <td className="p-3">{formatTime(row.firstscantime)}</td>
-                              <td className="p-3">{formatTime(row.lastscantime)}</td>
-                              <td className="p-3">{getOverIn(row.firstscantime) || '-'}</td>
-                              <td className="p-3">{row.shiftname}</td>
-                              <td className="p-3">
-                                <button
-                                  onClick={() => {
-                                    router.push(
-                                      `/report/person/${encodeURIComponent(row.person_code)}?from=${encodeURIComponent(row.workdate)}`
-                                    );
-                                  }}
-                                  className="cursor-pointer"
-                                  title="View Details"
-                                >
-                                  <PiFileMagnifyingGlassBold size={24} className="text-blue-500 hover:text-blue-700" />
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </>
-                  )}
-                </div>
-              );
-            })()
-          ))}
+
+          {/* แสดงตาราง No Scan ทุกแผนก */}
+          {sortedDeptcodes.map(deptcode => {
+            const detailGroups = deptGroups[deptcode];
+            const notScannedWithName = detailGroups.notScanned.filter(row => row.full_name && row.full_name.trim() !== '');
+            if (notScannedWithName.length === 0) return null;
+            return (
+              <div key={`${workdate}-${deptcode}-no-scan`} className="mb-4">
+                <h4 className="text-base font-semibold mt-2 mb-2 text-red-600">
+                  No Scan : {deptInfo[deptcode]} ({notScannedWithName.length} people)
+                </h4>
+                <table className="min-w-full bg-white rounded shadow text-sm mb-4">
+                  <thead className="bg-red-100 text-left">
+                    <tr>
+                      <th className="p-3">HQ Emp Id</th>
+                      <th className="p-3">Emp Id</th>
+                      <th className="p-3">FullName</th>
+                      <th className="p-3">Division</th>
+                      <th className="p-3">Section</th>
+                      <th className="p-3">Type</th>
+                      <th className="p-3">Shift Type</th>
+                      <th className="p-3">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {notScannedWithName.map((row, idx) => (
+                      <tr key={idx} className="hover:bg-red-50">
+                        <td className="p-3">{row.person_code}</td>
+                        <td className="p-3">{row.htcpersoncode}</td>
+                        <td className="p-3">{row.full_name}</td>
+                        <td className="p-3">{row.department_full_paths}</td>
+                        <td className="p-3">{row.deptname}</td>
+                        <td className="p-3">{row.PersonType}</td>
+                        <td className="p-3">{row.shiftname}</td>
+                        <td className="p-3">
+                          <button
+                            onClick={() => {
+                              router.push(
+                                `/report/person/${encodeURIComponent(row.person_code)}?from=${encodeURIComponent(row.workdate)}`
+                              );
+                            }}
+                            className="cursor-pointer"
+                            title="View Details"
+                          >
+                            <PiFileMagnifyingGlassBold size={24} className="text-blue-500 hover:text-blue-700" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            );
+          })}
+
+          {/* แสดงตาราง Scanned ทุกแผนก */}
+          {sortedDeptcodes.map(deptcode => {
+            const detailGroups = deptGroups[deptcode];
+            const scannedWithName = detailGroups.scanned.filter(row => row.full_name && row.full_name.trim() !== '');
+            if (scannedWithName.length === 0) return null;
+            return (
+              <div key={`${workdate}-${deptcode}-scanned`} className="mb-4">
+                <h4 className="text-base font-semibold mt-2 mb-2 text-green-600">
+                  Scanned : {deptInfo[deptcode]} ({scannedWithName.length} people)
+                </h4>
+                <table className="min-w-full bg-white rounded shadow text-sm">
+                  <thead className="bg-green-100 text-left">
+                    <tr>
+                      <th className="p-3">HQ Emp Id</th>
+                      <th className="p-3">Emp Id</th>
+                      <th className="p-3">FullName</th>
+                      <th className="p-3">Division</th>
+                      <th className="p-3">Section</th>
+                      <th className="p-3">Type</th>
+                      <th className="p-3">Time In</th>
+                      <th className="p-3">Time Out</th>
+                      <th className="p-3">Over IN</th>
+                      <th className="p-3">Shift Type</th>
+                      <th className="p-3">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {scannedWithName.map((row, idx) => (
+                      <tr key={idx} className="hover:bg-green-50">
+                        <td className="p-3">{row.person_code}</td>
+                        <td className="p-3">{row.htcpersoncode}</td>
+                        <td className="p-3">{row.full_name}</td>
+                        <td className="p-3">{row.department_full_paths}</td>
+                        <td className="p-3">{row.deptname}</td>
+                        <td className="p-3">{row.PersonType}</td>
+                        <td className="p-3">{formatTime(row.firstscantime)}</td>
+                        <td className="p-3">{formatTime(row.lastscantime)}</td>
+                        <td className="p-3">{getOverIn(row.firstscantime) || '-'}</td>
+                        <td className="p-3">{row.shiftname}</td>
+                        <td className="p-3">
+                          <button
+                            onClick={() => {
+                              router.push(
+                                `/report/person/${encodeURIComponent(row.person_code)}?from=${encodeURIComponent(row.workdate)}`
+                              );
+                            }}
+                            className="cursor-pointer"
+                            title="View Details"
+                          >
+                            <PiFileMagnifyingGlassBold size={24} className="text-blue-500 hover:text-blue-700" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            );
+          })}
         </div>
       );
     });
@@ -433,20 +429,13 @@ export default function ReportDetailPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <button
-        onClick={goBack}
-        className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-shadow shadow-md hover:shadow-lg"
-      >
-        <ArrowLeft className="w-5 h-5" />
-        <span>Back</span>
-      </button>
 
-      <h1 className="text-xl font-bold">รายงานแผนก</h1>
+      <h1 className="text-xl font-bold">Department report</h1>
       <h2 className="text-xl font-bold">{Object.values(deptInfo).join(', ')}</h2>
 
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex flex-col items-start gap-1">
-          <span className="text-gray-700 text-sm font-medium">วันเริ่มต้น</span>
+          <span className="text-gray-700 text-sm font-medium">Start date</span>
           <input
             type="date"
             value={startDate}
@@ -455,7 +444,7 @@ export default function ReportDetailPage() {
           />
         </label>
         <label className="flex flex-col items-start gap-1">
-          <span className="text-gray-700 text-sm font-medium">วันสิ้นสุด</span>
+          <span className="text-gray-700 text-sm font-medium">End date</span>
           <input
             type="date"
             value={endDate}
@@ -468,13 +457,13 @@ export default function ReportDetailPage() {
 
       {fetchError && (
         <div className="p-4 bg-red-100 text-red-700 rounded-lg shadow">
-          เกิดข้อผิดพลาด: {fetchError}
+          An error occurred: {fetchError}
         </div>
       )}
 
       {loading ? (
-        <div className="flex justify-center items-center  bg-gray-100">
-                <Spinner />
+        <div className="flex justify-center items-center  bg-gray-100">
+          <Spinner />
         </div>
       ) : details.length > 0 ? (
         <>
@@ -493,7 +482,7 @@ export default function ReportDetailPage() {
         </>
       ) : (
         <div className="text-center text-gray-500 py-10">
-          ไม่พบข้อมูลสำหรับช่วงวันที่และแผนกที่เลือก
+          No data found for the selected date range and department
         </div>
       )}
     </div>

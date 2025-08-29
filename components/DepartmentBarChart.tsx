@@ -109,7 +109,7 @@ export default function DepartmentChartsContainer({ apiEndpoint, deptCode }: Pro
     );
   }
   
-  const factoryTitle = deptCode === 'all' ? 'ทุกโรงงาน' : departmentNames[deptCode];
+  const factoryTitle = deptCode === 'all' ? 'All' : departmentNames[deptCode];
   
   const departmentDataMap = new Map<string, DepartmentChartData>();
   data.forEach(item => {
@@ -131,7 +131,7 @@ export default function DepartmentChartsContainer({ apiEndpoint, deptCode }: Pro
     labels: allScannedData.map((d) => d.department),
     datasets: [
       {
-        label: 'เปอร์เซ็นต์การเข้างาน ',
+        label: 'Attendance percentage ',
         data: allScannedData.map((d) => d.attendancePercentage),
         backgroundColor: '#4CAF50',
       },
@@ -153,7 +153,7 @@ export default function DepartmentChartsContainer({ apiEndpoint, deptCode }: Pro
       },
       title: {
         display: true,
-        text: `เปอร์เซ็นต์การเข้างานของพนักงาน${factoryTitle}`,
+        text: `Employee attendance percentage${factoryTitle}`,
         position: 'top',
         align: 'start',
         font: {
@@ -198,7 +198,7 @@ export default function DepartmentChartsContainer({ apiEndpoint, deptCode }: Pro
             const departmentInfo = departmentDataMap.get(departmentName);
             if (departmentInfo) {
               const totalEmployees = departmentInfo.scannedCount + departmentInfo.notScannedCount;
-              return `พนักงานในแผนก: ${totalEmployees.toLocaleString()} คน\nสแกนเข้าแล้ว: ${departmentInfo.scannedCount.toLocaleString()} คน`;
+              return `Employees in the department: ${totalEmployees.toLocaleString()} คน\nสแกนเข้าแล้ว: ${departmentInfo.scannedCount.toLocaleString()} คน`;
             }
             return '';
           }
@@ -215,7 +215,7 @@ export default function DepartmentChartsContainer({ apiEndpoint, deptCode }: Pro
         beginAtZero: true,
         max: 100, 
         ticks: { precision: 0, callback: (value) => `${value}%` }, 
-        title: { display: true, text: 'เปอร์เซ็นต์ (%)' },
+        title: { display: true, text: 'percent (%)' },
       },
     },
   };
@@ -235,7 +235,7 @@ export default function DepartmentChartsContainer({ apiEndpoint, deptCode }: Pro
     labels: allNotScannedData.map((d) => d.department),
     datasets: [
       {
-        label: 'เปอร์เซ็นต์ยังไม่สแกน ',
+        label: 'Percentage not yet scanned ',
         data: allNotScannedData.map((d) => d.notScannedPercentage),
         backgroundColor: '#FFC107',
       },
@@ -252,7 +252,7 @@ export default function DepartmentChartsContainer({ apiEndpoint, deptCode }: Pro
       },
       title: {
         display: true,
-        text: `เปอร์เซ็นต์พนักงานที่ยังไม่สแกนของพนักงาน${factoryTitle}`,
+        text: `Percentage of employees who have not yet scanned the employees ${factoryTitle}`,
         position: 'top',
         align: 'start',
         font: {
@@ -297,7 +297,7 @@ export default function DepartmentChartsContainer({ apiEndpoint, deptCode }: Pro
             const departmentInfo = departmentDataMap.get(departmentName);
             if (departmentInfo) {
               const totalEmployees = departmentInfo.scannedCount + departmentInfo.notScannedCount;
-              return `พนักงานในแผนก: ${totalEmployees.toLocaleString()} คน\nยังไม่สแกน: ${departmentInfo.notScannedCount.toLocaleString()} คน`;
+              return `Employees in the department: ${totalEmployees.toLocaleString()} คน\nยังไม่สแกน: ${departmentInfo.notScannedCount.toLocaleString()} คน`;
             }
             return '';
           }
@@ -314,7 +314,7 @@ export default function DepartmentChartsContainer({ apiEndpoint, deptCode }: Pro
         beginAtZero: true,
         max: 100, 
         ticks: { precision: 0, callback: (value) => `${value}%` }, 
-        title: { display: true, text: 'เปอร์เซ็นต์ (%)' },
+        title: { display: true, text: 'percent (%)' },
       },
     },
   };
