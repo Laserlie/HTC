@@ -173,7 +173,7 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
           setAllSubDepartments(uniqueSubDepartments);
           setAllDivisions(uniqueDivisions);
         } else {
-          console.warn('รูปแบบข้อมูลไม่ถูกต้อง: ข้อมูลไม่ใช่ Array', data);
+          console.warn('Invalid data format: Data is not an Array.', data);
           setFactories([]);
           setAllMainDepartments([]);
           setAllSubDepartments([]);
@@ -181,7 +181,7 @@ const ReportFilterForm = ({ onSearch, initialFilters }: Props) => {
         }
       })
       .catch(err => {
-        console.error('เกิดข้อผิดพลาดในการดึงข้อมูล:', err);
+        console.error('Error fetching data:', err);
         setFactories([]);
         setAllMainDepartments([]);
         setAllSubDepartments([]);

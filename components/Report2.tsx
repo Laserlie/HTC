@@ -109,12 +109,12 @@ const Report2: React.FC = () => {
                     });
                     setAllEmployees(formattedEmployees);
                 } else {
-                    console.warn('รูปแบบข้อมูลไม่ถูกต้อง: ข้อมูลไม่ใช่ Array');
+                    console.warn('Invalid data format: Data is not an Array');
                     setAllEmployees([]);
                 }
             })
             .catch(err => {
-                console.error('เกิดข้อผิดพลาดในการดึงข้อมูล:', err);
+                console.error('An error occurred while retrieving data:', err);
                 setAllEmployees([]);
             })
             .finally(() => {
@@ -261,7 +261,7 @@ const Report2: React.FC = () => {
         const link = document.createElement('a');
         const url = URL.createObjectURL(blob);
         link.setAttribute('href', url);
-        link.setAttribute('download', 'รายงานการมมาทำงาน_สัปดาห์.csv');
+        link.setAttribute('download', 'WorkAttendanceReport_week.csv');
         document.body.appendChild(link);
         link.click();
         document.body.appendChild(link);

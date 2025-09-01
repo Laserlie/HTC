@@ -115,7 +115,7 @@ export default function WeComSettingsForm() {
 
             activeEmployees.forEach(emp => {
                 const deptId = emp.deptCode || 'unknown';
-                const deptName = emp.deptName || 'ไม่ทราบแผนก';
+                const deptName = emp.deptName || 'Unknown department';
 
                 if (!departmentMap.has(deptId)) {
                     departmentMap.set(deptId, {
@@ -143,9 +143,9 @@ export default function WeComSettingsForm() {
         } catch (err) {
             console.error('Error fetching data:', err);
             if (axios.isAxiosError(err) && err.response?.data?.message) {
-                setError(`โหลดข้อมูลไม่สำเร็จ: ${err.response.data.message}`);
+                setError(`Failed to load data: ${err.response.data.message}`);
             } else {
-                setError('โหลดข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
+                setError('Failed to load data, please try again');
             }
         } finally {
             setLoading(false);
@@ -218,7 +218,7 @@ export default function WeComSettingsForm() {
             });
             return newMap;
         });
-        setSaveMsg('โปรดบันทึกเพื่อยืนยันการเปลี่ยนแปลง');
+        setSaveMsg('Please save to confirm changes');
         setError('');
         setSuccess('');
     }, []);
@@ -226,7 +226,7 @@ export default function WeComSettingsForm() {
     // ฟังก์ชันสำหรับบันทึกการเปลี่ยนแปลงทั้งหมดไปยัง Backend
     const handleSaveAllWeComIds = async () => {
         setSaving(true);
-        setSaveMsg('กำลังตรวจสอบและบันทึกข้อมูล...');
+        setSaveMsg('Checking and recording data...');
         setError('');
         setSuccess('');
 
@@ -268,8 +268,8 @@ export default function WeComSettingsForm() {
             });
 
             if (changesToProcess.length === 0) {
-                setSaveMsg('ไม่มีการเปลี่ยนแปลงข้อมูล');
-                setSuccess('ไม่มีข้อมูลใหม่ที่ต้องบันทึก');
+                setSaveMsg('No changes to update');
+                setSuccess('No new data to save');
                 setSaving(false);
                 return;
             }
@@ -294,7 +294,7 @@ export default function WeComSettingsForm() {
                             weComId: item.weComId,
                         };
 
-                        console.log("กำลังส่ง POST request สำหรับ LineUser ใหม่");
+                        console.log("Sending POST request for new LineUser");
                         console.log("Payload:", payload);
 
                         const response = await axios.post<LineUser>(LINE_USERS_API_PROXY, payload);
@@ -313,7 +313,7 @@ export default function WeComSettingsForm() {
 
                         if (!originalLineUser || originalLineUser.id === undefined || originalLineUser.id === null) {
                             console.warn(`Attempted to UPDATE LineUser without valid backendId for employeeCode: ${item.employeeCode}. Skipping.`);
-                            return Promise.reject(new Error(`ไม่สามารถอัปเดต WeCom ID ของพนักงาน ${item.employeeCode} ได้: ไม่พบ ID หรือข้อมูลเดิมในระบบ`));
+                            return Promise.reject(new Error(`Cannot update WeCom ID for employee ${item.employeeCode}: ID or original data not found in the system`));
                         }
 
                         payload = {
@@ -324,7 +324,7 @@ export default function WeComSettingsForm() {
                         };
 
                         const url = `${LINE_USERS_API_PROXY}/${originalLineUser.id.toString().trim()}`;
-                        console.log(`กำลังส่ง PUT request สำหรับ LineUser id: ${originalLineUser.id}`);
+                        console.log(`Sending PUT request for LineUser id: ${originalLineUser.id}`);
                         console.log("PUT URL:", url);
                         console.log("Payload:", payload);
 
@@ -346,11 +346,11 @@ export default function WeComSettingsForm() {
             const failedUpdates = results.filter(result => result.status === 'rejected');
             if (failedUpdates.length > 0) {
                 const errorMessages = failedUpdates.map(result => (result as PromiseRejectedResult).reason.message).join('\n');
-                setError(`เกิดข้อผิดพลาดบางส่วนในการบันทึก:\n${errorMessages}`);
-                setSaveMsg('บันทึกสำเร็จบางส่วน');
+                setError(`Some errors occurred during saving:\n${errorMessages}`);
+                setSaveMsg('Partial save successful');
             } else {
-                setSaveMsg('บันทึกสำเร็จ');
-                setSuccess('บันทึกข้อมูล WeCom ID ทั้งหมดสำเร็จแล้ว');
+                setSaveMsg('Save successful');
+                setSuccess('All WeCom ID data saved successfully');
             }
 
             await fetchData();
@@ -358,11 +358,11 @@ export default function WeComSettingsForm() {
         } catch (err) {
             console.error('Error saving WeCom IDs:', err);
             if (axios.isAxiosError(err) && err.response?.data?.message) {
-                setError(`เกิดข้อผิดพลาดในการบันทึก: ${err.response.data.message}`);
+                setError(`Failed to save: ${err.response.data.message}`);
             } else {
-                setError('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+                setError('Failed to save data');
             }
-            setSaveMsg('เกิดข้อผิดพลาดในการบันทึก');
+            setSaveMsg('Failed to save');
         } finally {
             setSaving(false);
         }
@@ -379,10 +379,10 @@ export default function WeComSettingsForm() {
         
         <div className="container mx-auto px-4 py-4">
           <h2 className="text-3xl font-extrabold text-gray-900 flex-grow">
-        <span className="text-blue-600">Wecom ID</span> Settings
+        <span className="text-blue-600">WeCom ID</span> Settings
       </h2>
       <p className="text-gray-600 text-base mb-8 border-b border-blue-100 pb-5 mt-[8px]">
-      จัดการ WeCom ID สำหรับพนักงาน เพื่อเปิดใช้การแจ้งเตือนผ่าน WeCom
+      Manage WeCom ID for employees to enable notifications via WeCom
     </p>
 
     {}
@@ -390,14 +390,14 @@ export default function WeComSettingsForm() {
     <div className="flex items-center mb-3">
     </div>
       <h3 className="text-xl font-bold text-gray-700 mb-2 flex items-center">
-        <i className="fas fa-building mr-3 text-gray-800"></i> ค้นหาด้วยชื่อ, รหัสพนักงาน หรือชื่อแผนก
+        <i className="fas fa-building mr-3 text-gray-800"></i> Search by name, employee code, or department name.
       </h3>
       <div className="relative">
         <input
           type="text"
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
-          placeholder="ค้นหาชื่อ, รหัสพนักงาน หรือชื่อแผนก..."
+          placeholder="Search by name, employee code, or department name..."
           className="block w-full px-5 py-3 text-base text-gray-800 bg-white border border-blue-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out"
         />
         {searchTerm && searchResults.length > 0 && (
@@ -424,11 +424,11 @@ export default function WeComSettingsForm() {
       <div className="bg-white rounded-xl shadow-lg border border-gray-200  mb-4">
         <h4 className="text-xl font-bold text-gray-800 mb-5 pb-4 border-b border-gray-200 flex items-center py-4">
           <i className="fas fa-users mr-3 text-gray-600"></i>
-          รายชื่อพนักงานในแผนก: <span className="text-blue-600 ml-2">{departments.find((d) => d.id === selectedDepartmentId)?.name}</span>
+          Employees in department: <span className="text-blue-600 ml-2">{departments.find((d) => d.id === selectedDepartmentId)?.name}</span>
         </h4>
         {currentDepartmentEmployees.length === 0 ? (
           <p className="text-gray-500 text-center py-6 text-lg">
-            <i className="fas fa-exclamation-circle mr-2"></i>ไม่พบพนักงานในแผนกนี้
+            <i className="fas fa-exclamation-circle mr-2"></i>No employees found in this department
           </p>
         ) : (
           <div className="overflow-x-auto shadow-md rounded-lg">
@@ -436,16 +436,16 @@ export default function WeComSettingsForm() {
               <thead className="bg-blue-50">
                 <tr>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-blue-700 uppercase tracking-wider">
-                    ชื่อพนักงาน
+                    Name
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-blue-700 uppercase tracking-wider">
-                    รหัสพนักงาน
+                    Employee ID
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-blue-700 uppercase tracking-wider">
                     WeCom ID
                   </th>
                   <th scope="col" className="px-6 py-3 text-right text-xs font-semibold text-blue-700 uppercase tracking-wider">
-                    การดำเนินการ
+                    Actions
                   </th>
                 </tr>
               </thead>
@@ -458,10 +458,10 @@ export default function WeComSettingsForm() {
                   return (
                     <tr key={key} className="hover:bg-gray-50 transition duration-150 ease-in-out">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {employee?.name || 'ไม่ทราบชื่อ'}
+                        {employee?.name || 'Unknown name'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {employee?.id || 'ไม่มีรหัส'}
+                        {employee?.id || 'No ID'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 w-1/3">
                         <input
@@ -471,7 +471,7 @@ export default function WeComSettingsForm() {
                             handleWeComIdChange(employee?.id ?? '', e.target.value, wecomIdMap.get(employee?.id ?? '')?.backendId, employee.workdayId)
                           }
                           className="block w-full px-4 py-2 text-sm text-gray-800 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-purple-400 focus:border-purple-400 transition duration-150 ease-in-out"
-                          placeholder="กรอก WeCom ID"
+                          placeholder="Enter WeCom ID"
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -481,7 +481,7 @@ export default function WeComSettingsForm() {
                               handleWeComIdChange(employee?.id ?? '', '', wecomIdMap.get(employee?.id ?? '')?.backendId, employee.workdayId)
                             }
                             className="text-red-600 hover:text-red-800 ml-4 px-4 py-2 rounded-lg border border-red-300 hover:border-red-500 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                            title="Reset WeCom ID สำหรับพนักงานคนนี้"
+                            title="Reset WeCom ID for this employee"
                           >
                             <i className="fas fa-trash-alt mr-1"></i> Reset
                           </button>
@@ -508,11 +508,11 @@ export default function WeComSettingsForm() {
     >
       {saving ? (
         <>
-          <i className="fas fa-spinner fa-spin mr-3"></i> กำลังบันทึก...
+          <i className="fas fa-spinner fa-spin mr-3"></i> Saving...
         </>
       ) : (
         <>
-          <i className="fas fa-save mr-3"></i> บันทึกการตั้งค่า WeCom ID ทั้งหมด
+          <i className="fas fa-save mr-3"></i> Save All WeCom ID Settings
         </>
       )}
     </button>

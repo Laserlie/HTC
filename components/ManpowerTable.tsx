@@ -285,7 +285,7 @@ export function ManpowerTable({ selectedDate, scanStatus, deptcodelevel1Filter }
               : deptLevel === 3
                 ? `Total ${entry.dept.deptname.replace('รวมแผนก ', '')}`
                 : `Total ${entry.dept.deptname}`;
-        const totalDeptCode = `TOTAL_${entry.dept.deptcode}`;
+        const totalDeptCode = `TOTAL ${entry.dept.deptcode}`;
 
         const aggregatedTotalsForCurrentNode = calculateTotalsIncludingChildren(entry.dept.deptcode);
 

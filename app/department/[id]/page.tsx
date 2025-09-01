@@ -85,7 +85,7 @@ export default function DepartmentDetailPage() {
 
   return (
     <div className="p-6 space-y-4">
-      <h1 className="text-2xl font-bold">แผนก : {department.name}</h1>
+      <h1 className="text-2xl font-bold">department : {department.name}</h1>
       <DepartmentTable
         employees={department.employees}
         scanStatus="all"

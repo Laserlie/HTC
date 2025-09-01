@@ -144,7 +144,7 @@ export default function ReportPersonDetailPage() {
       return;
     }
 
-    const headers = ['Date', 'Status', 'Time In', 'Time Out', 'Over IN', 'Shift'];
+    const headers = ['Date', 'Status', 'Time In', 'Time Out', 'Over In', 'Shift'];
     const rows = details.map((d) =>
       [
         d.workdate,

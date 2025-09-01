@@ -41,7 +41,7 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
         <div className="p-8 text-center text-red-600 bg-red-50 rounded-lg shadow-md max-w-lg mx-auto mt-10">
           <h2 className="text-xl font-bold mb-2 flex items-center justify-center">
             <FiAlertTriangle className="mr-2" />
-            เกิดข้อผิดพลาดขณะเรนเดอร์!
+            An error occurred.
           </h2>
           <p>{this.state.error?.message || 'Unknown error'}</p>
         </div>
@@ -101,7 +101,7 @@ const ScanNoscanReportPageInner = () => {
       const data: ApiResponse = await response.json();
       setAllEmployees(data.detil);
     } catch (err: unknown) {
-      setError('ไม่สามารถดึงข้อมูลพนักงานได้ โปรดลองอีกครั้ง');
+      setError('Unable to retrieve employee information. Please try again.');
       if (err instanceof Error) {
         console.error('API Fetch Error:', err.message);
       } else {
@@ -150,10 +150,10 @@ const ScanNoscanReportPageInner = () => {
 
   const getPageTitle = useCallback(() => {
     switch (status) {
-      case 'all': return 'รายงานพนักงานทั้งหมด';
-      case 'scanned': return 'รายงานพนักงานที่สแกนแล้ว';
-      case 'not_scanned': return 'รายงานพนักงานที่ยังไม่สแกน';
-      default: return 'รายงานการเข้างาน';
+      case 'all': return 'All Employee Reports';
+      case 'scanned': return 'Scanned Employee Report';
+      case 'not_scanned': return 'Not Scan Employee Report';
+      default: return 'Attendance Report';
     }
   }, [status]);
 
@@ -224,10 +224,10 @@ const ScanNoscanReportPageInner = () => {
       <div className="p-8 text-center text-red-600 bg-red-50 rounded-lg shadow-md max-w-lg mx-auto mt-10">
         <h2 className="text-xl font-bold mb-2 flex items-center justify-center">
           <FiAlertTriangle className="mr-2" />
-          เกิดข้อผิดพลาด!
+          error!
         </h2>
         <p>{error}</p>
-        <p className="mt-4 text-sm text-red-500">กรุณาลองใหม่อีกครั้ง หรือติดต่อผู้ดูแลระบบ</p>
+        <p className="mt-4 text-sm text-red-500">Please try again.</p>
       </div>
     );
   }
@@ -240,19 +240,19 @@ const ScanNoscanReportPageInner = () => {
         </p>
         <p className="text-xl text-gray-600 mb-4 text-center">
           {/* แสดงวันที่ปัจจุบันแทนค่าจาก URL */}
-          วันที่: <span className="font-bold text-gray-800">{today}</span>
+          date: <span className="font-bold text-gray-800">{today}</span>
         </p>
 
         <div className="flex justify-left mb-8 text-left p-1">
           <div className='container mx-auto'>
-            <label htmlFor="deptPrefixFilter" className="sr-only text-center">เลือกฝ่ายโรงงาน</label>
+            <label htmlFor="deptPrefixFilter" className="sr-only text-center">Select factory department</label>
             <select
               id="deptPrefixFilter"
               value={selectedDeptPrefix}
               onChange={(e) => setSelectedDeptPrefix(e.target.value)}
               className="w-1/4 border rounded-lg px-2 py-2 shadow-sm"
             >
-              <option value="">ทั้งหมด</option>
+              <option value="">All</option>
               {deptPrefixes.map(prefix => (
                 <option key={prefix.value} value={prefix.value}>
                   {prefix.label}
@@ -264,8 +264,8 @@ const ScanNoscanReportPageInner = () => {
 
         {filteredEmployees.length === 0 ? (
           <div className="text-center text-gray-500 p-2 bg-white rounded-lg shadow-xl max-w-2xl mx-auto mt-10 border border-gray-200">
-            <p className="text-2xl font-semibold mb-2">ไม่พบข้อมูลพนักงานสำหรับเงื่อนไขนี้</p>
-            <p className="text-lg text-gray-600">โปรดตรวจสอบวันที่หรือรหัสแผนกที่เลือกอีกครั้ง</p>
+            <p className="text-2xl font-semibold mb-2">No employee information found for this condition.</p>
+            <p className="text-lg text-gray-600">Please double check the selected date or department code.</p>
           </div>
         ) : (
           <div className="overflow-x-auto bg-white rounded-xl shadow-xl p-1.5 border border-gray-200 mb-\">
@@ -310,10 +310,10 @@ const ScanNoscanReportPageInner = () => {
                             }`}
                         >
                           {!row.employee.firstscantime
-                            ? 'ยังไม่สแกน'
+                            ? 'Not scan'
                             : (() => {
                               const [h, m, s] = row.employee.firstscantime.substring(11, 19).split(':').map(Number);
-                              return h > 8 || (h === 8 && (m > 0 || s > 0)) ? 'มาสาย' : 'สแกนแล้ว';
+                              return h > 8 || (h === 8 && (m > 0 || s > 0)) ? 'Over-in' : 'Scaned';
                             })()}
                         </span>
                       </td>
@@ -325,7 +325,7 @@ const ScanNoscanReportPageInner = () => {
             {visibleCount < flatEmployees.length && (
               <div ref={loaderRef} className="flex justify-center my-4">
                 <span className="px-4 py-2 text-gray-600 rounded shadow text-sm animate-pulse">
-                  กำลังโหลด...
+                  Loading data...
                 </span>
               </div>
             )}

@@ -121,7 +121,7 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
       }
     });
 
-    // 2. สร้าง parent node เฉยๆ (ไม่บวกค่าจากลูก)
+
     const addParentNode = (workdate: string, parentCode: string, name: string) => {
       const key = `${workdate}-${parentCode}`;
       if (!departmentsMap.has(key)) {
@@ -644,7 +644,7 @@ export function DepartmentTable({ employees, scanStatus = 'all', onLoadMore, has
 
       {hasMore && (
         <div ref={loadMoreRef} className="py-4 text-center text-gray-400 bg-white rounded-xl shadow mt-4">
-          กำลังโหลดข้อมูลเพิ่ม...
+          Loading data...
         </div>
       )}
 

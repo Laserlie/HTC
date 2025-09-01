@@ -67,8 +67,8 @@ export default function ReportDetailPage() {
 
     if (invalidDept || invalidDates) {
       const errorMessage = invalidDept
-        ? 'รหัสแผนกไม่ถูกต้อง'
-        : 'รูปแบบวันที่ไม่ถูกต้อง';
+        ? 'Invalid department code'
+        : 'Invalid date format';
       setFetchError(errorMessage);
       return;
     }
@@ -120,10 +120,10 @@ export default function ReportDetailPage() {
       setDetails(sortedDetails);
       setDeptInfo(deptNamesMap);
     } catch (err: unknown) {
-      console.error('เกิดข้อผิดพลาด:', err);
+      console.error('error:', err);
       setDetails([]);
       setDeptInfo({});
-      setFetchError('เกิดข้อผิดพลาดในการดึงข้อมูลทั้งหมด');
+      setFetchError('An error occurred while retrieving all data.');
     } finally {
       setLoading(false);
     }
@@ -195,11 +195,11 @@ export default function ReportDetailPage() {
 
   const exportToCSV = () => {
     if (details.length === 0) {
-      console.log('ไม่มีข้อมูลให้ Export');
+      console.log('No data to export');
       return;
     }
 
-    const headers = ['วันที่', 'ชื่อ-สกุล', 'เวลาเข้า', 'เวลาออก', 'over-in', 'แผนก'];
+    const headers = ['date', 'Name-Lastname', 'time in', 'Time-out', 'over-in', 'department'];
     const rows = details.map((d) => [
       d.workdate,
       d.full_name,

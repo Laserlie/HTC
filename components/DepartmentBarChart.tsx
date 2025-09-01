@@ -198,7 +198,7 @@ export default function DepartmentChartsContainer({ apiEndpoint, deptCode }: Pro
             const departmentInfo = departmentDataMap.get(departmentName);
             if (departmentInfo) {
               const totalEmployees = departmentInfo.scannedCount + departmentInfo.notScannedCount;
-              return `Employees in the department: ${totalEmployees.toLocaleString()} คน\nสแกนเข้าแล้ว: ${departmentInfo.scannedCount.toLocaleString()} คน`;
+              return `Employees in the department: ${totalEmployees.toLocaleString()} people\nScanned In: ${departmentInfo.scannedCount.toLocaleString()} people`;
             }
             return '';
           }
@@ -297,7 +297,7 @@ export default function DepartmentChartsContainer({ apiEndpoint, deptCode }: Pro
             const departmentInfo = departmentDataMap.get(departmentName);
             if (departmentInfo) {
               const totalEmployees = departmentInfo.scannedCount + departmentInfo.notScannedCount;
-              return `Employees in the department: ${totalEmployees.toLocaleString()} คน\nยังไม่สแกน: ${departmentInfo.notScannedCount.toLocaleString()} คน`;
+              return `Employees in the department: ${totalEmployees.toLocaleString()} people\nNot Scanned: ${departmentInfo.notScannedCount.toLocaleString()} people`;
             }
             return '';
           }
