@@ -420,7 +420,6 @@ const Report2: React.FC = () => {
                         <option value={11}>November</option>
                         <option value={12}>December</option>
 
-
                     </select>
 
                     {/* Week Filter Dropdown */}
