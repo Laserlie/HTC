@@ -75,7 +75,6 @@ const Report2: React.FC = () => {
         month: today.getMonth() + 1,
         year: today.getFullYear()
     });
-
     const getDataEmployeeHour = async (month: number, year: number) => {
         setLoadingData(true);
         const yearData = Config[year.toString() as keyof typeof Config];
@@ -125,7 +124,6 @@ const Report2: React.FC = () => {
                                 hoursItem.w5 || 0
                             ],
                             currentUsedHours: hoursItem.current_date_use_hour,
-
                             hoursLeft: hoursItem.hours_left,
                         };
                     });
@@ -144,6 +142,11 @@ const Report2: React.FC = () => {
                 setLoadingData(false);
             });
     }
+
+    useEffect(() => {
+        getDataEmployeeHour(dateTimeFil.month, dateTimeFil.year);
+    }, []); // The empty array [] ensures this effect runs only on mount.
+
 
     useEffect(() => {
         // Find the week data for the selected month and year
@@ -165,7 +168,6 @@ const Report2: React.FC = () => {
             }
         }
     }, [activeDateTimeFil.month, activeDateTimeFil.year]);
-
     // New handler for the "Search" button click
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -180,7 +182,6 @@ const Report2: React.FC = () => {
 
         setCurrentPage(1);
     };
-
     const filteredEmployees = useMemo(() => {
         const filtered = allEmployees.filter(employee => {
             const matchesSearch = employee.name.toLowerCase().includes(activeSearchTerm.toLowerCase()) ||
@@ -189,6 +190,7 @@ const Report2: React.FC = () => {
 
             let matchesStatus = true;
             const weekIndex = activeWeekFilter - 1;
+
 
             if (activeStatusFilter === 'overtime' && activeWeekFilter > 0) {
                 const hour = employee.hours[weekIndex] || 0;
@@ -212,7 +214,6 @@ const Report2: React.FC = () => {
         });
         return filtered.sort((a, b) => a.deptCode.localeCompare(b.deptCode));
     }, [activeSearchTerm, activeStatusFilter, activeFactoryFilter, activeDivisionFilter, activeDepartmentFilter, allEmployees, activeWeekFilter]);
-
     // Memoized unique options for each dropdown
     const factoryOptions = useMemo(() => {
         const options = new Map<string, string>();
@@ -220,6 +221,7 @@ const Report2: React.FC = () => {
             const { factory } = parseDeptCode(emp.deptCode);
             if (factory && !options.has(factory)) {
                 options.set(factory, emp.departmentName);
+
 
             }
         });
@@ -231,8 +233,9 @@ const Report2: React.FC = () => {
             const { factory, division } = parseDeptCode(emp.deptCode);
             if (factory === factoryFilterInput && division && division !== '00' && !options.has(division)) {
                 options.set(division, emp.departmentName);
-            }
 
+
+            }
         });
         return Array.from(options.entries()).map(([code, name]) => ({ code, name }));
     }, [allEmployees, factoryFilterInput]);
@@ -242,6 +245,7 @@ const Report2: React.FC = () => {
             const { factory, division } = parseDeptCode(emp.deptCode);
             if (factory === factoryFilterInput && division === divisionFilterInput && emp.departmentName) {
                 uniqueDepartments.set(emp.deptCode, { code: emp.deptCode, name: emp.departmentName });
+
 
             }
         });
@@ -269,6 +273,7 @@ const Report2: React.FC = () => {
                 overtimeEmployees = filteredEmployees.filter(emp => (emp.hours[weekIndex] || 0) > 60).length;
             } else {
                 overtimeEmployees = filteredEmployees.filter(emp => emp.hours.some(h => h > 60)).length;
+
 
             }
             normalEmployees = filteredEmployees.length - overtimeEmployees;
@@ -327,7 +332,7 @@ const Report2: React.FC = () => {
         document.body.appendChild(link);
         link.click();
         document.body.appendChild(link);
-    };
+    }; 
     // Handlers for pagination
     const handleRowsPerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setRowsPerPage(Number(e.target.value));
@@ -335,7 +340,7 @@ const Report2: React.FC = () => {
     };
 
     // New helper to format the month name in Thai
-    const getThaiMonthName = (month: number) => {
+    const getMountName = (month: number) => {
         const monthNames = [
             'January', 'February', 'March', 'April', 'May', 'June',
             'July', 'August', 'September', 'October', 'November', 'December'
@@ -350,12 +355,11 @@ const Report2: React.FC = () => {
                 <div className="flex items-center justify-between">
                     <div>
 
-                        <h1 className="text-3xl font-bold text-gray-700 mb-2 ">Weekly employee work report for {getThaiMonthName(dateTimeFil.month)} {dateTimeFil.year}</h1>
+                        <h1 className="text-3xl font-bold text-gray-700 mb-2 ">Weekly employee work report for {getMountName(dateTimeFil.month)} {dateTimeFil.year}</h1>
                         <p className="text-gray-600">Working hours - Weekly</p>
                     </div>
                 </div>
             </div>
-
 
             {/* Filter and Search */}
             <div className="bg-white rounded-xl shadow-md p-6 mb-8">
@@ -372,6 +376,7 @@ const Report2: React.FC = () => {
                     <select
                         id="statusFilter"
 
+
                         value={statusFilterInput}
 
                         onChange={(e) => setStatusFilterInput(e.target.value)}
@@ -382,22 +387,8 @@ const Report2: React.FC = () => {
                         <option value="normal">Normal (≤ 60 hrs)</option>
                         <option value="overtime">Overtime ( &gt; 60 hrs)</option>
                     </select>
-                    {/* Week Filter Dropdown */}
                     <select
-                        id="weekFilter"
 
-                        value={weekFilterInput}
-                        onChange={e => setWeekFilterInput(Number(e.target.value))}
-                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 shadow-md"
-                    >
-                        <option value={0}>All Weeks</option>
-                        {visibleWeeks.map((weekNum) => (
-                            <option key={weekNum} value={weekNum}>
-                                Week {weekNum}
-                            </option>
-                        ))}
-                    </select>
-                    <select
 
                         id="monthFilter"
                         value={dateTimeFil.month}
@@ -413,20 +404,41 @@ const Report2: React.FC = () => {
                     >
                         <option value={today.getMonth() + 1}>Latest Month</option>
 
+
                         <option value={1}>January</option>
                         <option value={2}>February</option>
                         <option value={3}>March</option>
                         <option value={4}>April</option>
+
                         <option value={5}>May</option>
                         <option value={6}>June</option>
                         <option value={7}>July</option>
                         <option value={8}>August</option>
+
                         <option value={9}>September</option>
                         <option value={10}>October</option>
                         <option value={11}>November</option>
                         <option value={12}>December</option>
 
+
                     </select>
+
+                    {/* Week Filter Dropdown */}
+                    <select
+                        id="weekFilter"
+
+                        value={weekFilterInput}
+                        onChange={e => setWeekFilterInput(Number(e.target.value))}
+                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 shadow-md"
+                    >
+                        <option value={0}>All Weeks</option>
+                        {visibleWeeks.map((weekNum) => (
+                            <option key={weekNum} value={weekNum}>
+                                Week {weekNum}
+                            </option>
+                        ))}
+                    </select>
+
                     <select
                         id="yearFilter"
                         value={dateTimeFil.year}
@@ -458,7 +470,6 @@ const Report2: React.FC = () => {
                     </select>
                     {/* Updated Factory dropdown to show names */}
                     <select
-
                         value={factoryFilterInput}
                         onChange={(e) => {
                             setFactoryFilterInput(e.target.value);
@@ -516,6 +527,7 @@ const Report2: React.FC = () => {
                     >
                         Search
                         <svg xmlns="http://www.w3.org/2000/svg"
+
                             className="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" fill="none" />
                             <line x1="16.5" y1="16.5" x2="21" y2="21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -526,6 +538,7 @@ const Report2: React.FC = () => {
             </div>
 
             {/* Summary Cards */}
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-5">
                 {/*Card 1: Total Employees */}
                 <div className="bg-blue-100 rounded-xl shadow-md p-6 ">
@@ -540,6 +553,7 @@ const Report2: React.FC = () => {
                             <p className="text-sm text-blue-800">All employees</p>
                             <p className="text-3xl font-bold text-blue-800">{allEmployees.length} people</p>
                         </div>
+
                     </div>
                 </div>
 
@@ -580,10 +594,12 @@ const Report2: React.FC = () => {
 
             </div>
 
+
             {loadingData && (
                 <div className="p-8 text-center text-gray-500">
                     <svg className="animate-spin h-8 w-8 text-blue-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+
 
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0
 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -634,8 +650,8 @@ const Report2: React.FC = () => {
                                     <th
                                         key={`week-header-${weekNum}`}
 
-                                        className={`px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider ${activeWeekFilter === weekNum ?
-                                            'bg-indigo-100' : ''}`}
+
+                                        className={`px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider ${activeWeekFilter === weekNum ? 'bg-indigo-100' : ''}`}
                                     >
                                         Week {weekNum}
 
@@ -657,8 +673,10 @@ const Report2: React.FC = () => {
                                 paginatedEmployees.map(employee => {
                                     // Logic to find the latest week or use the filtered week
 
+
                                     const latestWeekIndex = activeWeekFilter > 0 ? activeWeekFilter - 1 : employee.hours.length - 1 - [...employee.hours].reverse().findIndex(hour => hour > 0);
                                     const latestUsedHours = latestWeekIndex !== -1 ? (employee.hours[latestWeekIndex] || 0) : 0;
+
 
                                     const hoursLeftCalculated = 60 - latestUsedHours; // Assuming 60 hours is the maximum
 
@@ -667,8 +685,10 @@ const Report2: React.FC = () => {
                                         <tr key={employee.id} className={'hover:bg-gray-50'}>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 w-2/12">{employee.deptCode}</td>
 
+
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 w-1/12">{employee.id}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 w-2/12">{employee.departmentName}</td>
+
 
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 w-2/12">{employee.name}</td>
                                             {visibleWeeks.map((weekNum) => {
@@ -685,19 +705,20 @@ const Report2: React.FC = () => {
 
                                                 // Highlight the cell if it's the selected week
 
+
                                                 const highlightClass = activeWeekFilter === weekNum ? 'bg-indigo-50' : '';
                                                 return (
                                                     <td key={index} className={`px-6 py-4 whitespace-nowrap text-sm text-center ${cellColorClass} ${highlightClass}`}>
 
+
                                                         {hour == null ? 0 : hour}
                                                     </td>
 
+
                                                 );
                                             })}
-                                            <td className={`px-6 py-4 whitespace-nowrap text-sm text-center ${latestUsedHours > 60 ?
-                                                'text-red-600 font-semibold' : 'text-green-600'}`}>{latestUsedHours == null ? 0 : latestUsedHours}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-center">{hoursLeftCalculated == null ?
-                                                0 : hoursLeftCalculated}</td>
+                                            <td className={`px-6 py-4 whitespace-nowrap text-sm text-center ${latestUsedHours > 60 ? 'text-red-600 font-semibold' : 'text-green-600'}`}>{latestUsedHours == null ? 0 : latestUsedHours}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-center">{hoursLeftCalculated == null ? 0 : hoursLeftCalculated}</td>
                                         </tr>
                                     );
                                 })
@@ -737,6 +758,7 @@ const Report2: React.FC = () => {
                         </button>
                     </div>
                 </div>
+
             </div>
 
             {/* Export Button */}
